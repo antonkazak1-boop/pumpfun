@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pump Dex Bot Mini App - Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+/* Основные переменные для темы */
+:root {
+    --primary-color: #007bff;
+    --primary-dark: #0056b3;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --background-color: #f8f9fa;
+    --secondary-bg: #ffffff;
+    --text-color: #333333;
+    --text-muted: #6c757d;
+    --border-color: #dee2e6;
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+/* Глобальные стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+}
+
+/* Основной контейнер */
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    background-color: var(--secondary-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Заголовок приложения */
+.app-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    position: relative;
+    box-shadow: var(--shadow);
+}
+
+.app-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.app-header i {
+    margin-right: 0.5rem;
+}
+
+.refresh-button {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+/* Навигация по вкладкам */
+.tabs-nav {
+    background-color: var(--secondary-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tabs-scroll {
+    display: flex;
+    overflow-x: auto;
+    padding: 0 1rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.tabs-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.tab-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    min-width: 80px;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-button:hover {
+    color: var(--primary-color);
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.tab-button.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-button i {
+    font-size: 1.2rem;
+}
+
+.tab-button small {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+}
+
+/* Содержимое вкладок */
+.tab-content-wrapper {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-header {
+    margin-bottom: 1.5rem;
+}
+
+.tab-header h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.tab-header i {
+    margin-right: 0.5rem;
+}
+
+.tab-description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Список данных */
+.data-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Элемент данных */
+.data-item {
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.data-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.data-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary-color);
+}
+
+.whale-item::before {
+    background: var(--info-color);
+}
+
+.surge-item::before {
+    background: var(--warning-color);
+}
+
+.fresh-item::before {
+    background: var(--success-color);
+}
+
+.data-item h3 {
+    color: var(--text-color);
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.data-item h3 i {
+    font-size: 1rem;
+}
+
+.item-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.stat-value.positive {
+    color: var(--success-color);
+}
+
+.stat-value.negative {
+    color: var(--danger-color);
+}
+
+.stat-value.neutral {
+    color: var(--info-color);
+}
+
+.item-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+}
+
+.action-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.action-button.secondary {
+    background: var(--text-muted);
+}
+
+.action-button.secondary:hover {
+    background: var(--text-color);
+}
+
+/* Подвал приложения */
+.app-footer {
+    background-color: var(--background-color);
+    border-top: 1px solid var(--border-color);
+    padding: 1rem;
+    margin-top: auto;
+}
+
+.footer-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.status-indicator {
+    font-weight: 600;
+    color: var(--success-color);
+}
+
+/* Демо баннер */
+.demo-banner {
+    background: linear-gradient(90deg, var(--warning-color), #e0a800);
+    color: #000;
+    text-align: center;
+    padding: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0;
+    }
+    
+    .app-header {
+        padding: 0.75rem;
+    }
+    
+    .app-header h1 {
+        font-size: 1.3rem;
+    }
+    
+    .tabs-scroll {
+        padding: 0 0.5rem;
+    }
+    
+    .tab-content-wrapper {
+        padding: 0.75rem;
+    }
+    
+    .data-item {
+        padding: 0.75rem;
+    }
+    
+    .item-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .footer-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="demo-banner">
+        🚧 DEMO ВЕРСИЯ - Показывает тестовые данные для демонстрации интерфейса
+    </div>
+
+    <div class="container">
+        <header class="app-header">
+            <h1><i class="fas fa-robot"></i> Pump Dex Bot</h1>
+            <div class="refresh-button">
+                <i class="fas fa-sync-alt"></i>
+            </div>
+        </header>
+
+        <!-- Навигационные вкладки -->
+        <nav class="tabs-nav">
+            <div class="tabs-scroll">
+                <button class="tab-button active" onclick="showTab('clusterBuy')">
+                    <i class="fas fa-fire"></i>
+                    <span>Cluster Buy</span>
+                    <small>10м</small>
+                </button>
+                <button class="tab-button" onclick="showTab('whaleMoves')">
+                    <i class="fas fa-whale"></i>
+                    <span>Whale Moves</span>
+                    <small>30м</small>
+                </button>
+                <button class="tab-button" onclick="showTab('volumeSurge')">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Volume Surge</span>
+                    <small>15м</small>
+                </button>
+                <button class="tab-button" onclick="showTab('coBuy')">
+                    <i class="fas fa-users"></i>
+                    <span>Co-buy</span>
+                    <small>20м</small>
+                </button>
+                <button class="tab-button" onclick="showTab('smartMoney')">
+                    <i class="fas fa-brain"></i>
+                    <span>Smart Money</span>
+                    <small>1ч</small>
+                </button>
+                <button class="tab-button" onclick="showTab('freshTokens')">
+                    <i class="fas fa-seedling"></i>
+                    <span>Fresh Tokens</span>
+                    <small>5м</small>
+                </button>
+                <button class="tab-button" onclick="showTab('topGainers')">
+                    <i class="fas fa-trophy"></i>
+                    <span>Top Gainers</span>
+                    <small>1ч</small>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Содержимое вкладок -->
+        <main class="tab-content-wrapper">
+            <!-- Cluster Buy Tab -->
+            <div id="clusterBuy" class="tab-content active">
+                <div class="tab-header">
+                    <h2><i class="fas fa-fire"></i> Cluster Buy (10 минут)</h2>
+                    <p class="tab-description">Токены с 3+ уникальными покупателями</p>
+                </div>
+                <div class="data-list">
+                    <div class="data-item">
+                        <h3>
+                            <i class="fas fa-fire"></i>
+                            1. So1111...112
+                        </h3>
+                        <div class="item-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Покупатели</div>
+                                <div class="stat-value positive">7</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Общий объем SOL</div>
+                                <div class="stat-value neutral">342.5</div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <a href="#" class="action-button">
+                                <i class="fas fa-external-link-alt"></i> Pump.fun
+                            </a>
+                            <a href="#" class="action-button secondary">
+                                <i class="fas fa-chart-line"></i> DexScreener
+                            </a>
+                            <button class="action-button secondary">
+                                <i class="fas fa-info-circle"></i> Детали
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="data-item">
+                        <h3>
+                            <i class="fas fa-fire"></i>
+                            2. 4k3Dpr...789
+                        </h3>
+                        <div class="item-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Покупатели</div>
+                                <div class="stat-value positive">5</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Общий объем SOL</div>
+                                <div class="stat-value neutral">189.2</div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <a href="#" class="action-button">
+                                <i class="fas fa-external-link-alt"></i> Pump.fun
+                            </a>
+                            <a href="#" class="action-button secondary">
+                                <i class="fas fa-chart-line"></i> DexScreener
+                            </a>
+                            <button class="action-button secondary">
+                                <i class="fas fa-info-circle"></i> Детали
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="data-item">
+                        <h3>
+                            <i class="fas fa-fire"></i>
+                            3. EPjFW...abc
+                        </h3>
+                        <div class="item-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Покупатели</div>
+                                <div class="stat-value positive">4</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Общий объем SOL</div>
+                                <div class="stat-value neutral">95.7</div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <a href="#" class="action-button">
+                                <i class="fas fa-external-link-alt"></i> Pump.fun
+                            </a>
+                            <a href="#" class="action-button secondary">
+                                <i class="fas fa-chart-line"></i> DexScreener
+                            </a>
+                            <button class="action-button secondary">
+                                <i class="fas fa-info-circle"></i> Детали
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Whale Moves Tab -->
+            <div id="whaleMoves" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-whale"></i> Whale Moves (30 минут)</h2>
+                    <p class="tab-description">Крупные покупки свыше 100 SOL</p>
+                </div>
+                <div class="data-list">
+                    <div class="data-item whale-item">
+                        <h3>
+                            <i class="fas fa-whale"></i>
+                            1. Китовая покупка
+                        </h3>
+                        <div class="item-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Кошелек</div>
+                                <div class="stat-value">3Nc2k...9cWq</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Токен</div>
+                                <div class="stat-value">So1111...112</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">SOL потрачено</div>
+                                <div class="stat-value positive">450.25</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Время</div>
+                                <div class="stat-value">14:23</div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <a href="#" class="action-button">
+                                <i class="fas fa-external-link-alt"></i> Pump.fun
+                            </a>
+                            <a href="#" class="action-button secondary">
+                                <i class="fas fa-receipt"></i> Транзакция
+                            </a>
+                            <a href="#" class="action-button secondary">
+                                <i class="fas fa-wallet"></i> Кошелек
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="data-item whale-item">
+                        <h3>
+                            <i class="fas fa-whale"></i>
+                            2. Китовая покупка
+                        </h3>
+                        <div class="item-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Кошелек</div>
+                                <div class="stat-value">7Wx9m...4pQs</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Токен</div>
+                                <div class="stat-value">4k3Dpr...789</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">SOL потрачено</div>
+                                <div class="stat-value positive">275.50</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Время</div>
+                                <div class="stat-value">14:18</div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <a href="#" class="action-button">
+                                <i class="fas fa-external-link-alt"></i> Pump.fun
+                            </a>
+                            <a href="#" class="action-button secondary">
+                                <i class="fas fa-receipt"></i> Транзакция
+                            </a>
+                            <a href="#" class="action-button secondary">
+                                <i class="fas fa-wallet"></i> Кошелек
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volume Surge Tab -->
+            <div id="volumeSurge" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-chart-line"></i> Volume Surge (15 минут)</h2>
+                    <p class="tab-description">Резкий рост объема торгов</p>
+                </div>
+                <div class="data-list">
+                    <div class="data-item surge-item">
+                        <h3>
+                            <i class="fas fa-chart-line"></i>
+                            1. EPjFW...abc
+                        </h3>
+                        <div class="item-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Текущий объем (15м)</div>
+                                <div class="stat-value positive">125.4 SOL</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Предыдущий объем</div>
+                                <div class="stat-value">45.2 SOL</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Рост</div>
+                                <div class="stat-value positive">+177.4%</div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <a href="#" class="action-button">
+                                <i class="fas fa-external-link-alt"></i> Pump.fun
+                            </a>
+                            <button class="action-button secondary">
+                                <i class="fas fa-info-circle"></i> Детали
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fresh Tokens Tab -->
+            <div id="freshTokens" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-seedling"></i> Fresh Tokens (5 минут)</h2>
+                    <p class="tab-description">Новые токены с активностью</p>
+                </div>
+                <div class="data-list">
+                    <div class="data-item fresh-item">
+                        <h3>
+                            <i class="fas fa-seedling"></i>
+                            1. 9WzDXc...def
+                        </h3>
+                        <div class="item-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Ранних покупателей</div>
+                                <div class="stat-value positive">8</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Общий объем</div>
+                                <div class="stat-value neutral">67.3 SOL</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Возраст</div>
+                                <div class="stat-value">3м назад</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Создан</div>
+                                <div class="stat-value">14:25</div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <a href="#" class="action-button">
+                                <i class="fas fa-external-link-alt"></i> Pump.fun
+                            </a>
+                            <button class="action-button secondary">
+                                <i class="fas fa-info-circle"></i> Детали
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty tabs for demo -->
+            <div id="coBuy" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-users"></i> Co-buy Analysis (20 минут)</h2>
+                    <p class="tab-description">Токены, покупаемые одновременно</p>
+                </div>
+                <div class="data-list">
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; color: var(--border-color);"></i>
+                        <h3>Загрузка данных...</h3>
+                        <p>В реальном приложении здесь будут отображаться парные покупки токенов</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="smartMoney" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-brain"></i> Smart Money (1 час)</h2>
+                    <p class="tab-description">Активность опытных трейдеров</p>
+                </div>
+                <div class="data-list">
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <i class="fas fa-brain" style="font-size: 3rem; margin-bottom: 1rem; color: var(--border-color);"></i>
+                        <h3>Загрузка данных...</h3>
+                        <p>В реальном приложении здесь будет активность умных денег</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="topGainers" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-trophy"></i> Top Gainers (1 час)</h2>
+                    <p class="tab-description">Лидеры по объему торгов</p>
+                </div>
+                <div class="data-list">
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <i class="fas fa-trophy" style="font-size: 3rem; margin-bottom: 1rem; color: var(--border-color);"></i>
+                        <h3>Загрузка данных...</h3>
+                        <p>В реальном приложении здесь будут лидеры по объему</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Подвал с информацией -->
+        <footer class="app-footer">
+            <div class="footer-info">
+                <p><i class="fas fa-clock"></i> Последнее обновление: 14:28:15</p>
+                <p><i class="fas fa-database"></i> Статус API: <span class="status-indicator">демо режим</span></p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Убираем активные классы со всех кнопок
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Убираем активные классы со всех табов
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Активируем нужную кнопку
+            event.target.closest('.tab-button').classList.add('active');
+            
+            // Активируем нужный таб
+            document.getElementById(tabName).classList.add('active');
+        }
+    </script>
+</body>
+</html>

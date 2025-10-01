@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pump Dex Bot Mini App</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="animated-bg"></div>
+    
+    <div id="loading" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Загрузка...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="app-header">
+            <h1>
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                </div>
+                Pump Dex Bot
+            </h1>
+            <div class="header-controls">
+                <div class="refresh-button pulse" onclick="refreshCurrentTab()">
+                    <i class="fas fa-sync-alt" id="refresh-icon"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Навигационные вкладки -->
+        <nav class="tabs-nav">
+            <div class="tabs-scroll">
+                <button class="tab-button active" data-tab="clusterBuy">
+                    <i class="fas fa-fire"></i>
+                    <span>Cluster Buy</span>
+                    <small>10м</small>
+                </button>
+                <button class="tab-button" data-tab="whaleMoves">
+                    <i class="fas fa-whale"></i>
+                    <span>Whale Moves</span>
+                    <small>30м</small>
+                </button>
+                <button class="tab-button" data-tab="volumeSurge">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Volume Surge</span>
+                    <small>15м</small>
+                </button>
+                <button class="tab-button" data-tab="coBuy">
+                    <i class="fas fa-users"></i>
+                    <span>Co-buy</span>
+                    <small>20м</small>
+                </button>
+                <button class="tab-button" data-tab="smartMoney">
+                    <i class="fas fa-brain"></i>
+                    <span>Smart Money</span>
+                    <small>1ч</small>
+                </button>
+                <button class="tab-button" data-tab="freshTokens">
+                    <i class="fas fa-seedling"></i>
+                    <span>Fresh Tokens</span>
+                    <small>5м</small>
+                </button>
+                <button class="tab-button" data-tab="topGainers">
+                    <i class="fas fa-trophy"></i>
+                    <span>Top Gainers</span>
+                    <small>1ч</small>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Содержимое вкладок -->
+        <main class="tab-content-wrapper">
+            <!-- Cluster Buy Tab -->
+            <div id="clusterBuy" class="tab-content active">
+                <div class="tab-header">
+                    <h2><i class="fas fa-fire"></i> Cluster Buy (10 минут)</h2>
+                    <p class="tab-description">Токены с 3+ уникальными покупателями</p>
+                </div>
+                <div id="clusterBuyData" class="data-list">
+                    <div class="loading-placeholder">Загрузка данных...</div>
+                </div>
+            </div>
+
+            <!-- Whale Moves Tab -->
+            <div id="whaleMoves" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-whale"></i> Whale Moves (30 минут)</h2>
+                    <p class="tab-description">Крупные покупки свыше 100 SOL</p>
+                </div>
+                <div id="whaleMovesData" class="data-list">
+                    <div class="loading-placeholder">Загрузка данных...</div>
+                </div>
+            </div>
+
+            <!-- Volume Surge Tab -->
+            <div id="volumeSurge" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-chart-line"></i> Volume Surge (15 минут)</h2>
+                    <p class="tab-description">Резкий рост объема торгов</p>
+                </div>
+                <div id="volumeSurgeData" class="data-list">
+                    <div class="loading-placeholder">Загрузка данных...</div>
+                </div>
+            </div>
+
+            <!-- Co-buy Analysis Tab -->
+            <div id="coBuy" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-users"></i> Co-buy Analysis (20 минут)</h2>
+                    <p class="tab-description">Токены, покупаемые одновременно</p>
+                </div>
+                <div id="coBuyData" class="data-list">
+                    <div class="loading-placeholder">Загрузка данных...</div>
+                </div>
+            </div>
+
+            <!-- Smart Money Tab -->
+            <div id="smartMoney" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-brain"></i> Smart Money (1 час)</h2>
+                    <p class="tab-description">Активность опытных трейдеров</p>
+                </div>
+                <div id="smartMoneyData" class="data-list">
+                    <div class="loading-placeholder">Загрузка данных...</div>
+                </div>
+            </div>
+
+            <!-- Fresh Tokens Tab -->
+            <div id="freshTokens" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-seedling"></i> Fresh Tokens (5 минут)</h2>
+                    <p class="tab-description">Новые токены с активностью</p>
+                </div>
+                <div id="freshTokensData" class="data-list">
+                    <div class="loading-placeholder">Загрузка данных...</div>
+                </div>
+            </div>
+
+            <!-- Top Gainers Tab -->
+            <div id="topGainers" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-trophy"></i> Top Gainers (1 час)</h2>
+                    <p class="tab-description">Лидеры по объему торгов</p>
+                </div>
+                <div id="topGainersData" class="data-list">
+                    <div class="loading-placeholder">Загрузка данных...</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Подвал с информацией -->
+        <footer class="app-footer">
+            <div class="footer-info">
+                <p><i class="fas fa-clock"></i> Последнее обновление: <span id="lastUpdate">-</span></p>
+                <p><i class="fas fa-database"></i> Статус API: <span id="apiStatus" class="status-indicator">проверка...</span></p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Модальное окно для деталей токена -->
+    <div id="tokenModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTokenTitle">Детали токена</h3>
+                <span class="close" onclick="closeTokenModal()">&times;</span>
+            </div>
+            <div id="modalTokenContent" class="modal-body">
+                <!-- Содержимое будет заполнено динамически -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

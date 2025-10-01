@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: pump-dex-mini-app
+    env: node
+    plan: starter
+    region: frankfurt
+    buildCommand: "npm ci"
+    startCommand: "npm start"
+    autoDeploy: true
+    healthCheckPath: "/api/health"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Подставьте свою строку подключения Supabase (DATABASE_URL)
+      - key: DATABASE_URL
+        sync: false
+      # Опционально, если используете бота и Mini App URL
+      - key: BOT_TOKEN
+        sync: false
+      - key: MINI_APP_URL
+        sync: false
+
