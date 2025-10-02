@@ -8,26 +8,18 @@ const { resolveWalletMeta } = require('./walletMap');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Простое подключение к Supabase, как в n8n (используем pooler)
+// Подключение к Supabase pooler (как в n8n)
 let pool;
-if (process.env.DATABASE_URL) {
-    // Для Render - используем DATABASE_URL из переменных окружения
-    pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
-    });
-} else {
-    // Для локальной разработки - прямые креды Supabase из настроек n8n
-    pool = new Pool({
-        user: 'postgres.gzwxdmoqntnninlqpmmw',
-        host: 'aws-1-eu-north-1.pooler.supabase.com',
-        database: 'postgres',
-        password: 'FedorAnnaSemen123',
-        port: 5432,
-        ssl: false,  // Отключаем SSL как в твоих настройках n8n
-        max: 100    // Максимальное количество подключений
-    });
-}
+// Всегда используем pooler - переопределяем DATABASE_URL если она есть
+pool = new Pool({
+    user: 'postgres.gzwxdmoqntnninlqpmmw',
+    host: 'aws-1-eu-north-1.pooler.supabase.com',
+    database: 'postgres',
+    password: 'FedorAnnaSemen123',
+    port: 5432,
+    ssl: false,  // Отключаем SSL как в твоих настройках n8n
+    max: 100    // Максимальное количество подключений
+});
 
 // Простой тест подключения
 console.log('Testing database connection...');
