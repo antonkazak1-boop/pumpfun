@@ -5,6 +5,31 @@ const path = require('path');
 // Импорт wallet map модуля
 const { resolveWalletMeta } = require('./walletMap');
 
+// Helper функция для обогащения данных информацией о кошельках
+function enrichWalletData(data) {
+    if (!data) return data;
+    
+    if (Array.isArray(data)) {
+        return data.map(item => {
+            const walletMeta = resolveWalletMeta(item.wallet);
+            return {
+                ...item,
+                wallet_name: walletMeta.wallet_name,
+                wallet_telegram: walletMeta.wallet_telegram,
+                wallet_twitter: walletMeta.wallet_twitter
+            };
+        });
+    } else {
+        const walletMeta = resolveWalletMeta(data.wallet);
+        return {
+            ...data,
+            wallet_name: walletMeta.wallet_name,
+            wallet_telegram: walletMeta.wallet_telegram,
+            wallet_twitter: walletMeta.wallet_twitter
+        };
+    }
+}
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -271,7 +296,7 @@ app.get('/api/health', async (req, res) => {
         });
     } catch (error) {
         console.error('Health check error:', error);
-        res.status(500).json({
+    res.status(500).json({ 
             success: false,
             database: 'disconnected',
             error: error.message
@@ -311,7 +336,8 @@ app.get('/api/whalemoves', async (req, res) => {
             LIMIT 20;
         `;
         const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
+        const enrichedData = enrichWalletData(result.rows);
+        res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Whalemoves error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -387,7 +413,8 @@ app.get('/api/smartmoney', async (req, res) => {
             LIMIT 15;
         `;
         const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
+        const enrichedData = enrichWalletData(result.rows);
+        res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Smart money error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -548,6 +575,26 @@ app.get('/api/earlysignal1h', async (req, res) => {
         res.json({ success: true, data: result.rows });
     } catch (error) {
         console.error('Early signal 1h error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.get('/api/token/details/:mint', async (req, res) => {
+    try {
+        const { mint } = req.params;
+        const query = `
+            SELECT 
+                wallet, side, sol_spent, tx_signature, ts
+            FROM events
+            WHERE token_mint = $1 AND ts >= NOW() - INTERVAL '2 hours'
+            ORDER BY ts DESC
+            LIMIT 50;
+        `;
+        const result = await pool.query(query, [mint]);
+        const enrichedData = enrichWalletData(result.rows);
+        res.json({ success: true, data: enrichedData });
+    } catch (error) {
+        console.error('Token details error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

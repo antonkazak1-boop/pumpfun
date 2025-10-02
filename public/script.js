@@ -637,7 +637,7 @@ async function showTokenDetails(tokenMint) {
     modal.classList.add('active');
     
     try {
-        const tokenData = await fetchData(`token/${tokenMint}`);
+        const tokenData = await fetchData(`token/details/${tokenMint}`);
         
         if (!tokenData || tokenData.length === 0) {
             content.innerHTML = `
