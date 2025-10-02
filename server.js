@@ -4,6 +4,12 @@ const path = require('path');
 const cors = require('cors');
 const dns = require('dns');
 
+// Принудительно отключаем IPv6 на уровне системы
+process.env.NODE_OPTIONS = '--dns-lookup-order=ipv4first';
+
+// Дополнительно принудительно отключаем IPv6 для DNS
+dns.setDefaultResultOrder('ipv4first');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -17,18 +23,28 @@ async function createPool() {
             const url = new URL(process.env.DATABASE_URL);
             const hostname = url.hostname;
             
-            // Принудительно резолвим IPv4 адрес
-            const ipv4Address = await new Promise((resolve, reject) => {
-                dns.lookup(hostname, { family: 4 }, (err, address) => {
-                    if (err) reject(err);
-                    else resolve(address);
+            let ipv4Address;
+            try {
+                // Принудительно резолвим IPv4 адрес
+                ipv4Address = await new Promise((resolve, reject) => {
+                    dns.lookup(hostname, { family: 4 }, (err, address) => {
+                        if (err) reject(err);
+                        else resolve(address);
+                    });
                 });
-            });
-            
-            console.log(`Resolved ${hostname} to IPv4: ${ipv4Address}`);
+                console.log(`Resolved ${hostname} to IPv4: ${ipv4Address}`);
+            } catch (dnsError) {
+                console.error('DNS lookup failed, using fallback IPv4:', dnsError.message);
+                // Fallback к известному IPv4 адресу Supabase для региона EU West
+                ipv4Address = '172.67.68.74'; // Известный IPv4 для Supabase EU region
+            }
             
             // Создаем connection string с IPv4 адресом
-            const connectionString = process.env.DATABASE_URL.replace(hostname, ipv4Address);
+            const originalConnectionString = process.env.DATABASE_URL.toString();
+            const connectionString = originalConnectionString.replace(hostname, ipv4Address);
+            
+            console.log(`Original connection string: ${originalConnectionString.replace(/\/\/[^:]+:[^@]+@/, '//REDACTED:***@')}`);
+            console.log(`Modified connection string: ${connectionString.replace(/\/\/[^:]+:[^@]+@/, '//REDACTED:***@')}`);
             
             pool = new Pool({
                 connectionString: connectionString,
