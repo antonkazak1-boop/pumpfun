@@ -9,9 +9,13 @@ const port = process.env.PORT || 3000;
 // Конфигурация базы данных PostgreSQL (поддержка DATABASE_URL для Supabase/Render/Neon)
 let pool;
 if (process.env.DATABASE_URL) {
+    // Принудительно используем IPv4 для Supabase
+    const connectionString = process.env.DATABASE_URL.replace(/\/\/[^:]+:/, '//db.gzwxdmoqntnninlqpmmw.supabase.co:');
     pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+        connectionString: connectionString,
+        ssl: { rejectUnauthorized: false },
+        // Принудительно используем IPv4
+        family: 4
     });
 } else {
     pool = new Pool({
