@@ -46,23 +46,8 @@ async function initializeEventsTable() {
             console.log('❌ Table events does not exist, creating...');
             await createEventsTable();
         } else {
-            console.log('✅ Table events exists, checking schema...');
-            const columnNames = result.rows.map(row => row.column_name.toLowerCase());
-            
-            // Проверяем наличие всех необходимых колонок
-            const requiredColumns = ['tx_signature', 'slot', 'ts', 'source', 'type', 'dex', 'fee_payer', 'fee', 
-                                   'wallet', 'side', 'token_mint', 'token_amount', 'native_sol_change', 
-                                   'sol_spent', 'sol_received', 'usd_value', 'wallet_name', 'wallet_telegram', 'wallet_twitter'];
-            
-            const missingColumns = requiredColumns.filter(col => !columnNames.includes(col));
-            
-            if (missingColumns.length > 0) {
-                console.log('❌ Missing columns:', missingColumns.join(', '));
-                console.log('Recreating table with correct schema...');
-                await dropAndRecreateEventsTable();
-            } else {
-                console.log('✅ Table events has all required columns');
-            }
+            console.log('✅ Table events exists with', result.rows.length, 'columns');
+            console.log('Table schema:', result.rows.map(row => `${row.column_name} (${row.data_type})`).join(', '));
         }
     } catch (error) {
         console.log('❌ Error checking table events:', error.message);
@@ -75,28 +60,23 @@ async function createEventsTable() {
     try {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS events (
-                id SERIAL PRIMARY KEY,
-                tx_signature VARCHAR(255),
-                slot BIGINT,
-                ts TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                source VARCHAR(100),
-                type VARCHAR(50),
-                dex VARCHAR(100),
-                fee_payer VARCHAR(255),
-                fee DECIMAL(18, 9),
-                wallet VARCHAR(255),
-                side VARCHAR(20),
-                token_mint VARCHAR(255),
-                token_amount DECIMAL(36, 18),
-                native_sol_change DECIMAL(18, 9),
-                sol_spent DECIMAL(18, 9),
-                sol_received DECIMAL(18, 9),
-                usd_value DECIMAL(18, 9),
-                wallet_name VARCHAR(255),
-                wallet_telegram VARCHAR(500),
-                wallet_twitter VARCHAR(500),
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                UNIQUE(tx_signature, token_mint, side)
+                id bigserial primary key,
+                ts timestamptz not null,
+                wallet text not null,
+                wallet_name text,
+                wallet_telegram text,
+                wallet_twitter text,
+                token_mint text,
+                token_amount numeric,
+                sol_spent numeric,
+                sol_received numeric,
+                side text,
+                dex text,
+                tx_signature text,
+                source text,
+                usd_value numeric,
+                usd_estimate numeric,
+                created_at timestamptz default now()
             );
         `);
         console.log('✅ Table events created successfully');
@@ -105,19 +85,6 @@ async function createEventsTable() {
     }
 }
 
-async function dropAndRecreateEventsTable() {
-    try {
-        // Удаляем старую таблицу
-        await pool.query('DROP TABLE IF EXISTS events CASCADE');
-        console.log('🗑️ Dropped old events table');
-        
-        // Создаем новую таблицу
-        await createEventsTable();
-        console.log('✅ Recreated events table with correct schema');
-    } catch (error) {
-        console.error('❌ Failed to recreate table events:', error.message);
-    }
-}
 
 // Middleware
 app.use(express.json());
@@ -227,18 +194,13 @@ app.post('/webhook/helius', async (req, res) => {
 
             rows.push({
                 tx_signature: ev.signature || null,
-                slot: ev.slot || null,
                 ts: ev.timestamp ? new Date(ev.timestamp * 1000).toISOString() : new Date().toISOString(),
                 source: ev.source || null,
-                type: ev.type || null,
                 dex: ev.source || null,
-                fee_payer: ev.feePayer || null,
-                fee: toSol(ev.fee || 0),
                 wallet: wallet || null,
                 side: leg.side,
                 token_mint: leg.token_mint,
                 token_amount: leg.token_amount,
-                native_sol_change: solDelta,
                 sol_spent,
                 sol_received,
                 usd_value: ev.usdValue ?? null,
@@ -253,9 +215,9 @@ app.post('/webhook/helius', async (req, res) => {
         }
 
         // Bulk insert с базовой дедупликацией по tx_signature + token_mint + side
-        const columns = [
-            'tx_signature','slot','ts','source','type','dex','fee_payer','fee','wallet','side','token_mint','token_amount','native_sol_change','sol_spent','sol_received','usd_value','wallet_name','wallet_telegram','wallet_twitter'
-        ];
+                const columns = [
+                    'tx_signature','ts','source','dex','wallet','side','token_mint','token_amount','sol_spent','sol_received','usd_value','wallet_name','wallet_telegram','wallet_twitter'
+                ];
         
         const values = [];
         const params = [];
@@ -265,18 +227,13 @@ app.post('/webhook/helius', async (req, res) => {
             values.push(`(${columns.map(() => `$${idx++}`).join(',')})`);
             params.push(
                 r.tx_signature,
-                r.slot,
                 r.ts,
                 r.source,
-                r.type,
                 r.dex,
-                r.fee_payer,
-                r.fee,
                 r.wallet,
                 r.side,
                 r.token_mint,
                 r.token_amount,
-                r.native_sol_change,
                 r.sol_spent,
                 r.sol_received,
                 r.usd_value,
@@ -286,11 +243,11 @@ app.post('/webhook/helius', async (req, res) => {
             );
         }
 
-        const insertSql = `
-            INSERT INTO events (${columns.join(',')})
-            VALUES ${values.join(',')}
-            ON CONFLICT (tx_signature, token_mint, side) DO NOTHING;
-        `;
+                const insertSql = `
+                    INSERT INTO events (${columns.join(',')})
+                    VALUES ${values.join(',')}
+                    ON CONFLICT (id) DO NOTHING;
+                `;
 
         await pool.query(insertSql, params);
 
