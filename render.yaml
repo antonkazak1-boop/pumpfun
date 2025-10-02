@@ -20,3 +20,4 @@ services:
       - key: MINI_APP_URL
         sync: false
 
+
