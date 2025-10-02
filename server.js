@@ -73,7 +73,6 @@ async function createEventsTable() {
                 side text,
                 dex text,
                 tx_signature text,
-                source text,
                 usd_value numeric,
                 usd_estimate numeric,
                 created_at timestamptz default now()
@@ -195,7 +194,6 @@ app.post('/webhook/helius', async (req, res) => {
             rows.push({
                 tx_signature: ev.signature || null,
                 ts: ev.timestamp ? new Date(ev.timestamp * 1000).toISOString() : new Date().toISOString(),
-                source: ev.source || null,
                 dex: ev.source || null,
                 wallet: wallet || null,
                 side: leg.side,
@@ -208,6 +206,8 @@ app.post('/webhook/helius', async (req, res) => {
                 wallet_telegram,
                 wallet_twitter,
             });
+
+            console.log(`✅ Parsed event: ${ev.source} ${leg.side} ${leg.token_mint} - wallet: ${wallet || 'unknown'}`);
         }
 
         if (rows.length === 0) {
@@ -216,7 +216,7 @@ app.post('/webhook/helius', async (req, res) => {
 
         // Bulk insert с базовой дедупликацией по tx_signature + token_mint + side
                 const columns = [
-                    'tx_signature','ts','source','dex','wallet','side','token_mint','token_amount','sol_spent','sol_received','usd_value','wallet_name','wallet_telegram','wallet_twitter'
+                    'tx_signature','ts','dex','wallet','side','token_mint','token_amount','sol_spent','sol_received','usd_value','wallet_name','wallet_telegram','wallet_twitter'
                 ];
         
         const values = [];
@@ -228,7 +228,6 @@ app.post('/webhook/helius', async (req, res) => {
             params.push(
                 r.tx_signature,
                 r.ts,
-                r.source,
                 r.dex,
                 r.wallet,
                 r.side,
