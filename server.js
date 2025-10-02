@@ -26,18 +26,50 @@ console.log('Testing database connection...');
 pool.query('SELECT NOW() as current_time').then(async result => {
     console.log('✅ Database connection successful! Time:', result.rows[0].current_time);
     
-    // Проверяем существование таблицы events
-    try {
-        await pool.query('SELECT column_name FROM information_schema.columns WHERE table_name = $1', ['events']);
-        console.log('✅ Table events exists');
-    } catch (error) {
-        console.log('❌ Table events does not exist or has issues:', error.message);
-        console.log('Creating table events...');
-        await createEventsTable();
-    }
+    // Проверяем и инициализируем таблицу events
+    await initializeEventsTable();
 }).catch(error => {
     console.error('❌ Database connection failed:', error.message);
 });
+
+async function initializeEventsTable() {
+    try {
+        // Проверяем существование таблицы events
+        const result = await pool.query(`
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'events' 
+            ORDER BY ordinal_position
+        `);
+        
+        if (result.rows.length === 0) {
+            console.log('❌ Table events does not exist, creating...');
+            await createEventsTable();
+        } else {
+            console.log('✅ Table events exists, checking schema...');
+            const columnNames = result.rows.map(row => row.column_name.toLowerCase());
+            
+            // Проверяем наличие всех необходимых колонок
+            const requiredColumns = ['tx_signature', 'slot', 'ts', 'source', 'type', 'dex', 'fee_payer', 'fee', 
+                                   'wallet', 'side', 'token_mint', 'token_amount', 'native_sol_change', 
+                                   'sol_spent', 'sol_received', 'usd_value', 'wallet_name', 'wallet_telegram', 'wallet_twitter'];
+            
+            const missingColumns = requiredColumns.filter(col => !columnNames.includes(col));
+            
+            if (missingColumns.length > 0) {
+                console.log('❌ Missing columns:', missingColumns.join(', '));
+                console.log('Recreating table with correct schema...');
+                await dropAndRecreateEventsTable();
+            } else {
+                console.log('✅ Table events has all required columns');
+            }
+        }
+    } catch (error) {
+        console.log('❌ Error checking table events:', error.message);
+        console.log('Creating table events...');
+        await createEventsTable();
+    }
+}
 
 async function createEventsTable() {
     try {
@@ -70,6 +102,20 @@ async function createEventsTable() {
         console.log('✅ Table events created successfully');
     } catch (error) {
         console.error('❌ Failed to create table events:', error.message);
+    }
+}
+
+async function dropAndRecreateEventsTable() {
+    try {
+        // Удаляем старую таблицу
+        await pool.query('DROP TABLE IF EXISTS events CASCADE');
+        console.log('🗑️ Dropped old events table');
+        
+        // Создаем новую таблицу
+        await createEventsTable();
+        console.log('✅ Recreated events table with correct schema');
+    } catch (error) {
+        console.error('❌ Failed to recreate table events:', error.message);
     }
 }
 
