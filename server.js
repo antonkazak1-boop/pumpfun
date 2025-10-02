@@ -632,6 +632,14 @@ app.get('/api/token/:mint', async (req, res) => {
 // Эндпоинт для проверки здоровья сервера
 app.get('/api/health', async (req, res) => {
     try {
+        if (!pool) {
+            return res.status(500).json({
+                success: false,
+                database: 'not_configured',
+                error: 'Database pool not initialized'
+            });
+        }
+        
         const result = await pool.query('SELECT NOW()');
         res.json({
             success: true,
@@ -639,6 +647,7 @@ app.get('/api/health', async (req, res) => {
             timestamp: result.rows[0].now
         });
     } catch (error) {
+        console.error('Health check error:', error);
         res.status(500).json({
             success: false,
             database: 'disconnected',
@@ -665,6 +674,8 @@ app.listen(port, () => {
     console.log(`   - GET /api/freshtokens - новые токены (5м)`);
     console.log(`   - GET /api/topgainers - топ по объему (1ч)`);
     console.log(`   - GET /api/token/:mint - информация о токене`);
+    console.log(`🔧 Database URL: ${process.env.DATABASE_URL ? 'configured' : 'not configured'}`);
+    console.log(`🔧 Pool status: ${pool ? 'initialized' : 'not initialized'}`);
 });
 
 // Graceful shutdown
