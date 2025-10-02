@@ -1056,7 +1056,7 @@ function initializeTradersScroll() {
     const tradersContainer = document.getElementById('tradersScroll');
     if (!tradersContainer) return;
     
-    // Список известных трейдеров с их символами
+    // List of known traders with their symbols
     const traders = [
         { name: "Dave Portnoy", symbol: "🏛️", telegram: null, twitter: "https://x.com/stoolpresidente" },
         { name: "dingaling", symbol: "💎", telegram: null, twitter: "https://x.com/dingalingts" },
@@ -1106,18 +1106,46 @@ function initializeTradersScroll() {
         { name: "bihoz", symbol: "🚀", telegram: null, twitter: "https://x.com/bihozNFTs" },
         { name: "Hesi", symbol: "🎯", telegram: null, twitter: "https://x.com/hesikillaz" },
         { name: "Giann", symbol: "⚡", telegram: null, twitter: "https://x.com/Giann2K" },
-        { name: "jamessmith", symbol: "🎯", telegram: null, twitter: "https://x.com/luckedhub" }
+        { name: "jamessmith", symbol: "🎯", telegram: null, twitter: "https://x.com/luckedhub" },
+        { name: "Ansem", symbol: "🧠", telegram: null, twitter: "https://x.com/blknoiz06" },
+        { name: "Michi", symbol: "🎮", telegram: null, twitter: "https://x.com/michibets" },
+        { name: "evening", symbol: "🌙", telegram: null, twitter: "https://x.com/eveningbtc" },
+        { name: "shaka", symbol: "🏝️", telegram: "https://t.me/shakasisland", twitter: "https://x.com/solanashaka" },
+        { name: "Damian Prosalendis", symbol: "🏦", telegram: "http://t.me/prosacalls", twitter: "https://x.com/DamianProsa" },
+        { name: "Fuzz", symbol: "🎧", telegram: null, twitter: "https://x.com/slfuzz" },
+        { name: "JADAWGS", symbol: "🐶", telegram: null, twitter: "https://x.com/10xJDOG" },
+        { name: "nob mini", symbol: "🔰", telegram: null, twitter: "https://x.com/noobmini_" },
+        { name: "aloh", symbol: "🍍", telegram: "https://t.me/alohcooks", twitter: "https://x.com/alohquant" },
+        { name: "cxltures", symbol: "🎨", telegram: null, twitter: "https://x.com/cxlturesvz" },
+        { name: "Orange", symbol: "🍊", telegram: null, twitter: "https://x.com/OrangeSBS" },
+        { name: "Betman", symbol: "🦇", telegram: null, twitter: "https://x.com/ImTheBetman" },
+        { name: "Collectible", symbol: "📦", telegram: null, twitter: "https://x.com/collectible" },
+        { name: "Risk", symbol: "⚠️", telegram: null, twitter: "https://x.com/risk100x" },
+        { name: "The Doc", symbol: "🩺", telegram: "https://t.me/+9OnlKXERe9hkODBh", twitter: "https://x.com/KayTheDoc" },
+        { name: "Putrick", symbol: "🎯", telegram: "https://t.me/cryptoputro", twitter: "https://x.com/Putrickk" },
+        { name: "Mr. Frog", symbol: "🐸", telegram: null, twitter: "https://x.com/TheMisterFrog" },
+        { name: "MoneyMaykah", symbol: "💰", telegram: null, twitter: "https://x.com/moneymaykah_" },
+        { name: "EvansOfWeb", symbol: "🌐", telegram: null, twitter: "https://x.com/EvansOfWeb3" },
+        { name: "Owl", symbol: "🦉", telegram: null, twitter: "https://x.com/OwlFN_" },
+        { name: "Sebi", symbol: "🎪", telegram: "https://t.me/launchlog", twitter: "https://x.com/limpcritisism" },
+        { name: "gambles.sol", symbol: "🎲", telegram: "https://t.me/launchlog", twitter: "https://x.com/mastern0de3" },
+        { name: "Inside Calls", symbol: "📞", telegram: "http://t.me/callsfromwithin", twitter: "https://x.com/insidecalls" },
+        { name: "Laanie", symbol: "🐰", telegram: "https://t.me/laaniecalls", twitter: "https://x.com/cryptolaanie" },
+        { name: "Casino", symbol: "🎰", telegram: "https://t.me/casino_calls", twitter: "https://x.com/casino616" },
+        { name: "Trey", symbol: "🎵", telegram: "https://t.me/treystele", twitter: "https://x.com/treysocial" },
+        { name: "Otta", symbol: "🦦", telegram: "https://t.me/ottabag", twitter: "https://x.com/ottabag" },
+        { name: "Fabix", symbol: "⚗️", telegram: "https://t.me/FabixAlpha", twitter: "https://x.com/Fabix_Sol" }
     ];
     
     // Очистим контейнер и создадим элементы
     tradersContainer.innerHTML = '';
     
-    // Создаем дублированные элементы для плавной прокрутки
-    const totalItems = traders.length * 3; // создаем 3 копии массива для бесконечной прокрутки
-    
+    // Create elements for smooth scrolling with better variety
+    const totalItems = traders.length * 2; // Only 2 copies for better variety
+
     traders.forEach((trader, originalIndex) => {
-        for (let copy = 0; copy < 3; copy++) {
-            const index = originalIndex * 3 + copy;
+        for (let copy = 0; copy < 2; copy++) {
+            const index = originalIndex * 2 + copy;
             const traderElement = createTraderElement(trader, index);
             tradersContainer.appendChild(traderElement);
         }
@@ -1127,7 +1155,7 @@ function initializeTradersScroll() {
 function createTraderElement(trader, index) {
     const div = document.createElement('div');
     div.className = 'trader-item';
-    div.style.cssText = `--delay: ${index * 0.5}s; animation-delay: ${index * 0.5}s;`;
+    div.style.cssText = `--delay: ${index * 0.3}s; animation-delay: ${index * 0.3}s;`;
     
     // Генерируем цветной градиент для аватара
     const colors = [
