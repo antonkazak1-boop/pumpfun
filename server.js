@@ -21,13 +21,57 @@ pool = new Pool({
     max: 100    // Максимальное количество подключений
 });
 
-// Простой тест подключения
+// Тест подключения и инициализация таблицы
 console.log('Testing database connection...');
-pool.query('SELECT NOW() as current_time').then(result => {
+pool.query('SELECT NOW() as current_time').then(async result => {
     console.log('✅ Database connection successful! Time:', result.rows[0].current_time);
+    
+    // Проверяем существование таблицы events
+    try {
+        await pool.query('SELECT column_name FROM information_schema.columns WHERE table_name = $1', ['events']);
+        console.log('✅ Table events exists');
+    } catch (error) {
+        console.log('❌ Table events does not exist or has issues:', error.message);
+        console.log('Creating table events...');
+        await createEventsTable();
+    }
 }).catch(error => {
     console.error('❌ Database connection failed:', error.message);
 });
+
+async function createEventsTable() {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS events (
+                id SERIAL PRIMARY KEY,
+                tx_signature VARCHAR(255),
+                slot BIGINT,
+                ts TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                source VARCHAR(100),
+                type VARCHAR(50),
+                dex VARCHAR(100),
+                fee_payer VARCHAR(255),
+                fee DECIMAL(18, 9),
+                wallet VARCHAR(255),
+                side VARCHAR(20),
+                token_mint VARCHAR(255),
+                token_amount DECIMAL(36, 18),
+                native_sol_change DECIMAL(18, 9),
+                sol_spent DECIMAL(18, 9),
+                sol_received DECIMAL(18, 9),
+                usd_value DECIMAL(18, 9),
+                wallet_name VARCHAR(255),
+                wallet_telegram VARCHAR(500),
+                wallet_twitter VARCHAR(500),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                UNIQUE(tx_signature, token_mint, side)
+            );
+        `);
+        console.log('✅ Table events created successfully');
+    } catch (error) {
+        console.error('❌ Failed to create table events:', error.message);
+    }
+}
 
 // Middleware
 app.use(express.json());
