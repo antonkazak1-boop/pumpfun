@@ -271,11 +271,18 @@ function renderWhaleMoves(data) {
         const txUrl = `https://solscan.io/tx/${item.tx_signature}`;
         const walletUrl = `https://solscan.io/account/${item.wallet}`;
         
+        // Получаем данные о трейдере
+        const traderName = item.wallet_name || undefined;
+        const telegramLink = item.wallet_telegram;
+        const twitterLink = item.wallet_twitter;
+        
         return `
             <div class="data-item whale-item">
                 <h3>
                     <i class="fas fa-whale"></i>
-                    ${index + 1}. Китовая покупка
+                    ${index + 1}. ${traderName ? traderName : 'Китовая покупка'}
+                    ${telegramLink ? `<a href="${telegramLink}" target="_blank" class="social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
+                    ${twitterLink ? `<a href="${twitterLink}" target="_blank" class="social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
@@ -453,11 +460,18 @@ function renderSmartMoney(data) {
         const walletUrl = `https://solscan.io/account/${walletData.wallet}`;
         const latestTrade = walletData.trades[0]; // Первая торговля (самая свежая)
         
+        // Получаем данные о трейдере из latest trade
+        const traderName = latestTrade.wallet_name || 'Анонимный трейдер';
+        const telegramLink = latestTrade.wallet_telegram;
+        const twitterLink = latestTrade.wallet_twitter;
+        
         return `
             <div class="data-item smart-item">
                 <h3>
                     <i class="fas fa-brain"></i>
-                    ${index + 1}. Умный трейдер
+                    ${index + 1}. ${traderName}
+                    ${telegramLink ? `<a href="${telegramLink}" target="_blank" class="social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
+                    ${twitterLink ? `<a href="${twitterLink}" target="_blank" class="social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
@@ -689,8 +703,8 @@ async function showTokenDetails(tokenMint) {
                                 <div class="stat-value ${trade.side === 'BUY' ? 'positive' : 'negative'}">${trade.side}</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-label">Кошелек</div>
-                                <div class="stat-value">${shortenAddress(trade.wallet)}</div>
+                                <div class="stat-label">Трейдер</div>
+                                <div class="stat-value">${trade.wallet_name || shortenAddress(trade.wallet)}</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-label">SOL</div>
