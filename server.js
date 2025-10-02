@@ -18,38 +18,84 @@ async function createPool() {
         try {
             console.log('Creating database connection to Supabase...');
             
+            // Если это Supabase, попробуем использовать правильный IPv4
+            let connectionString = process.env.DATABASE_URL;
+            if (process.env.DATABASE_URL.includes('supabase.co')) {
+                console.log('Detected Supabase connection, forcing IPv4...');
+                // Получаем правильный IPv4 для Supabase EU
+                const url = new URL(process.env.DATABASE_URL);
+                
+                // Попробуем известные IPv4 адреса Supabase для разных регионов
+                const knownSupabaseIPs = [
+                    '54.217.178.118',  // EU West 1
+                    '54.194.137.185',  // EU West 2  
+                    '3.248.186.91',    // EU West 3
+                    '108.136.13.109'   // US East 1
+                ];
+                
+                // Заменим домен на первый IPv4 адрес
+                connectionString = connectionString.replace(url.hostname, knownSupabaseIPs[0]);
+                console.log(`Using Supabase IPv4: ${knownSupabaseIPs[0]}`);
+            }
+            
             pool = new Pool({
-                connectionString: process.env.DATABASE_URL,
+                connectionString: connectionString,
                 ssl: { rejectUnauthorized: false },
-                // Настройки для стабильной работы с Supabase
+                // Оптимизированные настройки для стабильной работы
                 min: 1,
-                max: 10,
+                max: 5,
                 idleTimeoutMillis: 30000,
-                connectionTimeoutMillis: 10000,
-                acquireTimeoutMillis: 10000,
-                createTimeoutMillis: 10000,
+                connectionTimeoutMillis: 20000,
+                acquireTimeoutMillis: 15000,
+                createTimeoutMillis: 15000,
                 destroyTimeoutMillis: 5000,
                 reapIntervalMillis: 1000,
-                createRetryIntervalMillis: 200,
+                createRetryIntervalMillis: 500,
+                // Увеличиваем количество попыток
+                keepAlive: true,
+                keepAliveInitialDelayMillis: 0,
             });
             
-            // Тестируем подключение
-            const client = await pool.connect();
-            const result = await client.query('SELECT NOW() as current_time');
-            console.log('✅ Database connection successful! Time:', result.rows[0].current_time);
-            client.release();
+            // Тестируем подключение с retry
+            let connected = false;
+            let attempts = 0;
+            const maxAttempts = 3;
+            
+            while (!connected && attempts < maxAttempts) {
+                try {
+                    attempts++;
+                    console.log(`Connection attempt ${attempts}/${maxAttempts}...`);
+                    
+                    const client = await pool.connect();
+                    const result = await client.query('SELECT NOW() as current_time');
+                    console.log('✅ Database connection successful! Time:', result.rows[0].current_time);
+                    client.release();
+                    connected = true;
+                    
+                } catch (attemptError) {
+                    console.error(`❌ Attempt ${attempts} failed:`, attemptError.message);
+                    if (attempts < maxAttempts) {
+                        console.log(`Waiting 2 seconds before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
+                }
+            }
+            
+            if (!connected) {
+                throw new Error(`Failed to connect after ${maxAttempts} attempts`);
+            }
             
         } catch (error) {
             console.error('❌ Database connection failed:', error.message);
-            console.error('Creating pool with minimal config for fallback...');
+            console.error('Creating minimal fallback pool...');
             
-            // Минимальная конфигурация для подключения
+            // Последний шанс - минимальная конфигурация
             pool = new Pool({
                 connectionString: process.env.DATABASE_URL,
                 ssl: { rejectUnauthorized: false },
                 min: 0,
                 max: 1,
-                connectionTimeoutMillis: 5000,
+                connectionTimeoutMillis: 15000,
             });
         }
     } else {
