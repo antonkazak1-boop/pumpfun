@@ -4,10 +4,7 @@ const path = require('path');
 const cors = require('cors');
 const dns = require('dns');
 
-// Принудительно отключаем IPv6 на уровне системы
-process.env.NODE_OPTIONS = '--dns-lookup-order=ipv4first';
-
-// Дополнительно принудительно отключаем IPv6 для DNS
+// Попробуем оптимизировать подключение к базе данных
 dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
@@ -19,45 +16,40 @@ let pool;
 async function createPool() {
     if (process.env.DATABASE_URL) {
         try {
-            // Парсим DATABASE_URL
-            const url = new URL(process.env.DATABASE_URL);
-            const hostname = url.hostname;
+            console.log('Creating database connection to Supabase...');
             
-            let ipv4Address;
-            try {
-                // Принудительно резолвим IPv4 адрес
-                ipv4Address = await new Promise((resolve, reject) => {
-                    dns.lookup(hostname, { family: 4 }, (err, address) => {
-                        if (err) reject(err);
-                        else resolve(address);
-                    });
-                });
-                console.log(`Resolved ${hostname} to IPv4: ${ipv4Address}`);
-            } catch (dnsError) {
-                console.error('DNS lookup failed, using fallback IPv4:', dnsError.message);
-                // Fallback к известному IPv4 адресу Supabase для региона EU West
-                ipv4Address = '172.67.68.74'; // Известный IPv4 для Supabase EU region
-            }
-            
-            // Создаем connection string с IPv4 адресом
-            const originalConnectionString = process.env.DATABASE_URL.toString();
-            const connectionString = originalConnectionString.replace(hostname, ipv4Address);
-            
-            console.log(`Original connection string: ${originalConnectionString.replace(/\/\/[^:]+:[^@]+@/, '//REDACTED:***@')}`);
-            console.log(`Modified connection string: ${connectionString.replace(/\/\/[^:]+:[^@]+@/, '//REDACTED:***@')}`);
-            
-            pool = new Pool({
-                connectionString: connectionString,
-                ssl: { rejectUnauthorized: false }
-            });
-            
-            console.log('Database pool created with IPv4 connection');
-        } catch (error) {
-            console.error('Failed to resolve IPv4 address, falling back to original connection:', error.message);
-            // Fallback к оригинальному подключению
             pool = new Pool({
                 connectionString: process.env.DATABASE_URL,
-                ssl: { rejectUnauthorized: false }
+                ssl: { rejectUnauthorized: false },
+                // Настройки для стабильной работы с Supabase
+                min: 1,
+                max: 10,
+                idleTimeoutMillis: 30000,
+                connectionTimeoutMillis: 10000,
+                acquireTimeoutMillis: 10000,
+                createTimeoutMillis: 10000,
+                destroyTimeoutMillis: 5000,
+                reapIntervalMillis: 1000,
+                createRetryIntervalMillis: 200,
+            });
+            
+            // Тестируем подключение
+            const client = await pool.connect();
+            const result = await client.query('SELECT NOW() as current_time');
+            console.log('✅ Database connection successful! Time:', result.rows[0].current_time);
+            client.release();
+            
+        } catch (error) {
+            console.error('❌ Database connection failed:', error.message);
+            console.error('Creating pool with minimal config for fallback...');
+            
+            // Минимальная конфигурация для подключения
+            pool = new Pool({
+                connectionString: process.env.DATABASE_URL,
+                ssl: { rejectUnauthorized: false },
+                min: 0,
+                max: 1,
+                connectionTimeoutMillis: 5000,
             });
         }
     } else {
