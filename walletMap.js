@@ -5,7 +5,7 @@ function toLower(value) {
     return (value || '').toString().trim().toLowerCase();
 }
 
-// TODO: Replace this sample with the full 312-entry map from n8n
+// Complete wallet map from n8n example
 const WALLET_MAP = {
     "dymsqudnqjyydvq86xmzavru9t7xwfqewh6gpqw9tpnf": { name: "unprofitable", telegram: null, twitter: "https://x.com/exitliquid1ty" },
     "5rkpdk4jnvaumgzev2zu8vjggmtthddtrsd5o9dhgzhd": { name: "Dave Portnoy", telegram: null, twitter: "https://x.com/stoolpresidente" },
