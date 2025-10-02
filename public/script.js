@@ -10,7 +10,8 @@ let isLoading = false;
 
 // Маппинг вкладок к API эндпоинтам
 const TAB_API_MAP = {
-    'about': null, // Специальная вкладка без API
+    'about': null, // Special tab without API
+    'analytics': null, // Analytics tab without API  
     'clusterBuy': 'clusterbuy',
     'whaleMoves': 'whalemoves', 
     'volumeSurge': 'volumesurge',
@@ -22,7 +23,8 @@ const TAB_API_MAP = {
 
 // Маппинг для рендеринга функций
 const TAB_RENDER_MAP = {
-    'about': null, // Специальная вкладка без рендеринга
+    'about': null, // Special tab without rendering
+    'analytics': null, // Analytics tab without rendering
     'clusterBuy': renderClusterBuy,
     'whaleMoves': renderWhaleMoves,
     'volumeSurge': renderVolumeSurge,
@@ -634,7 +636,7 @@ async function showTokenDetails(tokenMint) {
     if (!modal || !title || !content) return;
     
     title.textContent = `Детали токена: ${shortenAddress(tokenMint)}`;
-    content.innerHTML = '<div class="loading-placeholder">Загрузка данных токена...</div>';
+    content.innerHTML = '<div class="loading-placeholder">Loading token data...</div>';
     
     modal.classList.add('active');
     
@@ -771,8 +773,8 @@ async function loadTabData(tabName) {
     const renderFunction = TAB_RENDER_MAP[tabName];
     const dataContainerId = `${tabName}Data`;
     
-    // Специальная обработка для вкладки "about"
-    if (tabName === 'about') {
+    // Special handling for non-API tabs
+    if (tabName === 'about' || tabName === 'analytics') {
         hideLoading();
         return;
     }

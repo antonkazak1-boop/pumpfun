@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -38,13 +38,19 @@
             <div class="tabs-scroll">
                 <button class="tab-button active" data-tab="about">
                     <i class="fas fa-info-circle"></i>
-                    <span>О боте</span>
+                    <span>About Bot</span>
+
                     <small>info</small>
+                </button>
+                <button class="tab-button" data-tab="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                    <small>data</small>
                 </button>
                 <button class="tab-button" data-tab="clusterBuy">
                     <i class="fas fa-fire"></i>
                     <span>Cluster Buy</span>
-                    <small>10м</small>
+                    <small>10m</small>
                 </button>
                 <button class="tab-button" data-tab="whaleMoves">
                     <i class="fas fa-whale"></i>
@@ -124,6 +130,156 @@
                             <h4><i class="fas fa-users"></i> Наши трейдеры</h4>
                             <div class="traders-scroll" id="tradersScroll">
                                 <!-- Список трейдеров будет генерироваться JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-chart-bar"></i> Analytics Engine</h2>
+                    <p class="tab-description">Detailed analysis methods and calculation algorithms</p>
+                </div>
+                
+                <div class="analytics-content">
+                    <div class="analytics-grid">
+                        <!-- Cluster Buy Analytics -->
+                        <div class="analytics-card">
+                            <div class="analytics-header">
+                                <h3><i class="fas fa-fire"></i> Cluster Buy Analysis</h3>
+                                <span class="analytics-time">10minutes window</span>
+                            </div>
+                            <div class="analytics-description">
+                                <p><strong>Purpose:</strong> Identifies tokens with coordinated multiple buyer activity</p>
+                                <div class="analytics-method">
+                                    <h4>Methodology:</h4>
+                                    <ul>
+                                        <li>Groups transactions by token_mint in 10-minute windows</li>
+                                        <li>Counts unique wallet addresses (buyers)</li>
+                                        <li>Filters tokens with 3+ unique buyers</li>
+                                        <li>Sorts by total transaction count</li>
+                                    </ul>
+                                </div>
+                                <div class="analytics-query">
+                                    <h4>SQL Query:</h4>
+                                    <code>SELECT token_mint, COUNT(*) as tx_count, COUNT(DISTINCT wallet) as unique_buyers FROM events WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '10 minutes' GROUP BY token_mint HAVING COUNT(DISTINCT wallet) >= 3 ORDER BY tx_count DESC</code>
+                                </div>
+                                <div class="analytics-value">
+                                    <span class="value-label">Signal threshold:</span>
+                                    <span class="value-data">≥3 unique buyers</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Whale Moves Analytics -->
+                        <div class="analytics-card">
+                            <div class="analytics-header">
+                                <h3><i class="fas fa-whale"></i> Whale Moves Analysis</h3>
+                                <span class="analytics-time">30minutes window</span>
+                            </div>
+                            <div class="analytics-description">
+                                <p><strong>Purpose:</strong> Tracks large-volume purchases indicating whale activity</p>
+                                <div class="analytics-method">
+                                    <h4>Methodology:</h4>
+                                    <ul>
+                                        <li>Filters buy transactions by SOL spent threshold</li>
+                                        <li>Monitors 30-minute time window</li>
+                                        <li>Includes trader identification from walletMap</li>
+                                        <li>Orders by volume and recency</li>
+                                    </ul>
+                                </div>
+                                <div class="analytics-query">
+                                    <h4>SQL Query:</h4>
+                                    <code>SELECT token_mint, wallet, sol_spent, ts FROM events WHERE side = 'BUY' AND sol_spent > 50 AND ts >= NOW() - INTERVAL '30 minutes' ORDER BY sol_spent DESC, ts DESC</code>
+                                </div>
+                                <div class="analytics-value">
+                                    <span class="value-label">Volume threshold:</span>
+                                    <span class="value-data">≥50 SOL per transaction</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Volume Surge Analytics -->
+                        <div class="analytics-card">
+                            <div class="analytics-header">
+                                <h3><i class="fas fa-chart-line"></i> Volume Surge Analysis</h3>
+                                <span class="analytics-time">15minutes window</span>
+                            </div>
+                            <div class="analytics-description">
+                                <p><strong>Purpose:</strong> Detects sudden spikes in trading volume</p>
+                                <div class="analytics-method">
+                                    <h4>Methodology:</h4>
+                                    <ul>
+                                        <li>Sums SOL volume per token over 15 minutes</li>
+                                        <li>Aggregates total transaction count</li>
+                                        <li>Filters tokens above volume threshold</li>
+                                        <li>Prioritizes highest volume increases</li>
+                                    </ul>
+                                </div>
+                                <div class="analytics-query">
+                                    <h4>SQL Query:</h4>
+                                    <code>SELECT token_mint, SUM(sol_spent) as total_volume, COUNT(*) as tx_count FROM events WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '15 minutes' GROUP BY token_mint HAVING SUM(sol_spent) > 100 ORDER BY total_volume DESC</code>
+                                </div>
+                                <div class="analytics-value">
+                                    <span class="value-label">Volume threshold:</span>
+                                    <span class="value-data">≥100 SOL total volume</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Smart Money Analytics -->
+                        <div class="analytics-card">
+                            <div class="analytics-header">
+                                <h3><i class="fas fa-brain"></i> Smart Money Analysis</h3>
+                                <span class="analytics-time">1hour window</span>
+                            </div>
+                            <div class="analytics-description">
+                                <p><strong>Purpose:</strong> Identifies consistently profitable wallet strategies</p>
+                                <div class="analytics-method">
+                                    <h4>Methodology:</h4>
+                                    <ul>
+                                        <li>Analyzes wallet profitability over 1 hour</li>
+                                        <li>Requires 3+ unique tokens traded</li>
+                                        <li>Enforces minimum 5 SOL average buy size</li>
+                                        <li>Joins with recent token activity</li>
+                                    </ul>
+                                </div>
+                                <div class="analytics-query">
+                                    <h4>SQL Query:</h4>
+                                    <code>WITH profitable_wallets AS (SELECT wallet, COUNT(DISTINCT token_mint) AS unique_tokens, AVG(sol_spent) AS avg_buy_size FROM events WHERE side = 'BUY' AND ts > now() - interval '1 hour' GROUP BY wallet HAVING COUNT(DISTINCT token_mint) >= 3 AND AVG(sol_spent) > 5) SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint FROM profitable_wallets p JOIN events e ON p.wallet = e.wallet...</code>
+                                </div>
+                                <div class="analytics-value">
+                                    <span class="value-label">Requirements:</span>
+                                    <span class="value-data">3+ tokens, ≥5 SOL avg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="analytics-summary">
+                            <h3><i class="fas fa-cogs"></i> Data Processing Pipeline</h3>
+                            <div class="pipeline-steps">
+                                <div class="pipeline-step">
+                                    <div class="step-number">1</div>
+                                    <h4>Data Collection</h4>
+                                    <p>Real-time blockchain transaction monitoring via Helius webhooks</p>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-number">2</div>
+                                    <h4>Wallet Enrichment</h4>
+                                    <p>Integration with 312-strong trader database for identification</p>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-number">3</div>
+                                    <h4>Pattern Analysis</h4>
+                                    <p>Complex SQL algorithms identify buying patterns and correlations</p>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-number">4</div>
+                                    <h4>Signal Generation</h4>
+                                    <p>Threshold-based filtering creates actionable trading signals</p>
+                                </div>
                             </div>
                         </div>
                     </div>
