@@ -4,12 +4,13 @@ const REFRESH_INTERVAL = 30000; // 30 секунд
 const API_TIMEOUT = 10000; // 10 секунд
 
 // Глобальные переменные
-let currentTab = 'clusterBuy';
+let currentTab = 'about';
 let refreshTimer = null;
 let isLoading = false;
 
 // Маппинг вкладок к API эндпоинтам
 const TAB_API_MAP = {
+    'about': null, // Специальная вкладка без API
     'clusterBuy': 'clusterbuy',
     'whaleMoves': 'whalemoves', 
     'volumeSurge': 'volumesurge',
@@ -21,6 +22,7 @@ const TAB_API_MAP = {
 
 // Маппинг для рендеринга функций
 const TAB_RENDER_MAP = {
+    'about': null, // Специальная вкладка без рендеринга
     'clusterBuy': renderClusterBuy,
     'whaleMoves': renderWhaleMoves,
     'volumeSurge': renderVolumeSurge,
@@ -769,6 +771,12 @@ async function loadTabData(tabName) {
     const renderFunction = TAB_RENDER_MAP[tabName];
     const dataContainerId = `${tabName}Data`;
     
+    // Специальная обработка для вкладки "about"
+    if (tabName === 'about') {
+        hideLoading();
+        return;
+    }
+    
     if (!endpoint || !renderFunction) {
         console.error(`Неизвестная вкладка: ${tabName}`);
         return;
@@ -1021,6 +1029,9 @@ async function initApp() {
     });
     
     // Загрузка данных для активной вкладки
+    // Инициализация анимации трейдеров
+    initializeTradersScroll();
+    
     await loadTabData(currentTab);
     
     // Запуск автоматического обновления
@@ -1036,6 +1047,114 @@ async function initApp() {
     console.log('✅ Pump Dex Mini App инициализирован успешно');
     console.log('🎨 Современный дизайн загружен');
     console.log('📡 API подключение проверено');
+}
+
+// === АНИМАЦИЯ ТРЕЙДЕРОВ ===
+function initializeTradersScroll() {
+    const tradersContainer = document.getElementById('tradersScroll');
+    if (!tradersContainer) return;
+    
+    // Список известных трейдеров с их символами
+    const traders = [
+        { name: "Dave Portnoy", symbol: "🏛️", telegram: null, twitter: "https://x.com/stoolpresidente" },
+        { name: "dingaling", symbol: "💎", telegram: null, twitter: "https://x.com/dingalingts" },
+        { name: "Levis", symbol: "🚀", telegram: "https://t.me/LevisAlpha", twitter: "https://x.com/LevisNFT" },
+        { name: "7xNickk", symbol: "⚡", telegram: null, twitter: "https://x.com/7xNickk" },
+        { name: "Pain", symbol: "🩸", telegram: "https://t.me/PainCrypto69", twitter: "https://x.com/PainCrypt0" },
+        { name: "Monarch", symbol: "👑", telegram: "https://t.me/MonarchJournal", twitter: "https://x.com/MonarchBTC" },
+        { name: "ShockedJS", symbol: "⚡", telegram: "https://t.me/shockedjstrading", twitter: "https://x.com/ShockedJS" },
+        { name: "JB", symbol: "💰", telegram: null, twitter: "https://x.com/Jeetburner" },
+        { name: "unprofitable", symbol: "📉", telegram: null, twitter: "https://x.com/exitliquid1ty" },
+        { name: "xunle", symbol: "🌙", telegram: null, twitter: "https://x.com/xunle111" },
+        { name: "Oura", symbol: "🌅", telegram: "https://t.me/OuraEmergencyCalls", twitter: "https://x.com/Oura456" },
+        { name: "Lynk", symbol: "🔗", telegram: "https://t.me/lynkscabal", twitter: "https://x.com/lynk0x" },
+        { name: "Kadenox", symbol: "⚡", telegram: null, twitter: "https://x.com/kadenox" },
+        { name: "Insyder", symbol: "🕵️", telegram: null, twitter: "https://x.com/insydercrypto" },
+        { name: "LilMoonLambo", symbol: "🌙", telegram: null, twitter: "https://x.com/LilMoonLambo" },
+        { name: "Phineas.SOL", symbol: "🧪", telegram: "https://t.me/PhineasCabal", twitter: "https://x.com/Phineas_Sol" },
+        { name: "Solstice", symbol: "🌅", telegram: "https://t.me/solsticesmoonshots", twitter: "https://x.com/The__Solstice" },
+        { name: "Hail", symbol: "⚡", telegram: null, twitter: "https://x.com/ignHail" },
+        { name: "Jeets", symbol: "💰", telegram: null, twitter: "https://x.com/ieatjeets" },
+        { name: "Groovy", symbol: "🎵", telegram: null, twitter: "https://x.com/0xGroovy" },
+        { name: "big bags bobby", symbol: "💰", telegram: null, twitter: "https://x.com/bigbagsbobby" },
+        { name: "gr3g", symbol: "💪", telegram: null, twitter: "https://x.com/gr3gor14n" },
+        { name: "Sebastian", symbol: "⚡", telegram: null, twitter: "https://x.com/Saint_pablo123" },
+        { name: "Enjooyer", symbol: "🍼", telegram: null, twitter: "https://x.com/0xEnjooyer" },
+        { name: "Sweep", symbol: "🧹", telegram: "https://t.me/jsdao", twitter: "https://x.com/0xSweep" },
+        { name: "goob", symbol: "🤡", telegram: "https://t.me/goobscall", twitter: "https://x.com/ifullclipp" },
+        { name: "xander", symbol: "⚔️", telegram: "https://t.me/xanderstrenches", twitter: "https://x.com/xandereef" },
+        { name: "ozark", symbol: "🏔️", telegram: null, twitter: "https://x.com/ohzarke" },
+        { name: "Exy", symbol: "🎯", telegram: null, twitter: "https://x.com/eth_exy" },
+        { name: "Unipcs", symbol: "🦴", telegram: null, twitter: "https://x.com/theunipcs" },
+        { name: "Leens", symbol: "👨‍🍳", telegram: "https://t.me/leenscooks", twitter: "https://x.com/leensx100" },
+        { name: "FINN", symbol: "🐕", telegram: null, twitter: "https://x.com/finnbags" },
+        { name: "Lectron", symbol: "⚡", telegram: null, twitter: "https://x.com/LectronNFT" },
+        { name: "Don", symbol: "🎭", telegram: "https://t.me/dontrenches", twitter: "https://x.com/doncaarbon" },
+        { name: "Sizeab1e", symbol: "📏", telegram: "https://t.me/thetradingcorps", twitter: "https://x.com/sizeab1e" },
+        { name: "Flames", symbol: "🔥", telegram: null, twitter: "https://x.com/FlamesOnSol" },
+        { name: "oscar", symbol: "🏆", telegram: null, twitter: "https://x.com/oscarexitliq" },
+        { name: "printer", symbol: "🖨️", telegram: null, twitter: "https://x.com/prxnterr" },
+        { name: "Bronsi", symbol: "🍪", telegram: "https://t.me/Bronsisinsiderinfo", twitter: "https://x.com/Bronsicooks" },
+        { name: "staticc", symbol: "⚡", telegram: null, twitter: "https://x.com/staticctrades" },
+        { name: "Zil", symbol: "⚡", telegram: "https://t.me/zilcalls", twitter: "https://x.com/zilxbt" },
+        { name: "Publix", symbol: "🏪", telegram: null, twitter: "https://x.com/Publixplayz" },
+        { name: "Thurston", symbol: "⚡", telegram: null, twitter: "https://x.com/itsthurstxn" },
+        { name: "Hash", symbol: "💩", telegram: "https://t.me/HashTrades", twitter: "https://x.com/Hashbergers" },
+        { name: "guappy", symbol: "🐠", telegram: null, twitter: "https://x.com/guappy_eth" },
+        { name: "bihoz", symbol: "🚀", telegram: null, twitter: "https://x.com/bihozNFTs" },
+        { name: "Hesi", symbol: "🎯", telegram: null, twitter: "https://x.com/hesikillaz" },
+        { name: "Giann", symbol: "⚡", telegram: null, twitter: "https://x.com/Giann2K" },
+        { name: "jamessmith", symbol: "🎯", telegram: null, twitter: "https://x.com/luckedhub" }
+    ];
+    
+    // Очистим контейнер и создадим элементы
+    tradersContainer.innerHTML = '';
+    
+    // Создаем дублированные элементы для плавной прокрутки
+    const totalItems = traders.length * 3; // создаем 3 копии массива для бесконечной прокрутки
+    
+    traders.forEach((trader, originalIndex) => {
+        for (let copy = 0; copy < 3; copy++) {
+            const index = originalIndex * 3 + copy;
+            const traderElement = createTraderElement(trader, index);
+            tradersContainer.appendChild(traderElement);
+        }
+    });
+}
+
+function createTraderElement(trader, index) {
+    const div = document.createElement('div');
+    div.className = 'trader-item';
+    div.style.cssText = `--delay: ${index * 0.5}s; animation-delay: ${index * 0.5}s;`;
+    
+    // Генерируем цветной градиент для аватара
+    const colors = [
+        'linear-gradient(135deg, #4a9eff, #6c5ce7)',
+        'linear-gradient(135deg, #6c5ce7, #74b9ff)', 
+        'linear-gradient(135deg, #74b9ff, #a29bfe)',
+        'linear-gradient(135deg, #a29bfe, #fd79a8)',
+        'linear-gradient(135deg, #fd79a8, #fdcb6e)',
+        'linear-gradient(135deg, #fdcb6e, #00b894)',
+        'linear-gradient(135deg, #00b894, #00cec9)',
+        'linear-gradient(135deg, #00cec9, #4a9eff)'
+    ];
+    
+    const colorIndex = index % colors.length;
+    
+    div.innerHTML = `
+        <div class="trader-avatar" style="background: ${colors[colorIndex]}">
+            ${trader.symbol}
+        </div>
+        <div class="trader-info">
+            <div class="trader-name">${trader.name}</div>
+            <div class="trader-socials">
+                ${trader.telegram ? `<a href="${trader.telegram}" target="_blank" class="trader-social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
+                ${trader.twitter ? `<a href="${trader.twitter}" target="_blank" class="trader-social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
+            </div>
+        </div>
+    `;
+    
+    return div;
 }
 
 // Запуск приложения после загрузки DOM

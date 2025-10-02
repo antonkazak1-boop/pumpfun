@@ -36,7 +36,12 @@
         <!-- Навигационные вкладки -->
         <nav class="tabs-nav">
             <div class="tabs-scroll">
-                <button class="tab-button active" data-tab="clusterBuy">
+                <button class="tab-button active" data-tab="about">
+                    <i class="fas fa-info-circle"></i>
+                    <span>О боте</span>
+                    <small>info</small>
+                </button>
+                <button class="tab-button" data-tab="clusterBuy">
                     <i class="fas fa-fire"></i>
                     <span>Cluster Buy</span>
                     <small>10м</small>
@@ -76,8 +81,57 @@
 
         <!-- Содержимое вкладок -->
         <main class="tab-content-wrapper">
+            <!-- About Tab -->
+            <div id="about" class="tab-content active">
+                <div class="tab-header">
+                    <h2><i class="fas fa-info-circle"></i> О Pump Dex Bot</h2>
+                    <p class="tab-description">Мощный аналитический инструмент для отслеживания умных денег</p>
+                </div>
+                
+                <div class="about-hero">
+                    <div class="hero-content">
+                        <div class="hero-text">
+                            <h3>Почему Pump Dex Bot?</h3>
+                            <ul class="features-list">
+                                <li><i class="fas fa-brain"></i> Отслеживание <strong>312 известных трейдеров</strong></li>
+                                <li><i class="fas fa-chart-line"></i> Анализ объемов и движений китов</li>
+                                <li><i class="fas fa-fire"></i> Кластерные покупки и сигналы раннего входа</li>
+                                <li><i class="fas fa-bolt"></i> Real-time обновления каждые 5 минут</li>
+                                <li><i class="fas fa-shield-alt"></i> Проверенные стратегии лучших трейдеров</li>
+                            </ul>
+                            
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-number">312</div>
+                                    <div class="stat-label">Известных трейдеров</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">15+</div>
+                                    <div class="stat-label">Сигналов в час</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">5мин</div>
+                                    <div class="stat-label">Обновления</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">100%</div>
+                                    <div class="stat-label">Автоматика</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="hero-traders">
+                            <h4><i class="fas fa-users"></i> Наши трейдеры</h4>
+                            <div class="traders-scroll" id="tradersScroll">
+                                <!-- Список трейдеров будет генерироваться JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Cluster Buy Tab -->
-            <div id="clusterBuy" class="tab-content active">
+            <div id="clusterBuy" class="tab-content">
                 <div class="tab-header">
                     <h2><i class="fas fa-fire"></i> Cluster Buy (10 минут)</h2>
                     <p class="tab-description">Токены с 3+ уникальными покупателями</p>
