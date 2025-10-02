@@ -2,31 +2,65 @@ const express = require('express');
 const { Pool } = require('pg');
 const path = require('path');
 const cors = require('cors');
+const dns = require('dns');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Конфигурация базы данных PostgreSQL (поддержка DATABASE_URL для Supabase/Render/Neon)
 let pool;
-if (process.env.DATABASE_URL) {
-    // Принудительно используем IPv4 для Supabase
-    const connectionString = process.env.DATABASE_URL.replace(/\/\/[^:]+:/, '//db.gzwxdmoqntnninlqpmmw.supabase.co:');
-    pool = new Pool({
-        connectionString: connectionString,
-        ssl: { rejectUnauthorized: false },
-        // Принудительно используем IPv4
-        family: 4
-    });
-} else {
-    pool = new Pool({
-        user: process.env.DB_USER || 'YOUR_DB_USER',
-        host: process.env.DB_HOST || 'YOUR_DB_HOST',
-        database: process.env.DB_NAME || 'YOUR_DB_NAME',
-        password: process.env.DB_PASSWORD || 'YOUR_DB_PASSWORD',
-        port: process.env.DB_PORT || 5432,
-        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-    });
+
+async function createPool() {
+    if (process.env.DATABASE_URL) {
+        try {
+            // Парсим DATABASE_URL
+            const url = new URL(process.env.DATABASE_URL);
+            const hostname = url.hostname;
+            
+            // Принудительно резолвим IPv4 адрес
+            const ipv4Address = await new Promise((resolve, reject) => {
+                dns.lookup(hostname, { family: 4 }, (err, address) => {
+                    if (err) reject(err);
+                    else resolve(address);
+                });
+            });
+            
+            console.log(`Resolved ${hostname} to IPv4: ${ipv4Address}`);
+            
+            // Создаем connection string с IPv4 адресом
+            const connectionString = process.env.DATABASE_URL.replace(hostname, ipv4Address);
+            
+            pool = new Pool({
+                connectionString: connectionString,
+                ssl: { rejectUnauthorized: false }
+            });
+            
+            console.log('Database pool created with IPv4 connection');
+        } catch (error) {
+            console.error('Failed to resolve IPv4 address, falling back to original connection:', error.message);
+            // Fallback к оригинальному подключению
+            pool = new Pool({
+                connectionString: process.env.DATABASE_URL,
+                ssl: { rejectUnauthorized: false }
+            });
+        }
+    } else {
+        pool = new Pool({
+            user: process.env.DB_USER || 'YOUR_DB_USER',
+            host: process.env.DB_HOST || 'YOUR_DB_HOST',
+            database: process.env.DB_NAME || 'YOUR_DB_NAME',
+            password: process.env.DB_PASSWORD || 'YOUR_DB_PASSWORD',
+            port: process.env.DB_PORT || 5432,
+            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+        });
+    }
 }
+
+// Инициализируем pool асинхронно
+createPool().catch(error => {
+    console.error('Failed to create database pool:', error);
+    process.exit(1);
+});
 
 app.use(cors());
 // Limit incoming JSON to avoid abuse and large webhook payloads
@@ -637,10 +671,10 @@ app.get('/api/token/:mint', async (req, res) => {
 app.get('/api/health', async (req, res) => {
     try {
         if (!pool) {
-            return res.status(500).json({
+            return res.status(503).json({
                 success: false,
-                database: 'not_configured',
-                error: 'Database pool not initialized'
+                database: 'initializing',
+                error: 'Database pool is being initialized'
             });
         }
         
@@ -679,7 +713,7 @@ app.listen(port, () => {
     console.log(`   - GET /api/topgainers - топ по объему (1ч)`);
     console.log(`   - GET /api/token/:mint - информация о токене`);
     console.log(`🔧 Database URL: ${process.env.DATABASE_URL ? 'configured' : 'not configured'}`);
-    console.log(`🔧 Pool status: ${pool ? 'initialized' : 'not initialized'}`);
+    console.log(`🔧 Pool status: ${pool ? 'initialized' : 'initializing...'}`);
 });
 
 // Graceful shutdown
