@@ -1026,7 +1026,7 @@ body {
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         transition: all 0.3s ease;
         position: relative;
-        animation: slideUp 20s linear infinite;
+        animation: slideUp 10s linear infinite;
         animation-delay: var(--delay, 0s);
         backdrop-filter: blur(10px);
         border-radius: 12px;
