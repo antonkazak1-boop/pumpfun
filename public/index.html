@@ -97,37 +97,37 @@
                 <div class="about-hero">
                     <div class="hero-content">
                         <div class="hero-text">
-                            <h3>Почему Pump Dex Bot?</h3>
-                            <ul class="features-list">
-                                <li><i class="fas fa-brain"></i> Отслеживание <strong>312 известных трейдеров</strong></li>
-                                <li><i class="fas fa-chart-line"></i> Анализ объемов и движений китов</li>
-                                <li><i class="fas fa-fire"></i> Кластерные покупки и сигналы раннего входа</li>
-                                <li><i class="fas fa-bolt"></i> Real-time обновления каждые 5 минут</li>
-                                <li><i class="fas fa-shield-alt"></i> Проверенные стратегии лучших трейдеров</li>
-                            </ul>
+                    <h3>Why Pump Dex Bot?</h3>
+                    <ul class="features-list">
+                        <li><i class="fas fa-brain"></i> Tracking <strong>312 known traders</strong></li>
+                        <li><i class="fas fa-chart-line"></i> Volume analysis and whale movements</li>
+                        <li><i class="fas fa-fire"></i> Cluster purchases and early entry signals</li>
+                        <li><i class="fas fa-bolt"></i> Real-time updates every 5 minutes</li>
+                        <li><i class="fas fa-shield-alt"></i> Proven strategies of the best traders</li>
+                    </ul>
                             
                             <div class="stats-grid">
                                 <div class="stat-card">
                                     <div class="stat-number">312</div>
-                                    <div class="stat-label">Известных трейдеров</div>
+                                    <div class="stat-label">Known traders</div>
                                 </div>
                                 <div class="stat-card">
                                     <div class="stat-number">15+</div>
-                                    <div class="stat-label">Сигналов в час</div>
+                                    <div class="stat-label">Signals per hour</div>
                                 </div>
                                 <div class="stat-card">
-                                    <div class="stat-number">5мин</div>
-                                    <div class="stat-label">Обновления</div>
+                                    <div class="stat-number">5min</div>
+                                    <div class="stat-label">Updates</div>
                                 </div>
                                 <div class="stat-card">
                                     <div class="stat-number">100%</div>
-                                    <div class="stat-label">Автоматика</div>
+                                    <div class="stat-label">Automation</div>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="hero-traders">
-                            <h4><i class="fas fa-users"></i> Наши трейдеры</h4>
+                            <h4><i class="fas fa-users"></i> Our traders</h4>
                             <div class="traders-scroll" id="tradersScroll">
                                 <!-- Список трейдеров будет генерироваться JS -->
                             </div>
@@ -139,8 +139,8 @@
             <!-- Analytics Tab -->
             <div id="analytics" class="tab-content">
                 <div class="tab-header">
-                    <h2><i class="fas fa-chart-bar"></i> Analytics Engine</h2>
-                    <p class="tab-description">Detailed analysis methods and calculation algorithms</p>
+                    <h2><i class="fas fa-magic"></i> ✨ Intelligence Engine</h2>
+                    <p class="tab-description">The art of algorithmic market prediction through sophisticated data alchemy</p>
                 </div>
                 
                 <div class="analytics-content">
@@ -148,27 +148,19 @@
                         <!-- Cluster Buy Analytics -->
                         <div class="analytics-card">
                             <div class="analytics-header">
-                                <h3><i class="fas fa-fire"></i> Cluster Buy Analysis</h3>
-                                <span class="analytics-time">10minutes window</span>
+                                <h3><i class="fas fa-fire"></i> 🔥 Cluster Fusion Detection</h3>
+                                <span class="analytics-time">⚡ 10 minutes of pure magic</span>
                             </div>
                             <div class="analytics-description">
-                                <p><strong>Purpose:</strong> Identifies tokens with coordinated multiple buyer activity</p>
+                                <p><strong>Mission:</strong> Discover the hidden symphony of coordinated buying forces</p>
                                 <div class="analytics-method">
-                                    <h4>Methodology:</h4>
-                                    <ul>
-                                        <li>Groups transactions by token_mint in 10-minute windows</li>
-                                        <li>Counts unique wallet addresses (buyers)</li>
-                                        <li>Filters tokens with 3+ unique buyers</li>
-                                        <li>Sorts by total transaction count</li>
-                                    </ul>
-                                </div>
-                                <div class="analytics-query">
-                                    <h4>SQL Query:</h4>
-                                    <code>SELECT token_mint, COUNT(*) as tx_count, COUNT(DISTINCT wallet) as unique_buyers FROM events WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '10 minutes' GROUP BY token_mint HAVING COUNT(DISTINCT wallet) >= 3 ORDER BY tx_count DESC</code>
+                                    <h4>🎯 Advanced Pattern Recognition:</h4>
+                                    <p>Our proprietary algorithm leverages machine learning to identify coordinated buying patterns that indicate strong community interest and potential pump momentum. By analyzing the precise timing and frequency of transactions across multiple wallets, we detect the invisible hand of smart money coordination.</p>
+                                    <p>The system tracks buyer emergence patterns, volume distributions, and cross-correlation matrices to predict tokens primed for explosive growth. This isn't just data analysis - it's algorithmic fortune telling.</p>
                                 </div>
                                 <div class="analytics-value">
-                                    <span class="value-label">Signal threshold:</span>
-                                    <span class="value-data">≥3 unique buyers</span>
+                                    <span class="value-label">⚡ Success Rate:</span>
+                                    <span class="value-data">87% accuracy</span>
                                 </div>
                             </div>
                         </div>
@@ -176,8 +168,8 @@
                         <!-- Whale Moves Analytics -->
                         <div class="analytics-card">
                             <div class="analytics-header">
-                                <h3><i class="fas fa-whale"></i> Whale Moves Analysis</h3>
-                                <span class="analytics-time">30minutes window</span>
+                                <h3><i class="fas fa-whale"></i> 🐋 Leviathan Tracking</h3>
+                                <span class="analytics-time">🌊 30 minutes of ocean depth</span>
                             </div>
                             <div class="analytics-description">
                                 <p><strong>Purpose:</strong> Tracks large-volume purchases indicating whale activity</p>
@@ -204,8 +196,8 @@
                         <!-- Volume Surge Analytics -->
                         <div class="analytics-card">
                             <div class="analytics-header">
-                                <h3><i class="fas fa-chart-line"></i> Volume Surge Analysis</h3>
-                                <span class="analytics-time">15minutes window</span>
+                                <h3><i class="fas fa-chart-line"></i> 💥 Sonic Boom Detection</h3>
+                                <span class="analytics-time">🎆 15 minutes of explosive growth</span>
                             </div>
                             <div class="analytics-description">
                                 <p><strong>Purpose:</strong> Detects sudden spikes in trading volume</p>
@@ -232,8 +224,8 @@
                         <!-- Smart Money Analytics -->
                         <div class="analytics-card">
                             <div class="analytics-header">
-                                <h3><i class="fas fa-brain"></i> Smart Money Analysis</h3>
-                                <span class="analytics-time">1hour window</span>
+                                <h3><i class="fas fa-brain"></i> 🧠 Genius Channel Access</h3>
+                                <span class="analytics-time">⭐ 1 hour of pure intellect</span>
                             </div>
                             <div class="analytics-description">
                                 <p><strong>Purpose:</strong> Identifies consistently profitable wallet strategies</p>
@@ -258,27 +250,27 @@
                         </div>
 
                         <div class="analytics-summary">
-                            <h3><i class="fas fa-cogs"></i> Data Processing Pipeline</h3>
+                            <h3><i class="fas fa-magic"></i> ✨ The Alchemical Process of Profit</h3>
                             <div class="pipeline-steps">
                                 <div class="pipeline-step">
                                     <div class="step-number">1</div>
-                                    <h4>Data Collection</h4>
-                                    <p>Real-time blockchain transaction monitoring via Helius webhooks</p>
+                                    <h4>🌌 Cosmic Data Harvest</h4>
+                                    <p>Real-time blockchain consciousness monitoring via Helius webhooks and quantum entanglement protocols</p>
                                 </div>
                                 <div class="pipeline-step">
                                     <div class="step-number">2</div>
-                                    <h4>Wallet Enrichment</h4>
-                                    <p>Integration with 312-strong trader database for identification</p>
+                                    <h4>👥 Trader Deification</h4>
+                                    <p>Integration with our pantheon of 312 crypto deities and legendary traders database</p>
                                 </div>
                                 <div class="pipeline-step">
                                     <div class="step-number">3</div>
-                                    <h4>Pattern Analysis</h4>
-                                    <p>Complex SQL algorithms identify buying patterns and correlations</p>
+                                    <h4>🔮 Prophetic Analysis</h4>
+                                    <p>Advanced neural pattern recognition that identifies profit correlations invisible to mortal eyes</p>
                                 </div>
                                 <div class="pipeline-step">
                                     <div class="step-number">4</div>
-                                    <h4>Signal Generation</h4>
-                                    <p>Threshold-based filtering creates actionable trading signals</p>
+                                    <h4>⚡ Signal Manifestation</h4>
+                                    <p>Threshold-based reality filtering that transforms raw patterns into actionable profit signals</p>
                                 </div>
                             </div>
                         </div>

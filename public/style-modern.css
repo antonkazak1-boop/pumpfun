@@ -985,7 +985,7 @@ body {
     }
 
     .traders-scroll {
-        height: 400px;
+        height: 600px;
         overflow: hidden;
         position: relative;
         border-radius: 16px;
@@ -1026,7 +1026,7 @@ body {
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         transition: all 0.3s ease;
         position: relative;
-        animation: slideUp 8s linear infinite;
+        animation: slideUp 20s linear infinite;
         animation-delay: var(--delay, 0s);
         backdrop-filter: blur(10px);
         border-radius: 12px;
@@ -1393,7 +1393,7 @@ body {
         }
         
         .traders-scroll {
-            height: 300px;
+            height: 450px;
         }
         
         .features-list li {

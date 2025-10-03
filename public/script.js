@@ -1155,7 +1155,7 @@ function initializeTradersScroll() {
 function createTraderElement(trader, index) {
     const div = document.createElement('div');
     div.className = 'trader-item';
-    div.style.cssText = `--delay: ${index * 0.3}s; animation-delay: ${index * 0.3}s;`;
+    div.style.cssText = `--delay: ${index * 0.15}s; animation-delay: ${index * 0.15}s;`;
     
     // Генерируем цветной градиент для аватара
     const colors = [
