@@ -87,8 +87,13 @@
                 </button>
                 <button class="tab-button" data-tab="topGainers">
                     <i class="fas fa-trophy"></i>
-                    <span>Top Gainers</span>
+                    <span>Most Bought Tokens</span>
                     <small>1h</small>
+                </button>
+                <button class="tab-button" data-tab="coins">
+                    <i class="fas fa-coins"></i>
+                    <span>Coins</span>
+                    <small>market</small>
                 </button>
             </div>
         </nav>
@@ -379,11 +384,37 @@
             <!-- Top Gainers Tab -->
             <div id="topGainers" class="tab-content">
                 <div class="tab-header">
-                    <h2><i class="fas fa-trophy"></i> Top Gainers (1 hour)</h2>
-                    <p class="tab-description">Trading volume leaders</p>
+                    <h2><i class="fas fa-trophy"></i> Most Bought Tokens (1 hour)</h2>
+                    <p class="tab-description">Tokens with highest trading volume (click buyers for details)</p>
                 </div>
                 <div id="topGainersData" class="data-list">
                     <div class="loading-placeholder">Loading data...</div>
+                </div>
+            </div>
+
+            <!-- Coins Tab -->
+            <div id="coins" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-coins"></i> 🪙 Coin Market Overview</h2>
+                    <p class="tab-description">Track coins by market cap and trader activity</p>
+                </div>
+                
+                <!-- Market Cap Filters -->
+                <div class="market-filters">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-cap="low">Low Caps (0-99K)</button>
+                        <button class="filter-btn" data-cap="mid">Mid Caps (100K-999K)</button>
+                        <button class="filter-btn" data-cap="high">High Caps (1M+)</button>
+                    </div>
+                    <div class="time-filters">
+                        <button class="time-btn active" data-period="24h">24h</button>
+                        <button class="time-btn" data-period="7d">7d</button>
+                        <button class="time-btn" data-period="30d">30d</button>
+                    </div>
+                </div>
+
+                <div id="coinsData" class="coins-grid">
+                    <div class="loading-placeholder">Loading coins data...</div>
                 </div>
             </div>
         </main>

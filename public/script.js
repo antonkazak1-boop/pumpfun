@@ -63,7 +63,8 @@ const TAB_API_MAP = {
     'coBuy': 'cobuy',
     'smartMoney': 'smartmoney',
     'freshTokens': 'freshtokens',
-    'topGainers': 'topgainers'
+    'topGainers': 'topgainers',
+    'coins': 'coins/market' // Coins tab API endpoint
 };
 
 // Маппинг для рендеринга функций
@@ -77,7 +78,8 @@ const TAB_RENDER_MAP = {
     'coBuy': renderCoBuy,
     'smartMoney': renderSmartMoney,
     'freshTokens': renderFreshTokens,
-    'topGainers': renderTopGainers
+    'topGainers': renderTopGainers,
+    'coins': renderCoins // Coins tab rendering function
 };
 
 // Инициализация Telegram Web App
@@ -1369,6 +1371,79 @@ function createTraderElement(trader, index) {
     `;
     
     return div;
+}
+
+// Функция рендеринга Coins вкладки
+function renderCoins(data) {
+    const container = document.getElementById('coinsData');
+    container.classList.add('coins-grid');
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-coins"></i>
+                <h3>No coin data available</h3>
+                <p>No coins found for the selected criteria</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const coinsHTML = data.map(coin => `
+        <div class="coin-card" data-contract="${coin.token_mint}">
+            <div class="coin-header">
+                <div class="coin-ticker">$${coin.symbol || 'UNKNOWN'}</div>
+                <div class="coin-cap">${formatMarketCap(coin.market_cap)}</div>
+            </div>
+            <div class="coin-metrics">
+                <div class="metric">
+                    <span class="metric-label">Traders</span>
+                    <span class="metric-value">${coin.trader_count}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Trades</span>
+                    <span class="metric-value">${coin.total_trades}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Volume</span>
+                    <span class="metric-value">${formatSOL(coin.volume_sol)}</span>
+                </div>
+            </div>
+            <div class="coin-actions">
+                <button class="view-traders-btn" onclick="showCoinTraders('${coin.token_mint}')">
+                    <i class="fas fa-users"></i>
+                    View Traders
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = coinsHTML;
+}
+
+// Форматирование market cap
+function formatMarketCap(cap) {
+    if (!cap) return 'N/A';
+    if (cap >= 1000000) return `$${(cap / 1000000).toFixed(1)}M`;
+    if (cap >= 1000) return `$${(cap / 1000).toFixed(1)}K`;
+    return `$${cap.toFixed(0)}`;
+}
+
+// Показать трейдеров для конкретной монеты
+function showCoinTraders(tokenMint) {
+    // Пока что простой alert - позже сделаем красивое модальное окно
+    fetch(`/api/coins/traders/${tokenMint}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const traders = data.data;
+                const tradersList = traders.map(t => `
+                    ${t.wallet_name || 'ADDR'}: ${formatSOL(t.sol_spent)}
+                `).join('\n');
+                alert(`Traders for this coin:\n${tradersList}`);
+            }
+        })
+        .catch(err => console.error('Error fetching coin traders:', err));
 }
 
 // Запуск приложения после загрузки DOM

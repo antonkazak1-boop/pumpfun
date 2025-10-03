@@ -663,25 +663,100 @@ app.get('/api/traders/list', async (req, res) => {
         const result = await pool.query(query);
         
         // Обогащаем данные информацией о кошельках от walletMap
-        const enrichedData = result.rows.map(trader => {
-            const walletMeta = resolveWalletMeta(trader.wallet);
-            const traderDisplayName = walletMeta.wallet_name || 'Anonymous Trader';
-            const symbol = walletMeta.wallet_name ? 
-                walletMeta.wallet_name.charAt(0).toUpperCase() : 'AT';
-            
-            return {
-                ...trader,
-                name: traderDisplayName,
-                telegram: walletMeta.wallet_telegram,
-                twitter: walletMeta.wallet_twitter,
-                symbol: symbol,
-                isVerified: !!walletMeta.wallet_name // показываем есть ли реальное имя
-            };
-        });
+        const enrichedData = result.rows
+            .filter(trader => {
+                // Исключаем трейдеров без известного имени из walletMap
+                const walletMeta = resolveWalletMeta(trader.wallet);
+                return walletMeta.wallet_name; 
+            })
+            .map(trader => {
+                const walletMeta = resolveWalletMeta(trader.wallet);
+                
+                return {
+                    ...trader,
+                    name: walletMeta.wallet_name,
+                    telegram: walletMeta.wallet_telegram,
+                    twitter: walletMeta.wallet_twitter,
+                    symbol: walletMeta.wallet_name.charAt(0).toUpperCase(),
+                    isVerified: true
+                };
+            });
         
         res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Traders list error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Coins Market API - аналог Kolscan.io/tokens
+app.get('/api/coins/market', async (req, res) => {
+    try {
+        const { cap = 'all', period = '24h' } = req.query;
+        
+        // Определяем интервал времени
+        let timeInterval = '1 day';
+        if (period === '7d') timeInterval = '7 days';
+        if (period === '30d') timeInterval = '30 days';
+        
+        const query = `
+            SELECT 
+                e.token_mint,
+                COUNT(DISTINCT e.wallet) as trader_count,
+                COUNT(*) as total_trades,
+                SUM(e.sol_spent) as volume_sol,
+                AVG(e.sol_spent) as avg_trade_size,
+                MIN(e.ts) as first_buy,
+                MAX(e.ts) as last_activity
+            FROM events e
+            WHERE e.side = 'BUY' 
+            AND e.ts >= NOW() - INTERVAL '${timeInterval}'
+            GROUP BY e.token_mint
+            HAVING COUNT(DISTINCT e.wallet) >= 2 AND SUM(e.sol_spent) > 10
+            ORDER BY trader_count DESC, volume_sol DESC
+            LIMIT 20
+        `;
+        
+        const result = await pool.query(query);
+        
+        // Обогащаем данные метаданными токенов
+        const enrichedData = await Promise.all(result.rows.map(async (coin) => {
+            const tokenMeta = getTokenMetadata(coin.token_mint);
+            return {
+                ...coin,
+                symbol: tokenMeta?.symbol || coin.token_mint.substring(0, 8),
+                name: tokenMeta?.name || 'Unknown Token',
+                image: tokenMeta?.image || '/img/token-placeholder.png',
+                market_cap: tokenMeta?.market_cap || 0
+            };
+        }));
+        
+        res.json({ success: true, data: enrichedData });
+    } catch (error) {
+        console.error('Coins market error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить трейдеров конкретной монеты
+app.get('/api/coins/traders/:tokenMint', async (req, res) => {
+    try {
+        const { tokenMint } = req.params;
+        
+        const query = `
+            SELECT wallet, sol_spent, ts, tx_signature
+            FROM events 
+            WHERE token_mint = $1 AND side = 'BUY'
+            ORDER BY sol_spent DESC
+            LIMIT 20
+        `;
+        
+        const result = await pool.query(query, [tokenMint]);
+        const enrichedData = enrichWalletData(result.rows);
+        
+        res.json({ success: true, data: enrichedData });
+    } catch (error) {
+        console.error('Coin traders error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
