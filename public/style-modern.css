@@ -150,6 +150,87 @@
     color: #1a1a1a !important;
 }
 
+/* Analytics cards styling for light theme */
+.theme-light .analytics-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid transparent !important;
+    color: #1a1a1a !important;
+    background-clip: padding-box !important;
+}
+
+.theme-light .analytics-card::after {
+    background: linear-gradient(45deg, #0066cc, #0d6efd, #198754, #fd7e14, #0066cc) !important;
+    background-size: 400% 400% !important;
+    animation: gradientShift 6s ease infinite !important;
+    opacity: 0.6 !important;
+}
+
+.theme-light .analytics-card:hover {
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 0 15px 40px rgba(13, 110, 253, 0.4) !important;
+}
+
+.theme-light .analytics-card:hover::after {
+    opacity: 0.9 !important;
+    animation-duration: 3s !important;
+}
+
+.theme-light .analytics-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+.theme-light .analytics-description {
+    color: #1a1a1a !important;
+}
+
+.theme-light .analytics-description p {
+    color: #1a1a1a !important;
+}
+
+.theme-light .analytics-method {
+    color: #1a1a1a !important;
+}
+
+.theme-light .analytics-method h4 {
+    color: #1a1a1a !important;
+}
+
+.theme-light .analytics-value {
+    background: rgba(13, 110, 253, 0.1) !important;
+    border: 1px solid rgba(13, 110, 253, 0.3) !important;
+}
+
+.theme-light .analytics-value .value-label {
+    color: #555555 !important;
+}
+
+.theme-light .analytics-value .value-data {
+    color: #0066cc !important;
+}
+
+.theme-light .analytics-summary {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid transparent !important;
+}
+
+.theme-light .analytics-summary::after {
+    background: linear-gradient(45deg, #198754, #0dcaf0, #fd7e14, #0066cc, #198754) !important;
+    background-size: 400% 400% !important;
+    animation: gradientShift 7s ease infinite !important;
+    opacity: 0.6 !important;
+}
+
+.theme-light .pipeline-step {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    color: #1a1a1a !important;
+}
+
+.theme-light .step-number {
+    background: linear-gradient(45deg, #0066cc, #198754) !important;
+    color: white !important;
+}
+
 /* Telegram theme support */
 body.telegram-theme {
     --bg-primary: var(--tg-theme-bg-color, #0a0a0f);
@@ -1273,14 +1354,26 @@ body {
         }
     }
 
-    @keyframes gradientRotate {
-        0% {
-            transform: rotate(0deg);
-        }
-        100% {
-            transform: rotate(360deg);
-        }
+@keyframes gradientRotate {
+    0% {
+        transform: rotate(0deg);
     }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
 
     /* === ANALYTICS PAGE STYLES === */
     .analytics-content {
@@ -1297,18 +1390,38 @@ body {
 
     .analytics-card {
         background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 2px solid transparent;
         border-radius: 20px;
         padding: 1.5rem;
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
+        background-clip: padding-box;
+    }
+    
+    .analytics-card::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, #4a9eff, #6c5ce7, #74b9ff, #a29eff, #4a9eff);
+        background-size: 400% 400%;
+        border-radius: 20px;
+        z-index: -1;
+        animation: gradientShift 6s ease infinite;
+        opacity: 0.7;
     }
 
     .analytics-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(74, 158, 255, 0.5);
-        box-shadow: 0 12px 35px rgba(74, 158, 255, 0.2);
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 15px 40px rgba(74, 158, 255, 0.3);
+    }
+    
+    .analytics-card:hover::after {
+        opacity: 1;
+        animation-duration: 3s;
     }
 
     .analytics-card::before {
