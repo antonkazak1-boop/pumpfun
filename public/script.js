@@ -1140,17 +1140,23 @@ function initializeTradersScroll() {
     // Очистим контейнер и создадим элементы
     tradersContainer.innerHTML = '';
     
-    // Create elements for smooth scrolling without duplicates
-    traders.forEach((trader, index) => {
-        const traderElement = createTraderElement(trader, index);
-        tradersContainer.appendChild(traderElement);
-    });
+    // Create elements for truly infinite scrolling
+    const tradersCopy = traders.slice(); // Copy the array
+    const totalCopies = 5; // Create 5 copies for seamless infinite scroll
+    
+    for (let copy = 0; copy < totalCopies; copy++) {
+        traders.forEach((trader, index) => {
+            const globalIndex = copy * traders.length + index;
+            const traderElement = createTraderElement(trader, globalIndex);
+            tradersContainer.appendChild(traderElement);
+        });
+    }
 }
 
 function createTraderElement(trader, index) {
     const div = document.createElement('div');
     div.className = 'trader-item';
-    div.style.cssText = `--delay: ${index * 0.2}s; animation-delay: ${index * 0.2}s;`;
+    div.style.cssText = `--delay: ${index * 0.08}s; animation-delay: ${index * 0.08}s;`;
     
     // Генерируем цветной градиент для аватара
     const colors = [
