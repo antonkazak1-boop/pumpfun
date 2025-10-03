@@ -715,13 +715,13 @@ app.get('/api/coins/market', async (req, res) => {
             GROUP BY e.token_mint
             HAVING COUNT(DISTINCT e.wallet) >= 2 AND SUM(e.sol_spent) > 10
             ORDER BY trader_count DESC, volume_sol DESC
-            LIMIT 20
+            LIMIT 50
         `;
         
         const result = await pool.query(query);
         
         // Обогащаем данные метаданными токенов
-        const enrichedData = await Promise.all(result.rows.map(async (coin) => {
+        let enrichedData = await Promise.all(result.rows.map(async (coin) => {
             const tokenMeta = getTokenMetadata(coin.token_mint);
             return {
                 ...coin,
@@ -731,6 +731,26 @@ app.get('/api/coins/market', async (req, res) => {
                 market_cap: tokenMeta?.market_cap || 0
             };
         }));
+        
+        // Применяем фильтрацию по market cap
+        if (cap !== 'all') {
+            enrichedData = enrichedData.filter(coin => {
+                const marketCap = coin.market_cap || 0;
+                switch (cap) {
+                    case 'low':
+                        return marketCap >= 0 && marketCap < 100000; // 0-99K
+                    case 'mid':
+                        return marketCap >= 100000 && marketCap < 1000000; // 100K-999K
+                    case 'high':
+                        return marketCap >= 1000000; // 1M+
+                    default:
+                        return true;
+                }
+            });
+        }
+        
+        // Ограничиваем результат
+        enrichedData = enrichedData.slice(0, 20);
         
         res.json({ success: true, data: enrichedData });
     } catch (error) {
@@ -866,7 +886,19 @@ app.get('/api/topgainers', async (req, res) => {
             LIMIT 15;
         `;
         const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
+        
+        // Обогащаем данные метаданными токенов
+        const enrichedData = await Promise.all(result.rows.map(async (item) => {
+            const tokenMeta = getTokenMetadata(item.token_mint);
+            return {
+                ...item,
+                symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                name: tokenMeta?.name || 'Unknown Token',
+                image: tokenMeta?.image || '/img/token-placeholder.png'
+            };
+        }));
+        
+        res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Top gainers error:', error);
         res.status(500).json({ success: false, error: error.message });

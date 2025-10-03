@@ -2330,6 +2330,8 @@ body {
     margin-top: 0.5rem;
     max-height: 300px;
     overflow-y: auto;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .traders-header {
@@ -2448,6 +2450,8 @@ body {
 .theme-light .traders-dropdown {
     background: rgba(255, 255, 255, 0.98) !important;
     border: 1px solid rgba(102, 126, 234, 0.2) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
 }
 
 .theme-light .traders-header {

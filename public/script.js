@@ -579,11 +579,14 @@ function renderFreshTokens(data) {
         const timeSinceCreation = new Date() - new Date(item.first_seen);
         const minutesAgo = Math.floor(timeSinceCreation / (1000 * 60));
         
+        const tokenSymbol = item.symbol || item.token_mint.substring(0, 8);
+        const tokenName = item.name || 'Unknown Token';
+        
         return `
             <div class="data-item fresh-item">
                 <h3>
                     <i class="fas fa-seedling"></i>
-                    ${index + 1}. ${shortenAddress(item.token_mint)}
+                    ${index + 1}. ${tokenSymbol} - ${tokenName}
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
@@ -634,12 +637,14 @@ function renderTopGainers(data) {
     container.innerHTML = data.map((item, index) => {
         const pumpUrl = `https://pump.fun/coin/${item.token_mint}`;
         const dexUrl = `https://dexscreener.com/solana/${item.token_mint}`;
+        const tokenSymbol = item.symbol || item.token_mint.substring(0, 8);
+        const tokenName = item.name || 'Unknown Token';
         
         return `
             <div class="data-item">
                 <h3>
                     <i class="fas fa-trophy"></i>
-                    ${index + 1}. ${shortenAddress(item.token_mint)}
+                    ${index + 1}. ${tokenSymbol} - ${tokenName}
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">

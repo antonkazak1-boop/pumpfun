@@ -61,7 +61,8 @@ function getTokenMetadata(tokenMint) {
         image: '/img/token-placeholder.png',
         decimals: 6,
         price: 0,
-        priceChange: 0
+        priceChange: 0,
+        market_cap: 0
     };
 
     if (token) {
@@ -73,6 +74,7 @@ function getTokenMetadata(tokenMint) {
             decimals: token.decimals || 6,
             price: 0,
             priceChange: 0,
+            market_cap: 0, // Будет заполнено через API
             tags: token.tags || [],
             verified: token.verified || false
         };
