@@ -1,3 +1,34 @@
+// === THEME MANAGEMENT ===
+function toggleTheme() {
+    const body = document.body;
+    const themeIcon = document.querySelector('.theme-toggle i');
+    
+    if (body.classList.contains('theme-light')) {
+        // Switch to dark theme
+        body.classList.remove('theme-light');
+        themeIcon.className = 'fas fa-moon';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        // Switch to light theme
+        body.classList.add('theme-light');
+        themeIcon.className = 'fas fa-sun';
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    
+    if (savedTheme === 'light' || (!savedTheme && prefersLight)) {
+        document.body.classList.add('theme-light');
+        document.querySelector('.theme-toggle i').className = 'fas fa-sun';
+    } else {
+        document.body.classList.remove('theme-light');
+        document.querySelector('.theme-toggle i').className = 'fas fa-moon';
+    }
+}
+
 // Конфигурация
 const BACKEND_URL = window.location.origin; // Используем тот же домен, что и Mini App
 const REFRESH_INTERVAL = 30000; // 30 секунд
@@ -990,6 +1021,9 @@ function setupRefreshButtonHandler() {
 // Улучшенная инициализация приложения
 async function initApp() {
     console.log('🚀 Инициализация Pump Dex Mini App...');
+    
+    // Инициализация темы
+    initTheme();
     
     // Инициализация Telegram Web App
     const tg = initTelegramWebApp();

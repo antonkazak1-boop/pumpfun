@@ -27,6 +27,9 @@
                 Pump Dex Bot
             </h1>
             <div class="header-controls">
+                <div class="theme-toggle" onclick="toggleTheme()" title="Switch theme">
+                    <i class="fas fa-moon"></i>
+                </div>
                 <div class="refresh-button pulse" onclick="refreshCurrentTab()">
                     <i class="fas fa-sync-alt" id="refresh-icon"></i>
                 </div>
@@ -53,7 +56,7 @@
                     <small>10m</small>
                 </button>
                 <button class="tab-button" data-tab="whaleMoves">
-                    <i class="fas fa-whale"></i>
+                    <i class="fas fa-fish"></i>
                     <span>Whale Moves</span>
                     <small>30m</small>
                 </button>
@@ -292,7 +295,7 @@
             <!-- Whale Moves Tab -->
             <div id="whaleMoves" class="tab-content">
                 <div class="tab-header">
-                <h2><i class="fas fa-whale"></i> Whale Moves (30 minutes)</h2>
+                <h2><i class="fas fa-fish"></i> Whale Moves (30 minutes)</h2>
                 <p class="tab-description">Large purchases over 100 SOL</p>
                 </div>
                 <div id="whaleMovesData" class="data-list">

@@ -2,7 +2,7 @@
 
 /* Основные переменные для современной темы */
 :root {
-    /* Темная тема */
+    /* Темная тема по умолчанию */
     --bg-primary: #0a0a0f;
     --bg-secondary: #141419;
     --bg-tertiary: #1a1a23;
@@ -39,7 +39,28 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Телеграм тема поддержка */
+/* Light theme */
+.theme-light {
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e9ecef;
+    --bg-card: #ffffff;
+    --bg-hover: #f1f3f4;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --text-muted: #6c757d;
+    --accent-primary: #0d6efd;
+    --accent-secondary: #6f42c1;
+    --success: #198754;
+    --warning: #fd7e14;
+    --danger: #dc3545;
+    --info: #0dcaf0;
+    
+    --shadow-glow: 0 0 20px rgba(13, 110, 253, 0.15);
+}
+
+/* Telegram theme support */
 body.telegram-theme {
     --bg-primary: var(--tg-theme-bg-color, #0a0a0f);
     --bg-card: var(--tg-theme-secondary-bg-color, #1e1e2a);
@@ -198,6 +219,32 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.theme-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
+}
+
+.theme-toggle:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.theme-toggle i {
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
 }
 
 .refresh-button {
