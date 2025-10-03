@@ -939,6 +939,11 @@ function createWalletCard(trader) {
             <div class="wallet-info">
                 <h4>${trader.name || 'Anonymous Trader'}</h4>
                 <div class="wallet-address">${shortAddress}</div>
+                ${trader.telegram || trader.twitter ? `
+                <div class="wallet-socials">
+                    ${trader.telegram ? `<a href="${trader.telegram}" target="_blank" class="social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
+                    ${trader.twitter ? `<a href="${trader.twitter}" target="_blank" class="social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
+                </div>` : ''}
             </div>
         </div>
         

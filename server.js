@@ -406,15 +406,17 @@ app.get('/api/smartmoney', async (req, res) => {
                 GROUP BY wallet
                 HAVING COUNT(DISTINCT token_mint) >= 3 AND AVG(sol_spent) > 5
             )
-            SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint, e.sol_spent, e.ts, e.tx_signature
+            SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint, e.sol_spent as sol_spent_needs_price_lookup, e.ts, e.tx_signature
             FROM profitable_wallets p
-            JOIN events e ON p.wallet = e.wallet
-            WHERE e.side = 'BUY' AND e.ts > now() - interval '1 hour'
+            JOIN (SELECT wallet, token_mint, sol_spent, ts, tx_signature 
+                  FROM events 
+                  WHERE side = 'BUY' AND ts > now() - interval '1 hour') e ON p.wallet = e.wallet
             ORDER BY p.unique_tokens DESC, e.ts DESC
             LIMIT 15;
         `;
         const result = await pool.query(query);
-        const enrichedData = enrichWalletData(result.rows);
+        let enrichedData = enrichWalletData(result.rows);
+        enrichedData = await enrichTransactionData(enrichedData);
         res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Smart money error:', error);
@@ -663,12 +665,17 @@ app.get('/api/traders/list', async (req, res) => {
         // Обогащаем данные информацией о кошельках от walletMap
         const enrichedData = result.rows.map(trader => {
             const walletMeta = resolveWalletMeta(trader.wallet);
+            const traderDisplayName = walletMeta.wallet_name || 'Anonymous Trader';
+            const symbol = walletMeta.wallet_name ? 
+                walletMeta.wallet_name.charAt(0).toUpperCase() : 'AT';
+            
             return {
                 ...trader,
-                name: walletMeta.wallet_name || 'Anonymous Trader',
+                name: traderDisplayName,
                 telegram: walletMeta.wallet_telegram,
                 twitter: walletMeta.wallet_twitter,
-                symbol: (walletMeta.wallet_name || 'AT').charAt(0).toUpperCase()
+                symbol: symbol,
+                isVerified: !!walletMeta.wallet_name // показываем есть ли реальное имя
             };
         });
         

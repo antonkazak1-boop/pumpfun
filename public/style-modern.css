@@ -1789,6 +1789,39 @@ body {
     word-break: break-all;
 }
 
+.wallet-socials {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.wallet-socials .social-link {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.wallet-socials .social-link.telegram {
+    background: #0088cc;
+    color: white;
+}
+
+.wallet-socials .social-link.twitter {
+    background: #1da1f2;
+    color: white;
+}
+
+.wallet-socials .social-link:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 .wallet-stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
