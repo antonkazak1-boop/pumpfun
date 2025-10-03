@@ -625,6 +625,23 @@ app.get('/api/token/:mint', async (req, res) => {
     }
 });
 
+// Проверка соединения с базой данных
+async function testDatabaseConnection() {
+    try {
+        const startTime = Date.now();
+        const result = await pool.query('SELECT NOW() as current_time');
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        console.log(`✅ Database connection successful! Time: ${new Date(result.rows[0].current_time).toISOString()}`);
+        console.log(`⏱️ Database response time: ${responseTime}ms`);
+        return true;
+    } catch (error) {
+        console.error('❌ Database connection failed:', error);
+        return false;
+    }
+}
+
 // Получение списка известных трейдеров для Portfolio вкладки
 app.get('/api/traders/list', async (req, res) => {
     try {
@@ -667,8 +684,12 @@ async function startServer() {
     try {
         // Инициализация метаданных токенов
         console.log('🪙 Initializing token metadata service...');
-        await initializeTokenMetadata();
-        console.log('✅ Token metadata service ready');
+        const metadataLoaded = await initializeTokenMetadata();
+        if (metadataLoaded) {
+            console.log('✅ Token metadata service ready');
+        } else {
+            console.log('⚠️ Token metadata service running in fallback mode');
+        }
         
         // Тест подключения к БД
         const dbConnected = await testDatabaseConnection();

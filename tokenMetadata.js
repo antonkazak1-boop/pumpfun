@@ -19,11 +19,24 @@ async function initializeTokenMetadata() {
     try {
         console.log('🪙 Loading Jupiter token list...');
         const response = await fetch(JUPITER_TOKEN_LIST);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         jupiterTokens = await response.json();
+        
+        if (!Array.isArray(jupiterTokens)) {
+            throw new Error('Invalid token list format received');
+        }
+        
         console.log(`✅ Loaded ${jupiterTokens.length} token metadata records`);
+        return true;
     } catch (error) {
-        console.error('❌ Failed to load Jupiter token list:', error);
+        console.error('❌ Failed to load Jupiter token list:', error.message);
         jupiterTokens = [];
+        console.log('🔄 Token metadata service will work with empty list (fallback to address-only mode)');
+        return false;
     }
 }
 
