@@ -56,7 +56,7 @@ let isLoading = false;
 const TAB_API_MAP = {
     'about': null, // Special tab without API
     'analytics': null, // Analytics tab without API
-    'portfolio': '/api/traders/list', // Portfolio tab API endpoint  
+    'portfolio': 'traders/list', // Portfolio tab API endpoint  
     'clusterBuy': 'clusterbuy',
     'whaleMoves': 'whalemoves', 
     'volumeSurge': 'volumesurge',
@@ -239,8 +239,8 @@ function renderClusterBuy(data) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-fire"></i>
-                <h3>Нет кластерных покупок</h3>
-                <p>За последние 10 минут не обнаружено токенов с 3+ уникальными покупателями</p>
+                <h3>No Cluster Buy Activity</h3>
+                <p>No tokens with 3+ unique buyers detected in the last 10 minutes</p>
             </div>`;
         return;
     }
@@ -310,8 +310,8 @@ function renderWhaleMoves(data) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-whale"></i>
-                <h3>Нет движений китов</h3>
-                <p>За последние 30 минут не обнаружено покупок свыше 100 SOL</p>
+                <h3>No Whale Activity</h3>
+                <p>No purchases over 100 SOL detected in the last 30 minutes</p>
             </div>`;
         return;
     }
@@ -377,8 +377,8 @@ function renderVolumeSurge(data) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-chart-line"></i>
-                <h3>Нет всплесков объема</h3>
-                <p>За последние 15 минут не обнаружено значительных всплесков торгового объема</p>
+                <h3>No Volume Surge</h3>
+                <p>No significant trading volume spikes detected in the last 15 minutes</p>
             </div>`;
         return;
     }
@@ -430,8 +430,8 @@ function renderCoBuy(data) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-users"></i>
-                <h3>Нет совместных покупок</h3>
-                <p>За последние 20 минут не обнаружено токенов, покупаемых одновременно</p>
+                <h3>No Co-buy Activity</h3>
+                <p>No tokens purchased simultaneously detected in the last 20 minutes</p>
             </div>`;
         return;
     }
@@ -486,8 +486,8 @@ function renderSmartMoney(data) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-brain"></i>
-                <h3>Нет активности умных денег</h3>
-                <p>За последний час не обнаружена активность опытных трейдеров</p>
+                <h3>No Smart Money Activity</h3>
+                <p>No experienced trader activity detected in the last hour</p>
             </div>`;
         return;
     }
@@ -566,8 +566,8 @@ function renderFreshTokens(data) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-seedling"></i>
-                <h3>Нет новых токенов</h3>
-                <p>За последние 5 минут не появились новые токены с активностью</p>
+                <h3>No New Tokens</h3>
+                <p>No new tokens with activity appeared in the last 5 minutes</p>
             </div>`;
         return;
     }
@@ -623,8 +623,8 @@ function renderTopGainers(data) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-trophy"></i>
-                <h3>Нет лидеров</h3>
-                <p>За последний час не обнаружены токены с объемом свыше 100 SOL</p>
+                <h3>No Top Gainers</h3>
+                <p>No tokens with volume over 100 SOL detected in the last hour</p>
             </div>`;
         return;
     }
@@ -693,8 +693,8 @@ async function showTokenDetails(tokenMint) {
             content.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-info-circle"></i>
-                    <h3>Нет данных</h3>
-                    <p>Нет данных по активности токена за последние 2 часа</p>
+                    <h3>No Token Data</h3>
+                    <p>No activity data available for this token in the last 2 hours</p>
                 </div>`;
             return;
         }
@@ -890,22 +890,20 @@ async function renderPortfolio(data) {
 
     container.innerHTML = '';
 
-    // Create mock data for demo (in real implementation this would be from API)
-    const mockTraders = [
-        { wallet: 'dymsqudnqjyydvq86xmzavru9t7xwfqewh6gpqw9tpnf', name: 'unprofitable', symbol: '💎' },
-        { wallet: '5rkpdk4jnvaumgzev2zu8vjggmtthddtrsd5o9dhgzhd', name: 'Dave Portnoy', symbol: '🏛️' },
-        { wallet: 'amofvgj59dgf5p85pofip83pk7nzqrqrmszvv5rrfvtf', name: '7xNickk', symbol: '🎯' },
-        { wallet: 'gwofjfjutuswq2ewtz4p2sznoq9xylrf8t4q5kbtgz1r', name: 'Levis', symbol: '⚡' },
-        { wallet: '6m5sw6eapahncxnzapi1zvjnrb9rzhq3bj7fd84x9raf', name: 'ShockedJS', symbol: '🔥' },
-        { wallet: '4yzpszpxddjnf3unjkctdwesz2fl5mok7e5xqadnqry8', name: 'xunle', symbol: '🌟' },
-        { wallet: '4wptqa7bb4irdrphgnpjihgcxkh8t43gljmn5pbevfqw', name: 'Oura', symbol: '🌀' },
-        { wallet: 'ckpfgv2wv1vwdwjtxioegb8jhzqfs3evzez3qcetu7xd', name: 'Lynk', symbol: '🔮' }
-    ];
-
-    mockTraders.forEach(trader => {
-        const walletCard = createWalletCard(trader);
-        container.appendChild(walletCard);
-    });
+    // Use real data from API if available, otherwise show fallback
+    if (data && data.length > 0) {
+        data.forEach(trader => {
+            const walletCard = createWalletCard(trader);
+            container.appendChild(walletCard);
+        });
+    } else {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-wallet"></i>
+                <h3>No Active Traders</h3>
+                <p>No traders with activity in the last 7 days found</p>
+            </div>`;
+    }
 }
 
 // Create individual wallet card (Apple Stocks style)
@@ -924,8 +922,15 @@ function createWalletCard(trader) {
     const symbol = trader.symbol || trader.name.charAt(0).toUpperCase();
     const shortAddress = trader.wallet.slice(0, 8) + '...' + trader.wallet.slice(-8);
     
-    // Simulate portfolio performance
-    const performancePct = (Math.random() - 0.5) * 20; // -10% to +10%
+    // Real portfolio stats from API
+    const totalTrades = trader.total_trades || 0;
+    const totalVolume = trader.total_volume || 0;
+    const uniqueTokens = trader.unique_tokens || 0;
+    const lastActivity = trader.last_activity ? new Date(trader.last_activity).toLocaleDateString() : 'Unknown';
+    
+    // Simulate performance based on activity
+    const activityScore = totalTrades * 0.1 + uniqueTokens * 0.5;
+    const performancePct = activityScore > 10 ? Math.random() * 15 : Math.random() * 30 - 15;
     const performanceValue = performancePct > 0 ? `+${performancePct.toFixed(1)}%` : `${performancePct.toFixed(1)}%`;
     
     card.innerHTML = `
@@ -939,12 +944,12 @@ function createWalletCard(trader) {
         
         <div class="wallet-stats">
             <div class="stat-item">
-                <div class="stat-value">${Math.floor(Math.random() * 20) + 1}</div>
-                <div class="stat-label">Holdings</div>
+                <div class="stat-value">${uniqueTokens}</div>
+                <div class="stat-label">Tokens</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value">$${Math.floor(Math.random() * 500) + 50}K</div>
-                <div class="stat-label">Portfolio</div>
+                <div class="stat-value">${totalTrades}</div>
+                <div class="stat-label">Trades</div>
             </div>
         </div>
         
