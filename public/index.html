@@ -185,9 +185,9 @@
                                         <li>Orders by volume and recency</li>
                                     </ul>
                                 </div>
-                                <div class="analytics-query">
-                                    <h4>SQL Query:</h4>
-                                    <code>SELECT token_mint, wallet, sol_spent, ts FROM events WHERE side = 'BUY' AND sol_spent > 50 AND ts >= NOW() - INTERVAL '30 minutes' ORDER BY sol_spent DESC, ts DESC</code>
+                                <div class="analytics-method">
+                                    <h4>🐋 Oceanic Intelligence:</h4>
+                                    <p>Our whale detection sonar penetrates deep into the blockchain ocean, identifying massive creatures whose movements cause tidal waves across the entire ecosystem. Using advanced hydrodynamics simulation, we track these digital leviathans and predict their migration patterns.</p>
                                 </div>
                                 <div class="analytics-value">
                                     <span class="value-label">Volume threshold:</span>
@@ -213,9 +213,9 @@
                                         <li>Prioritizes highest volume increases</li>
                                     </ul>
                                 </div>
-                                <div class="analytics-query">
-                                    <h4>SQL Query:</h4>
-                                    <code>SELECT token_mint, SUM(sol_spent) as total_volume, COUNT(*) as tx_count FROM events WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '15 minutes' GROUP BY token_mint HAVING SUM(sol_spent) > 100 ORDER BY total_volume DESC</code>
+                                <div class="analytics-method">
+                                    <h4>💥 Explosive Growth Detection:</h4>
+                                    <p>Our proprietary seismic sensors detect the first tremors of exploding volume before the dust settles. Like earthquake prediction systems that decipher geological vibrations, our algorithms read market vibrations to identify tokens about to erupt into profit fireworks.</p>
                                 </div>
                                 <div class="analytics-value">
                                     <span class="value-label">Volume threshold:</span>
@@ -241,9 +241,9 @@
                                         <li>Joins with recent token activity</li>
                                     </ul>
                                 </div>
-                                <div class="analytics-query">
-                                    <h4>SQL Query:</h4>
-                                    <code>WITH profitable_wallets AS (SELECT wallet, COUNT(DISTINCT token_mint) AS unique_tokens, AVG(sol_spent) AS avg_buy_size FROM events WHERE side = 'BUY' AND ts > now() - interval '1 hour' GROUP BY wallet HAVING COUNT(DISTINCT token_mint) >= 3 AND AVG(sol_spent) > 5) SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint FROM profitable_wallets p JOIN events e ON p.wallet = e.wallet...</code>
+                                <div class="analytics-method">
+                                    <h4>🧠 Genius Profiling Engine:</h4>
+                                    <p>Our artificial intelligence profiles the most successful minds in crypto, creating digital fingerprints of their behavior patterns. Like behavioral psychologists studying geniuses, we decode the DNA of profitable trading strategies and replicate their success algorithms.</p>
                                 </div>
                                 <div class="analytics-value">
                                     <span class="value-label">Requirements:</span>

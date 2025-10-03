@@ -91,6 +91,65 @@
     font-weight: 700;
 }
 
+.theme-light .features-list {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    color: #1a1a1a;
+}
+
+.theme-light .features-list li {
+    color: #1a1a1a;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.theme-light .stats-grid .stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    color: #1a1a1a;
+}
+
+.theme-light .stats-grid .stat-number {
+    color: #0066cc;
+}
+
+.theme-light .stats-grid .stat-label {
+    color: #555555;
+}
+
+/* Light theme CSS variables override */
+.theme-light {
+    --bg-primary: #f8f9fa !important;
+    --bg-secondary: #ffffff !important;
+    --bg-tertiary: #e9ecef !important;
+    --bg-card: #ffffff !important;
+    --bg-hover: #f1f3f4 !important;
+    --border-color: rgba(0, 0, 0, 0.2) !important;
+    --text-primary: #1a1a1a !important;
+    --text-secondary: #2d2d2d !important;
+    --text-muted: #555555 !important;
+    --accent-primary: #0066cc !important;
+}
+
+/* Force theme-light styling */
+.theme-light body {
+    background: #f8f9fa !important;
+    color: #1a1a1a !important;
+}
+
+.theme-light header {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+.theme-light .tab-content-wrapper {
+    background: #f8f9fa !important;
+}
+
+.theme-light .tab-content {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+}
+
 /* Telegram theme support */
 body.telegram-theme {
     --bg-primary: var(--tg-theme-bg-color, #0a0a0f);
