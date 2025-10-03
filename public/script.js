@@ -827,6 +827,21 @@ async function loadTabData(tabName) {
         return;
     }
     
+    // Special handling for Coins tab with filters
+    if (tabName === 'coins') {
+        try {
+            showLoading();
+            await loadCoinsData('all', '24h'); // Load with default filters
+            updateLastUpdateTime();
+        } catch (error) {
+            console.error(`Ошибка загрузки данных для ${tabName}:`, error);
+            renderError(dataContainerId, error);
+        } finally {
+            hideLoading();
+        }
+        return;
+    }
+    
     if (!endpoint || !renderFunction) {
         console.error(`Неизвестная вкладка: ${tabName}`);
         return;
@@ -1219,6 +1234,9 @@ async function initApp() {
     // Инициализация анимации трейдеров
     initializeTradersScroll();
     
+    // Инициализация фильтров для Coins tab
+    initCoinsFilters();
+    
     await loadTabData(currentTab);
     
     // Запуск автоматического обновления
@@ -1444,19 +1462,141 @@ function formatSOL(amount) {
 
 // Показать трейдеров для конкретной монеты
 function showCoinTraders(tokenMint) {
-    // Пока что простой alert - позже сделаем красивое модальное окно
+    const coinCard = document.querySelector(`[data-contract="${tokenMint}"]`);
+    if (!coinCard) return;
+    
+    // Показываем loading в кнопке
+    const button = coinCard.querySelector('.view-traders-btn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    
     fetch(`/api/coins/traders/${tokenMint}`)
         .then(res => res.json())
         .then(data => {
-            if (data.success) {
-                const traders = data.data;
-                const tradersList = traders.map(t => `
-                    ${t.wallet_name || 'ADDR'}: ${formatSOL(t.sol_spent)}
-                `).join('\n');
-                alert(`Traders for this coin:\n${tradersList}`);
+            button.innerHTML = originalText; // Восстанавливаем кнопку
+            
+            if (data.success && data.data.length > 0) {
+                // Создаем выпадающий список внутри карточки
+                showTradersDropdown(coinCard, data.data);
+            } else {
+                showTradersDropdown(coinCard, []);
             }
         })
-        .catch(err => console.error('Error fetching coin traders:', err));
+        .catch(err => {
+            console.error('Error fetching coin traders:', err);
+            button.innerHTML = originalText;
+            showTradersDropdown(coinCard, []);
+        });
+}
+
+// Показать выпадающий список трейдеров
+function showTradersDropdown(coinCard, traders) {
+    // Удаляем предыдущий dropdown если есть
+    const existingDropdown = coinCard.querySelector('.traders-dropdown');
+    if (existingDropdown) {
+        existingDropdown.remove();
+        return;
+    }
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'traders-dropdown';
+    
+    if (traders.length === 0) {
+        dropdown.innerHTML = `
+            <div class="traders-header">
+                <h4><i class="fas fa-users"></i> Traders</h4>
+                <button class="close-dropdown" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="traders-content">
+                <p class="no-traders">No traders found for this coin</p>
+            </div>
+        `;
+    } else {
+        const tradersHTML = traders.map(trader => `
+            <div class="trader-item">
+                <div class="trader-info">
+                    <div class="trader-name">${trader.wallet_name || trader.wallet.substring(0, 8)}</div>
+                    <div class="trader-amount">${formatSOL(trader.sol_spent)}</div>
+                </div>
+                <div class="trader-socials">
+                    ${trader.wallet_telegram ? `<a href="${trader.wallet_telegram}" target="_blank" class="trader-social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
+                    ${trader.wallet_twitter ? `<a href="${trader.wallet_twitter}" target="_blank" class="trader-social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+        dropdown.innerHTML = `
+            <div class="traders-header">
+                <h4><i class="fas fa-users"></i> Traders (${traders.length})</h4>
+                <button class="close-dropdown" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="traders-content">
+                ${tradersHTML}
+            </div>
+        `;
+    }
+    
+    coinCard.appendChild(dropdown);
+}
+
+// Обработчики фильтров для Coins tab
+function initCoinsFilters() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const timeButtons = document.querySelectorAll('.time-btn');
+    
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Убираем active класс со всех кнопок
+            filterButtons.forEach(b => b.classList.remove('active'));
+            // Добавляем active класс к нажатой кнопке
+            btn.classList.add('active');
+            
+            // Перезагружаем данные с новым фильтром
+            const capFilter = btn.dataset.cap;
+            loadCoinsData(capFilter);
+        });
+    });
+    
+    timeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Убираем active класс со всех кнопок
+            timeButtons.forEach(b => b.classList.remove('active'));
+            // Добавляем active класс к нажатой кнопке
+            btn.classList.add('active');
+            
+            // Перезагружаем данные с новым периодом
+            const period = btn.dataset.period;
+            loadCoinsData(null, period);
+        });
+    });
+}
+
+// Загрузка данных Coins с фильтрами
+async function loadCoinsData(capFilter = 'all', period = '24h') {
+    try {
+        const params = new URLSearchParams();
+        if (capFilter && capFilter !== 'all') {
+            params.append('cap', capFilter);
+        }
+        params.append('period', period);
+        
+        const response = await fetch(`/api/coins/market?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            renderCoins(data.data);
+        } else {
+            console.error('Coins API error:', data.error);
+            renderCoins([]);
+        }
+    } catch (error) {
+        console.error('Error loading coins data:', error);
+        renderCoins([]);
+    }
 }
 
 // Запуск приложения после загрузки DOM

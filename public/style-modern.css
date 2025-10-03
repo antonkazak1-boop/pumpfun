@@ -2168,7 +2168,7 @@ body {
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
     position: relative;
-    overflow: hidden;
+    overflow: visible; /* Changed from hidden to visible for dropdown */
 }
 
 .coin-card::before {
@@ -2311,4 +2311,158 @@ body {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.8rem;
     }
+}
+
+/* ================================
+   TRADERS DROPDOWN STYLES
+   ================================ */
+
+.traders-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 25px var(--shadow-color);
+    z-index: 1000;
+    margin-top: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.traders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-color);
+    border-radius: 12px 12px 0 0;
+}
+
+.traders-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.close-dropdown {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.close-dropdown:hover {
+    background: var(--button-background);
+    color: var(--text-primary);
+}
+
+.traders-content {
+    padding: 0.5rem;
+}
+
+.trader-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--background-color);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.trader-item:hover {
+    background: var(--button-background);
+    transform: translateX(4px);
+}
+
+.trader-item:last-child {
+    margin-bottom: 0;
+}
+
+.trader-info {
+    flex: 1;
+}
+
+.trader-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.trader-amount {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.trader-socials {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.trader-social-link {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.trader-social-link.telegram {
+    background: #0088cc;
+    color: white;
+}
+
+.trader-social-link.twitter {
+    background: #1da1f2;
+    color: white;
+}
+
+.trader-social-link:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.no-traders {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 1rem;
+    margin: 0;
+}
+
+/* Light theme adjustments for dropdown */
+.theme-light .traders-dropdown {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid rgba(102, 126, 234, 0.2) !important;
+}
+
+.theme-light .traders-header {
+    background: rgba(102, 126, 234, 0.05) !important;
+    border-bottom: 1px solid rgba(102, 126, 234, 0.1) !important;
+}
+
+.theme-light .trader-item {
+    background: rgba(102, 126, 234, 0.03) !important;
+}
+
+.theme-light .trader-item:hover {
+    background: rgba(102, 126, 234, 0.08) !important;
+}
+
+.theme-light .trader-name {
+    color: #1a1a1a !important;
 }
