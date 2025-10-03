@@ -50,6 +50,11 @@
                     <span>Analytics</span>
                     <small>data</small>
                 </button>
+                <button class="tab-button" data-tab="portfolio">
+                    <i class="fas fa-wallet"></i>
+                    <span>Portfolio</span>
+                    <small>wallet</small>
+                </button>
                 <button class="tab-button" data-tab="clusterBuy">
                     <i class="fas fa-fire"></i>
                     <span>Cluster Buy</span>
@@ -322,6 +327,22 @@
                 </div>
                 <div id="coBuyData" class="data-list">
                     <div class="loading-placeholder">Loading data...</div>
+                </div>
+            </div>
+
+            <!-- Portfolio Tab -->
+            <div id="portfolio" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-wallet"></i> 📊 Wallet Portfolio Analysis</h2>
+                    <p class="tab-description">Real-time analysis of our traders' portfolios</p>
+                </div>
+                <div class="portfolio-container">
+                    <div class="trader-wallets">
+                        <h3><i class="fas fa-users"></i> Known Traders</h3>
+                        <div class="wallet-grid" id="walletGrid">
+                            <!-- Dynamic wallet cards will be inserted here -->
+                        </div>
+                    </div>
                 </div>
             </div>
 

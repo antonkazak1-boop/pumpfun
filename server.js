@@ -4,6 +4,7 @@ const path = require('path');
 
 // Импорт wallet map модуля
 const { resolveWalletMeta } = require('./walletMap');
+const { initializeTokenMetadata, enrichTransactionData, getTokenMetadata } = require('./tokenMetadata');
 
 // Helper функция для обогащения данных информацией о кошельках
 function enrichWalletData(data) {
@@ -624,17 +625,77 @@ app.get('/api/token/:mint', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`🚀 Pump Dex Mini App сервер запущен на порту ${port}`);
-    console.log(`📱 Mini App доступен по адресу: http://localhost:${port}`);
-    console.log(`🔗 Webhook эндпоинт: http://localhost:${port}/webhook/helius`);
-    console.log(`🔗 Health check: http://localhost:${port}/api/health`);
-    console.log(`🔗 API endpoints:`);
-    console.log(`   - /api/clusterbuy - кластерные покупки (10м)`);
-    console.log(`   - /api/whalemoves - движения китов (30м)`);
-    console.log(`   - /api/volumesurge - всплески объема (15м)`);
-    console.log(`   - /api/cobuy - совместные покупки (20м)`);
-    console.log(`   - /api/smartmoney - умные деньги (1ч)`);
-    console.log(`   - /api/freshtokens - новые токены (5м)`);
-    console.log(`   - /api/topgainers - топ по объему (1ч)`);
+// Получение списка известных трейдеров для Portfolio вкладки
+app.get('/api/traders/list', async (req, res) => {
+    try {
+        // Получаем уникальные кошельки с их профилями
+        const query = `
+            SELECT DISTINCT wallet, COUNT(*) as total_trades, 
+                   SUM(sol_spent) as total_volume,
+                   COUNT(DISTINCT token_mint) as unique_tokens,
+                   MAX(ts) as last_activity
+            FROM events 
+            WHERE ts >= NOW() - INTERVAL '7 days'
+            GROUP BY wallet 
+            ORDER BY total_volume DESC 
+            LIMIT 50
+        `;
+        
+        const result = await pool.query(query);
+        
+        // Обогащаем данные информацией о кошельках от walletMap
+        const enrichedData = result.rows.map(trader => {
+            const walletMeta = resolveWalletMeta(trader.wallet);
+            return {
+                ...trader,
+                name: walletMeta.wallet_name || 'Anonymous Trader',
+                telegram: walletMeta.wallet_telegram,
+                twitter: walletMeta.wallet_twitter,
+                symbol: (walletMeta.wallet_name || 'AT').charAt(0).toUpperCase()
+            };
+        });
+        
+        res.json({ success: true, data: enrichedData });
+    } catch (error) {
+        console.error('Traders list error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
+
+// Инициализация всех сервисов перед запуском
+async function startServer() {
+    try {
+        // Инициализация метаданных токенов
+        console.log('🪙 Initializing token metadata service...');
+        await initializeTokenMetadata();
+        console.log('✅ Token metadata service ready');
+        
+        // Тест подключения к БД
+        const dbConnected = await testDatabaseConnection();
+        if (!dbConnected) {
+            console.error('❌ Database connection failed, but continuing...');
+        }
+        
+        app.listen(port, () => {
+            console.log(`🚀 Pump Dex Mini App сервер запущен на порту ${port}`);
+            console.log(`📱 Mini App доступен по адресу: http://localhost:${port}`);
+            console.log(`🔗 Webhook эндпоинт: http://localhost:${port}/webhook/helius`);
+            console.log(`🔗 Health check: http://localhost:${port}/api/health`);
+            console.log(`🔗 API endpoints:`);
+            console.log(`   - /api/clusterbuy - кластерные покупки (10м)`);
+            console.log(`   - /api/whalemoves - движения китов (30м)`);
+            console.log(`   - /api/volumesurge - всплески объема (15м)`);
+            console.log(`   - /api/cobuy - совместные покупки (20м)`);
+            console.log(`   - /api/smartmoney - умные деньги (1ч)`);
+            console.log(`   - /api/freshtokens - новые токены (5м)`);
+            console.log(`   - /api/topgainers - топ по объему (1ч)`);
+        });
+        
+    } catch (error) {
+        console.error('❌ Failed to start server:', error);
+        process.exit(1);
+    }
+}
+
+// Запускаем сервер
+startServer();

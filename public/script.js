@@ -55,7 +55,8 @@ let isLoading = false;
 // Маппинг вкладок к API эндпоинтам
 const TAB_API_MAP = {
     'about': null, // Special tab without API
-    'analytics': null, // Analytics tab without API  
+    'analytics': null, // Analytics tab without API
+    'portfolio': '/api/traders/list', // Portfolio tab API endpoint  
     'clusterBuy': 'clusterbuy',
     'whaleMoves': 'whalemoves', 
     'volumeSurge': 'volumesurge',
@@ -69,6 +70,7 @@ const TAB_API_MAP = {
 const TAB_RENDER_MAP = {
     'about': null, // Special tab without rendering
     'analytics': null, // Analytics tab without rendering
+    'portfolio': renderPortfolio, // Portfolio tab rendering function
     'clusterBuy': renderClusterBuy,
     'whaleMoves': renderWhaleMoves,
     'volumeSurge': renderVolumeSurge,
@@ -869,6 +871,130 @@ function switchTab(tabName) {
     
     currentTab = tabName;
     loadTabData(tabName);
+}
+
+// ===== PORTFOLIO FUNCTIONS =====
+
+// Render portfolio traders list
+async function renderPortfolio(data) {
+    const container = document.getElementById('walletGrid');
+    if (!container) {
+        console.error('Wallet grid container not found');
+        return;
+    }
+
+    if (!data || !Array.isArray(data)) {
+        container.innerHTML = '<div class="loading-placeholder">No trader data available</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    // Create mock data for demo (in real implementation this would be from API)
+    const mockTraders = [
+        { wallet: 'dymsqudnqjyydvq86xmzavru9t7xwfqewh6gpqw9tpnf', name: 'unprofitable', symbol: '💎' },
+        { wallet: '5rkpdk4jnvaumgzev2zu8vjggmtthddtrsd5o9dhgzhd', name: 'Dave Portnoy', symbol: '🏛️' },
+        { wallet: 'amofvgj59dgf5p85pofip83pk7nzqrqrmszvv5rrfvtf', name: '7xNickk', symbol: '🎯' },
+        { wallet: 'gwofjfjutuswq2ewtz4p2sznoq9xylrf8t4q5kbtgz1r', name: 'Levis', symbol: '⚡' },
+        { wallet: '6m5sw6eapahncxnzapi1zvjnrb9rzhq3bj7fd84x9raf', name: 'ShockedJS', symbol: '🔥' },
+        { wallet: '4yzpszpxddjnf3unjkctdwesz2fl5mok7e5xqadnqry8', name: 'xunle', symbol: '🌟' },
+        { wallet: '4wptqa7bb4irdrphgnpjihgcxkh8t43gljmn5pbevfqw', name: 'Oura', symbol: '🌀' },
+        { wallet: 'ckpfgv2wv1vwdwjtxioegb8jhzqfs3evzez3qcetu7xd', name: 'Lynk', symbol: '🔮' }
+    ];
+
+    mockTraders.forEach(trader => {
+        const walletCard = createWalletCard(trader);
+        container.appendChild(walletCard);
+    });
+}
+
+// Create individual wallet card (Apple Stocks style)
+function createWalletCard(trader) {
+    const card = document.createElement('div');
+    card.className = 'wallet-card';
+    
+    // Simulate performance indicator (green/red)
+    const isProfitable = Math.random() > 0.3; // 70% chance of profitable
+    if (isProfitable) {
+        card.classList.add('profitable');
+    } else {
+        card.classList.add('lossy');
+    }
+
+    const symbol = trader.symbol || trader.name.charAt(0).toUpperCase();
+    const shortAddress = trader.wallet.slice(0, 8) + '...' + trader.wallet.slice(-8);
+    
+    // Simulate portfolio performance
+    const performancePct = (Math.random() - 0.5) * 20; // -10% to +10%
+    const performanceValue = performancePct > 0 ? `+${performancePct.toFixed(1)}%` : `${performancePct.toFixed(1)}%`;
+    
+    card.innerHTML = `
+        <div class="wallet-header">
+            <div class="wallet-avatar">${symbol}</div>
+            <div class="wallet-info">
+                <h4>${trader.name || 'Anonymous Trader'}</h4>
+                <div class="wallet-address">${shortAddress}</div>
+            </div>
+        </div>
+        
+        <div class="wallet-stats">
+            <div class="stat-item">
+                <div class="stat-value">${Math.floor(Math.random() * 20) + 1}</div>
+                <div class="stat-label">Holdings</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">$${Math.floor(Math.random() * 500) + 50}K</div>
+                <div class="stat-label">Portfolio</div>
+            </div>
+        </div>
+        
+        <div class="wallet-performance">
+            <div class="performance-indicator ${isProfitable ? '' : 'loss'}"></div>
+            <div class="performance-text">${performanceValue}</div>
+        </div>
+        
+        <div class="wallet-stock-chart"></div>
+        
+        <div class="wallet-dropdown">
+            <div class="token-holdings">
+                <h5><i class="fas fa-coins"></i> Top Holdings</h5>
+                ${createMockTokenHoldings()}
+            </div>
+        </div>
+    `;
+
+    // Add click handler to toggle dropdown
+    card.addEventListener('click', () => {
+        const dropdown = card.querySelector('.wallet-dropdown');
+        dropdown.classList.toggle('open');
+    });
+
+    return card;
+}
+
+// Create mock token holdings for demo (подобно TROLL, SPARK etc.)
+function createMockTokenHoldings() {
+    const tokens = [
+        { symbol: 'TROLL', name: 'Troll Token', balance: '1.89M', price: '$0.1670', value: '$316.0K', pct: '51.5%' },
+        { symbol: 'SPARK', name: 'Spark Token', balance: '11.66M', price: '$0.0127', value: '$148.1K', pct: '24.1%' },
+        { symbol: 'PUMP', name: 'Pump Token', balance: '500K', price: '$0.0850', value: '$42.5K', pct: '12.3%' },
+        { symbol: 'MOON', name: 'Moon Token', balance: '2.1M', price: '$0.0021', value: '$4.4K', pct: '5.1%' }
+    ];
+
+    return tokens.map(token => `
+        <div class="token-row">
+            <div class="token-info">
+                <div class="token-avatar">${token.symbol.charAt(0)}</div>
+                <div class="token-meta">
+                    <div class="token-name">${token.name}</div>
+                    <div class="token-symbol">${token.symbol}</div>
+                </div>
+            </div>
+            <div class="token-balance">${token.balance}</div>
+            <div class="token-value">${token.value}</div>
+            <div class="token-change positive">${token.pct}</div>
+        </div>
+    `).join('');
 }
 
 // Обновление текущей вкладки
