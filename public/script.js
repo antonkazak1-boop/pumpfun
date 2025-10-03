@@ -1429,6 +1429,14 @@ function formatMarketCap(cap) {
     return `$${cap.toFixed(0)}`;
 }
 
+// Форматирование SOL значений
+function formatSOL(amount) {
+    if (!amount) return '0 SOL';
+    if (amount >= 1000) return `${(amount / 1000).toFixed(1)}K SOL`;
+    if (amount >= 1) return `${amount.toFixed(2)} SOL`;
+    return `${amount.toFixed(4)} SOL`;
+}
+
 // Показать трейдеров для конкретной монеты
 function showCoinTraders(tokenMint) {
     // Пока что простой alert - позже сделаем красивое модальное окно
