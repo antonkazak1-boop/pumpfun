@@ -260,7 +260,7 @@ function renderClusterBuy(data) {
                             <i class="fas fa-fire"></i>
                         </div>
                         <div>
-                            <h3>Hot Token Alert</h3>
+                            <h3>${item.symbol || 'UNKNOWN'} - ${item.name || 'Unknown Token'}</h3>
                             <div class="token-address">${shortenAddress(item.token_mint)}</div>
                         </div>
                     </div>
@@ -439,23 +439,27 @@ function renderCoBuy(data) {
     }
     
     container.innerHTML = data.map((item, index) => {
-        const pumpUrlA = `https://pump.fun/coin/${item.token_a}`;
-        const pumpUrlB = `https://pump.fun/coin/${item.token_b}`;
+        const pumpUrl = `https://pump.fun/coin/${item.token_mint}`;
+        const dexUrl = `https://dexscreener.com/solana/${item.token_mint}`;
         
         return `
             <div class="data-item">
                 <h3>
                     <i class="fas fa-users"></i>
-                    ${index + 1}. Парная покупка
+                    ${index + 1}. ${item.symbol || 'UNKNOWN'} - ${item.name || 'Unknown Token'}
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
-                        <div class="stat-label">Токен A</div>
-                        <div class="stat-value">${shortenAddress(item.token_a)}</div>
+                        <div class="stat-label">Одновременных покупателей</div>
+                        <div class="stat-value positive">${item.simultaneous_buyers || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Токен B</div>
-                        <div class="stat-value">${shortenAddress(item.token_b)}</div>
+                        <div class="stat-label">Общий объем</div>
+                        <div class="stat-value">${formatSOL(item.total_volume || 0)}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Средняя покупка</div>
+                        <div class="stat-value">${formatSOL(item.avg_buy_size || 0)}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Общие покупатели</div>
@@ -531,17 +535,29 @@ function renderSmartMoney(data) {
                         <div class="stat-value">${shortenAddress(walletData.wallet)}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Уникальных токенов</div>
-                        <div class="stat-value positive">${walletData.unique_tokens || 0}</div>
+                        <div class="stat-label">Токенов торговал</div>
+                        <div class="stat-value positive">${latestTrade.total_tokens_traded || walletData.unique_tokens || 0}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Средний размер</div>
-                        <div class="stat-value neutral">${formatNumber(walletData.avg_buy_size)} SOL</div>
+                        <div class="stat-value neutral">${formatSOL(walletData.avg_buy_size)}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Последний токен</div>
-                        <div class="stat-value">${shortenAddress(latestTrade.token_mint)}</div>
+                        <div class="stat-value">${latestTrade.token_symbol || 'UNKNOWN'} - ${latestTrade.token_name || 'Unknown'}</div>
                     </div>
+                    ${latestTrade.most_buy_token ? `
+                    <div class="stat-item">
+                        <div class="stat-label">Most Buy</div>
+                        <div class="stat-value positive">${latestTrade.most_buy_token.symbol} (${formatSOL(latestTrade.most_buy_token.amount)})</div>
+                    </div>
+                    ` : ''}
+                    ${latestTrade.most_sell_token ? `
+                    <div class="stat-item">
+                        <div class="stat-label">Most Sell</div>
+                        <div class="stat-value negative">${latestTrade.most_sell_token.symbol} (${formatSOL(latestTrade.most_sell_token.amount)})</div>
+                    </div>
+                    ` : ''}
                 </div>
                 <div class="item-actions">
                     <a href="https://pump.fun/coin/${latestTrade.token_mint}" target="_blank" class="action-button">

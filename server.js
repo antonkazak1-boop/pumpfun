@@ -679,7 +679,7 @@ app.get('/api/traders/list', async (req, res) => {
                     isVerified: !!walletMeta.wallet_name
                 };
             })
-            .filter(trader => trader.isVerified); // Показываем только верифицированных трейдеров
+                .filter(trader => trader.isVerified || trader.total_volume > 100); // Показываем верифицированных или активных трейдеров
         
         console.log(`✅ After filtering: ${enrichedData.length} verified traders`);
         
@@ -786,16 +786,28 @@ app.get('/api/coins/traders/:tokenMint', async (req, res) => {
 app.get('/api/clusterbuy', async (req, res) => {
     try {
         const query = `
-            SELECT token_mint, COUNT(DISTINCT wallet) as unique_buyers, SUM(sol_spent) as total_volume, ts
+            SELECT token_mint, COUNT(DISTINCT wallet) as unique_buyers, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size, MAX(ts) as last_activity
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '10 minutes'
-            GROUP BY token_mint, ts
-            HAVING COUNT(DISTINCT wallet) >= 3
+            GROUP BY token_mint
+            HAVING COUNT(DISTINCT wallet) >= 3 AND SUM(sol_spent) > 10
             ORDER BY unique_buyers DESC, total_volume DESC
             LIMIT 15;
         `;
         const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
+        
+        // Обогащаем данные метаданными токенов
+        const enrichedData = await Promise.all(result.rows.map(async (item) => {
+            const tokenMeta = getTokenMetadata(item.token_mint);
+            return {
+                ...item,
+                symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                name: tokenMeta?.name || 'Unknown Token',
+                image: tokenMeta?.image || '/img/token-placeholder.png'
+            };
+        }));
+        
+        res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Cluster buy error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -805,16 +817,28 @@ app.get('/api/clusterbuy', async (req, res) => {
 app.get('/api/cobuy', async (req, res) => {
     try {
         const query = `
-            SELECT token_mint, COUNT(DISTINCT wallet) as simultaneous_buyers, SUM(sol_spent) as total_volume
+            SELECT token_mint, COUNT(DISTINCT wallet) as simultaneous_buyers, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '20 minutes'
             GROUP BY token_mint
-            HAVING COUNT(DISTINCT wallet) >= 2
+            HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 10
             ORDER BY simultaneous_buyers DESC, total_volume DESC
             LIMIT 15;
         `;
         const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
+        
+        // Обогащаем данные метаданными токенов
+        const enrichedData = await Promise.all(result.rows.map(async (item) => {
+            const tokenMeta = getTokenMetadata(item.token_mint);
+            return {
+                ...item,
+                symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                name: tokenMeta?.name || 'Unknown Token',
+                image: tokenMeta?.image || '/img/token-placeholder.png'
+            };
+        }));
+        
+        res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Co-buy error:', error);
         res.status(500).json({ success: false, error: error.message });
