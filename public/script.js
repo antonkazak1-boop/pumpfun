@@ -3,16 +3,23 @@ function toggleTheme() {
     const body = document.body;
     const themeIcon = document.querySelector('.theme-toggle i');
     
+    if (!themeIcon) {
+        console.error('Theme toggle icon not found');
+        return;
+    }
+    
     if (body.classList.contains('theme-light')) {
         // Switch to dark theme
         body.classList.remove('theme-light');
         themeIcon.className = 'fas fa-moon';
         localStorage.setItem('theme', 'dark');
+        console.log('Switched to dark theme');
     } else {
         // Switch to light theme
         body.classList.add('theme-light');
         themeIcon.className = 'fas fa-sun';
         localStorage.setItem('theme', 'light');
+        console.log('Switched to light theme');
     }
 }
 
@@ -22,10 +29,16 @@ function initTheme() {
     
     if (savedTheme === 'light' || (!savedTheme && prefersLight)) {
         document.body.classList.add('theme-light');
-        document.querySelector('.theme-toggle i').className = 'fas fa-sun';
+        const themeToggleIcon = document.querySelector('.theme-toggle i');
+        if (themeToggleIcon) {
+            themeToggleIcon.className = 'fas fa-sun';
+        }
     } else {
         document.body.classList.remove('theme-light');
-        document.querySelector('.theme-toggle i').className = 'fas fa-moon';
+        const themeToggleIcon = document.querySelector('.theme-toggle i');
+        if (themeToggleIcon) {
+            themeToggleIcon.className = 'fas fa-moon';
+        }
     }
 }
 

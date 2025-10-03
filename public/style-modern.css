@@ -46,18 +46,49 @@
     --bg-tertiary: #e9ecef;
     --bg-card: #ffffff;
     --bg-hover: #f1f3f4;
-    --border-color: rgba(0, 0, 0, 0.1);
-    --text-primary: #212529;
-    --text-secondary: #495057;
-    --text-muted: #6c757d;
-    --accent-primary: #0d6efd;
-    --accent-secondary: #6f42c1;
+    --border-color: rgba(0, 0, 0, 0.2);
+    --text-primary: #1a1a1a;
+    --text-secondary: #2d2d2d;
+    --text-muted: #555555;
+    --accent-primary: #0066cc;
+    --accent-secondary: #6c5ce7;
     --success: #198754;
     --warning: #fd7e14;
     --danger: #dc3545;
-    --info: #0dcaf0;
+    --info: #17a2b8;
     
-    --shadow-glow: 0 0 20px rgba(13, 110, 253, 0.15);
+    --shadow-glow: 0 0 20px rgba(0, 102, 204, 0.2);
+    
+    /* Additional fixes for light theme readability */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.theme-light .tab-button {
+    color: #1a1a1a;
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+.theme-light .tab-button.active {
+    background: #0066cc;
+    color: #ffffff;
+}
+
+.theme-light .header-title {
+    color: #1a1a1a;
+}
+
+.theme-light h2, .theme-light h3, .theme-light h4 {
+    color: #1a1a1a;
+}
+
+.theme-light .tab-description {
+    color: #555555;
+}
+
+.theme-light .trader-name {
+    color: #1a1a1a;
+    font-weight: 700;
 }
 
 /* Telegram theme support */
