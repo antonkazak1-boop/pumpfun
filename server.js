@@ -687,6 +687,189 @@ app.get('/api/traders/list', async (req, res) => {
     }
 });
 
+// Coins Market API - аналог Kolscan.io/tokens
+app.get('/api/coins/market', async (req, res) => {
+    try {
+        const { cap = 'all', period = '24h' } = req.query;
+        
+        // Определяем интервал времени
+        let timeInterval = '1 day';
+        if (period === '7d') timeInterval = '7 days';
+        if (period === '30d') timeInterval = '30 days';
+        
+        const query = `
+            SELECT 
+                e.token_mint,
+                COUNT(DISTINCT e.wallet) as trader_count,
+                COUNT(*) as total_trades,
+                SUM(e.sol_spent) as volume_sol,
+                AVG(e.sol_spent) as avg_trade_size,
+                MIN(e.ts) as first_buy,
+                MAX(e.ts) as last_activity
+            FROM events e
+            WHERE e.side = 'BUY' 
+            AND e.ts >= NOW() - INTERVAL '${timeInterval}'
+            GROUP BY e.token_mint
+            HAVING COUNT(DISTINCT e.wallet) >= 2 AND SUM(e.sol_spent) > 10
+            ORDER BY trader_count DESC, volume_sol DESC
+            LIMIT 20
+        `;
+        
+        const result = await pool.query(query);
+        
+        // Обогащаем данные метаданными токенов
+        const enrichedData = await Promise.all(result.rows.map(async (coin) => {
+            const tokenMeta = getTokenMetadata(coin.token_mint);
+            return {
+                ...coin,
+                symbol: tokenMeta?.symbol || coin.token_mint.substring(0, 8),
+                name: tokenMeta?.name || 'Unknown Token',
+                image: tokenMeta?.image || '/img/token-placeholder.png',
+                market_cap: tokenMeta?.market_cap || 0
+            };
+        }));
+        
+        res.json({ success: true, data: enrichedData });
+    } catch (error) {
+        console.error('Coins market error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить трейдеров конкретной монеты
+app.get('/api/coins/traders/:tokenMint', async (req, res) => {
+    try {
+        const { tokenMint } = req.params;
+        
+        const query = `
+            SELECT wallet, sol_spent, ts, tx_signature
+            FROM events 
+            WHERE token_mint = $1 AND side = 'BUY'
+            ORDER BY sol_spent DESC
+            LIMIT 20
+        `;
+        
+        const result = await pool.query(query, [tokenMint]);
+        const enrichedData = enrichWalletData(result.rows);
+        
+        res.json({ success: true, data: enrichedData });
+    } catch (error) {
+        console.error('Coin traders error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Добавляем недостающие API эндпоинты
+app.get('/api/clusterbuy', async (req, res) => {
+    try {
+        const query = `
+            SELECT token_mint, COUNT(DISTINCT wallet) as unique_buyers, SUM(sol_spent) as total_volume, ts
+            FROM events
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '10 minutes'
+            GROUP BY token_mint, ts
+            HAVING COUNT(DISTINCT wallet) >= 3
+            ORDER BY unique_buyers DESC, total_volume DESC
+            LIMIT 15;
+        `;
+        const result = await pool.query(query);
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('Cluster buy error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.get('/api/cobuy', async (req, res) => {
+    try {
+        const query = `
+            SELECT token_mint, COUNT(DISTINCT wallet) as simultaneous_buyers, SUM(sol_spent) as total_volume
+            FROM events
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '20 minutes'
+            GROUP BY token_mint
+            HAVING COUNT(DISTINCT wallet) >= 2
+            ORDER BY simultaneous_buyers DESC, total_volume DESC
+            LIMIT 15;
+        `;
+        const result = await pool.query(query);
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('Co-buy error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.get('/api/smartmoney', async (req, res) => {
+    try {
+        const query = `
+            WITH profitable_wallets AS (
+                SELECT wallet, COUNT(DISTINCT token_mint) AS unique_tokens, AVG(sol_spent) AS avg_buy_size
+                FROM events
+                WHERE side = 'BUY' AND ts > now() - interval '1 hour'
+                GROUP BY wallet
+                HAVING COUNT(DISTINCT token_mint) >= 3 AND AVG(sol_spent) > 5
+            )
+            SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint, e.sol_spent as sol_spent_needs_price_lookup, e.ts, e.tx_signature
+            FROM profitable_wallets p
+            JOIN (SELECT wallet, token_mint, sol_spent, ts, tx_signature 
+                  FROM events 
+                  WHERE side = 'BUY' AND ts > now() - interval '1 hour') e ON p.wallet = e.wallet
+            ORDER BY p.unique_tokens DESC, e.ts DESC
+            LIMIT 15;
+        `;
+        const result = await pool.query(query);
+        let enrichedData = enrichWalletData(result.rows);
+        enrichedData = await enrichTransactionData(enrichedData);
+        res.json({ success: true, data: enrichedData });
+    } catch (error) {
+        console.error('Smart money error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.get('/api/freshtokens', async (req, res) => {
+    try {
+        const query = `
+            WITH first_appearance AS (
+                SELECT token_mint, MIN(ts) AS first_seen
+                FROM events
+                GROUP BY token_mint
+            )
+            SELECT e.token_mint, COUNT(DISTINCT e.wallet) AS early_buyers, SUM(e.sol_spent) AS total_volume, fa.first_seen
+            FROM events e
+            JOIN first_appearance fa ON e.token_mint = fa.token_mint
+            WHERE e.side = 'BUY' AND fa.first_seen > now() - interval '5 minutes' AND e.ts > now() - interval '5 minutes'
+            GROUP BY e.token_mint, fa.first_seen
+            HAVING SUM(e.sol_spent) > 10
+            ORDER BY fa.first_seen DESC
+            LIMIT 10;
+        `;
+        const result = await pool.query(query);
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('Fresh tokens error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.get('/api/topgainers', async (req, res) => {
+    try {
+        const query = `
+            SELECT token_mint, COUNT(DISTINCT wallet) as buyer_count, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size
+            FROM events
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '1 hour'
+            GROUP BY token_mint
+            HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 20
+            ORDER BY buyer_count DESC, total_volume DESC
+            LIMIT 15;
+        `;
+        const result = await pool.query(query);
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('Top gainers error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Инициализация всех сервисов перед запуском
 async function startServer() {
     try {
@@ -718,6 +901,9 @@ async function startServer() {
             console.log(`   - /api/smartmoney - умные деньги (1ч)`);
             console.log(`   - /api/freshtokens - новые токены (5м)`);
             console.log(`   - /api/topgainers - топ по объему (1ч)`);
+            console.log(`   - /api/traders/list - список трейдеров для Portfolio`);
+            console.log(`   - /api/coins/market - рынок монет с фильтрами`);
+            console.log(`   - /api/coins/traders/:tokenMint - трейдеры конкретной монеты`);
         });
         
     } catch (error) {
