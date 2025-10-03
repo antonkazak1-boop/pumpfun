@@ -661,6 +661,7 @@ app.get('/api/traders/list', async (req, res) => {
         `;
         
         const result = await pool.query(query);
+        console.log(`📊 Found ${result.rows.length} traders in database`);
         
         // Обогащаем данные информацией о кошельках от walletMap
         const enrichedData = result.rows
@@ -679,6 +680,8 @@ app.get('/api/traders/list', async (req, res) => {
                 };
             })
             .filter(trader => trader.isVerified); // Показываем только верифицированных трейдеров
+        
+        console.log(`✅ After filtering: ${enrichedData.length} verified traders`);
         
         res.json({ success: true, data: enrichedData });
     } catch (error) {

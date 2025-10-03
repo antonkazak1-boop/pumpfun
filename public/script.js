@@ -1431,10 +1431,15 @@ function formatMarketCap(cap) {
 
 // Форматирование SOL значений
 function formatSOL(amount) {
-    if (!amount) return '0 SOL';
-    if (amount >= 1000) return `${(amount / 1000).toFixed(1)}K SOL`;
-    if (amount >= 1) return `${amount.toFixed(2)} SOL`;
-    return `${amount.toFixed(4)} SOL`;
+    if (!amount && amount !== 0) return '0 SOL';
+    
+    // Преобразуем в число если это строка
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : Number(amount);
+    
+    if (isNaN(numAmount)) return '0 SOL';
+    if (numAmount >= 1000) return `${(numAmount / 1000).toFixed(1)}K SOL`;
+    if (numAmount >= 1) return `${numAmount.toFixed(2)} SOL`;
+    return `${numAmount.toFixed(4)} SOL`;
 }
 
 // Показать трейдеров для конкретной монеты
