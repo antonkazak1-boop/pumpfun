@@ -5,6 +5,13 @@ const path = require('path');
 // Импорт wallet map модуля
 const { resolveWalletMeta } = require('./walletMap');
 const { initializeTokenMetadata, enrichTransactionData, getTokenMetadata } = require('./tokenMetadata');
+const { 
+    getNewPumpTokens, 
+    getPumpTokenDetails, 
+    getTopPumpTokensByVolume,
+    getTrendingPumpTokens,
+    getTokenStats
+} = require('./pumpfunAPI');
 
 // Helper функция для обогащения данных информацией о кошельках
 function enrichWalletData(data) {
@@ -977,6 +984,78 @@ app.get('/api/topgainers', async (req, res) => {
     }
 });
 
+// --- Pump.fun API endpoints ---
+
+// Получить новые токены с Pump.fun
+app.get('/api/pump/new', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        const tokens = await getNewPumpTokens(limit);
+        res.json({ success: true, data: tokens, count: tokens.length });
+    } catch (error) {
+        console.error('Pump.fun new tokens error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить детали токена с Pump.fun
+app.get('/api/pump/token/:address', async (req, res) => {
+    try {
+        const { address } = req.params;
+        const details = await getPumpTokenDetails(address);
+        
+        if (!details) {
+            return res.status(404).json({ success: false, error: 'Token not found' });
+        }
+        
+        res.json({ success: true, data: details });
+    } catch (error) {
+        console.error('Pump.fun token details error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить топ токенов по объему
+app.get('/api/pump/top', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 20;
+        const tokens = await getTopPumpTokensByVolume(limit);
+        res.json({ success: true, data: tokens, count: tokens.length });
+    } catch (error) {
+        console.error('Pump.fun top tokens error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить trending токены
+app.get('/api/pump/trending', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 15;
+        const tokens = await getTrendingPumpTokens(limit);
+        res.json({ success: true, data: tokens, count: tokens.length });
+    } catch (error) {
+        console.error('Pump.fun trending tokens error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить статистику токена
+app.get('/api/pump/stats/:address', async (req, res) => {
+    try {
+        const { address } = req.params;
+        const stats = await getTokenStats(address);
+        
+        if (!stats) {
+            return res.status(404).json({ success: false, error: 'Token not found' });
+        }
+        
+        res.json({ success: true, data: stats });
+    } catch (error) {
+        console.error('Pump.fun token stats error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Инициализация всех сервисов перед запуском
 async function startServer() {
     try {
@@ -1011,6 +1090,27 @@ async function startServer() {
             console.log(`   - /api/traders/list - список трейдеров для Portfolio`);
             console.log(`   - /api/coins/market - рынок монет с фильтрами`);
             console.log(`   - /api/coins/traders/:tokenMint - трейдеры конкретной монеты`);
+            console.log(`🔥 Pump.fun integration endpoints:`);
+            console.log(`   - /api/pump/new - новые токены с Pump.fun`);
+            console.log(`   - /api/pump/top - топ токенов по объему`);
+            console.log(`   - /api/pump/trending - trending токены`);
+            console.log(`   - /api/pump/token/:address - детали токена`);
+            console.log(`   - /api/pump/stats/:address - статистика токена`);
+            
+            // Запускаем Telegram бота параллельно (если BOT_TOKEN настроен)
+            if (process.env.BOT_TOKEN) {
+                try {
+                    console.log('\n🤖 Starting Telegram Bot...');
+                    require('./bot.js');
+                    console.log('✅ Telegram Bot started successfully!');
+                } catch (error) {
+                    console.log('⚠️ Telegram Bot not started:', error.message);
+                    console.log('   Set BOT_TOKEN environment variable to enable bot');
+                }
+            } else {
+                console.log('\n⚠️ BOT_TOKEN not set - Telegram Bot disabled');
+                console.log('   Set BOT_TOKEN environment variable to enable bot');
+            }
         });
         
     } catch (error) {
