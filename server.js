@@ -404,7 +404,7 @@ app.get('/api/smartmoney', async (req, res) => {
                 FROM events
                 WHERE side = 'BUY' AND ts > now() - interval '24 hours'
                 GROUP BY wallet
-                HAVING COUNT(DISTINCT token_mint) >= 3 AND AVG(sol_spent) > 5
+                HAVING COUNT(DISTINCT token_mint) >= 1 AND AVG(sol_spent) > 1
             )
             SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint, e.sol_spent as sol_spent_needs_price_lookup, e.ts, e.tx_signature
             FROM profitable_wallets p
@@ -437,7 +437,7 @@ app.get('/api/freshtokens', async (req, res) => {
             JOIN first_appearance fa ON e.token_mint = fa.token_mint
             WHERE e.side = 'BUY' AND fa.first_seen > now() - interval '5 minutes' AND e.ts > now() - interval '5 minutes'
             GROUP BY e.token_mint, fa.first_seen
-            HAVING SUM(e.sol_spent) > 10
+            HAVING SUM(e.sol_spent) > 1
             ORDER BY fa.first_seen DESC
             LIMIT 10;
         `;
@@ -679,7 +679,7 @@ app.get('/api/traders/list', async (req, res) => {
                     isVerified: !!walletMeta.wallet_name
                 };
             })
-                .filter(trader => trader.isVerified || trader.total_volume > 100); // Показываем верифицированных или активных трейдеров
+                .filter(trader => trader.isVerified || trader.total_volume > 10); // Показываем верифицированных или активных трейдеров
         
         console.log(`✅ After filtering: ${enrichedData.length} verified traders`);
         
@@ -713,7 +713,7 @@ app.get('/api/coins/market', async (req, res) => {
             WHERE e.side = 'BUY' 
             AND e.ts >= NOW() - INTERVAL '${timeInterval}'
             GROUP BY e.token_mint
-            HAVING COUNT(DISTINCT e.wallet) >= 2 AND SUM(e.sol_spent) > 10
+            HAVING COUNT(DISTINCT e.wallet) >= 1 AND SUM(e.sol_spent) > 1
             ORDER BY trader_count DESC, volume_sol DESC
             LIMIT 50
         `;
@@ -790,7 +790,7 @@ app.get('/api/clusterbuy', async (req, res) => {
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
-            HAVING COUNT(DISTINCT wallet) >= 3 AND SUM(sol_spent) > 10
+            HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 1
             ORDER BY unique_buyers DESC, total_volume DESC
             LIMIT 15;
         `;
@@ -821,7 +821,7 @@ app.get('/api/cobuy', async (req, res) => {
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
-            HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 10
+            HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 1
             ORDER BY simultaneous_buyers DESC, total_volume DESC
             LIMIT 15;
         `;
@@ -853,7 +853,7 @@ app.get('/api/smartmoney', async (req, res) => {
                 FROM events
                 WHERE side = 'BUY' AND ts > now() - interval '24 hours'
                 GROUP BY wallet
-                HAVING COUNT(DISTINCT token_mint) >= 3 AND AVG(sol_spent) > 5
+                HAVING COUNT(DISTINCT token_mint) >= 1 AND AVG(sol_spent) > 1
             )
             SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint, e.sol_spent as sol_spent_needs_price_lookup, e.ts, e.tx_signature
             FROM profitable_wallets p
@@ -886,7 +886,7 @@ app.get('/api/freshtokens', async (req, res) => {
             JOIN first_appearance fa ON e.token_mint = fa.token_mint
             WHERE e.side = 'BUY' AND fa.first_seen > now() - interval '5 minutes' AND e.ts > now() - interval '5 minutes'
             GROUP BY e.token_mint, fa.first_seen
-            HAVING SUM(e.sol_spent) > 10
+            HAVING SUM(e.sol_spent) > 1
             ORDER BY fa.first_seen DESC
             LIMIT 10;
         `;
@@ -905,7 +905,7 @@ app.get('/api/topgainers', async (req, res) => {
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
-            HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 20
+            HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 1
             ORDER BY buyer_count DESC, total_volume DESC
             LIMIT 15;
         `;
