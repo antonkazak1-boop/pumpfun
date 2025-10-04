@@ -613,19 +613,19 @@ function renderFreshTokens(data) {
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
-                        <div class="stat-label">Ранних покупателей</div>
+                        <div class="stat-label">Early Buyers</div>
                         <div class="stat-value positive">${item.early_buyers || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Общий объем</div>
-                        <div class="stat-value neutral">${formatNumber(item.total_volume)} SOL</div>
+                        <div class="stat-label">Total Volume</div>
+                        <div class="stat-value neutral">${formatSOL(item.total_volume)}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Возраст</div>
-                        <div class="stat-value">${minutesAgo}м назад</div>
+                        <div class="stat-label">Age</div>
+                        <div class="stat-value">${minutesAgo}m ago</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Создан</div>
+                        <div class="stat-label">Created</div>
                         <div class="stat-value">${formatTime(item.first_seen)}</div>
                     </div>
                 </div>
