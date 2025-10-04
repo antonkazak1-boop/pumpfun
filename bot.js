@@ -29,26 +29,107 @@ bot.start((ctx) => {
     console.log(`👋 Новый пользователь: ${userName} (ID: ${user.id})`);
     
     const welcomeMessage = `
-🤖 *Добро пожаловать в Pump Dex Bot!*
+🚀 *Welcome to Pump Dex Bot!*
 
-Привет, ${userName}! 
+Hey ${userName}! Ready to track smart money on Solana?
 
-Этот бот предоставляет вам доступ к мощному Mini App для анализа торговли токенами на Solana:
+╔═══════════════════════╗
+║  🎯 *What We Offer*      ║
+╚═══════════════════════╝
 
-🔥 *Cluster Buy* - токены с групповыми покупками
-🐋 *Whale Moves* - крупные движения китов
-📈 *Volume Surge* - всплески торгового объема  
-👥 *Co-buy Analysis* - анализ совместных покупок
-🧠 *Smart Money* - активность опытных трейдеров
-🌱 *Fresh Tokens* - новые токены с активностью
-🏆 *Top Gainers* - лидеры по объему торгов
+📊 *Real-Time Analytics*
+Track 300+ known traders and their moves in real-time. Every purchase, every sale - all in one dashboard.
 
-Нажмите кнопку ниже, чтобы запустить приложение! 👇
+🔥 *Smart Money Tracking*
+See what professional traders are buying before it pumps. Get instant insights into whale movements and cluster purchases.
+
+💎 *Fresh Token Discovery*
+Catch new tokens the moment smart traders enter. Never miss an early entry opportunity again.
+
+📈 *Live Market Data*
+• 20+ signals per hour
+• Live updates every 5 minutes  
+• 100% automated SQL analysis
+• Deep market insights
+
+╔═══════════════════════╗
+║  🎨 *Mini App Features*  ║
+╚═══════════════════════╝
+
+🐋 Whale Moves (10+ SOL)
+🔥 Cluster Buy Analysis
+📊 Volume Surge Detection
+👥 Co-buy Patterns
+🧠 Smart Money Moves
+🌱 Fresh Tokens (< 24h)
+🏆 Most Bought Tokens
+🪙 Coin Market Overview
+📱 Recent Activity Feed
+
+━━━━━━━━━━━━━━━━━━━━
+*Built by traders, for traders.*
+Powered by on-chain data analysis.
+━━━━━━━━━━━━━━━━━━━━
+
+👇 *Launch the Mini App below to start tracking!*
     `;
     
     ctx.replyWithMarkdown(welcomeMessage, 
         Markup.inlineKeyboard([
-            [Markup.button.webApp('🚀 Запустить Mini App', MINI_APP_URL)]
+            [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+            [Markup.button.url('📊 View Web Version', MINI_APP_URL)]
+        ])
+    );
+});
+
+// Обработчик команды /about
+bot.command('about', (ctx) => {
+    const aboutMessage = `
+📖 *About Pump Dex Bot*
+
+╔═══════════════════════╗
+║  💡 *Our Mission*        ║
+╚═══════════════════════╝
+
+We believe that everyone should have access to the same trading insights as professional traders. That's why we built Pump Dex Bot - to democratize smart money tracking on Solana.
+
+╔═══════════════════════╗
+║  🔍 *What We Track*      ║
+╚═══════════════════════╝
+
+📊 *300+ Known Traders*
+We monitor a carefully curated list of proven successful traders on Solana, tracking every move they make.
+
+⚡ *Real-Time Data*
+Our system processes blockchain data in real-time, giving you instant notifications when smart traders make moves.
+
+🎯 *Advanced Analytics*
+Powered by SQL-based analysis of on-chain data, we provide deep insights that go beyond simple price tracking.
+
+╔═══════════════════════╗
+║  🚀 *Key Features*       ║
+╚═══════════════════════╝
+
+• Live activity feed (BUY/SELL)
+• Whale transaction monitoring (10+ SOL)
+• Cluster buy detection (coordinated purchases)
+• Fresh token discovery (< 24h old)
+• Smart money tracking (proven traders)
+• Volume surge alerts
+• Market overview by cap
+• And much more...
+
+━━━━━━━━━━━━━━━━━━━━
+*Stay ahead of the curve.*
+*Trade smarter, not harder.*
+━━━━━━━━━━━━━━━━━━━━
+
+Questions? Contact @your_support_bot
+    `;
+    
+    ctx.replyWithMarkdown(aboutMessage,
+        Markup.inlineKeyboard([
+            [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)]
         ])
     );
 });
@@ -56,26 +137,53 @@ bot.start((ctx) => {
 // Обработчик команды /help
 bot.help((ctx) => {
     const helpMessage = `
-📖 *Помощь - Pump Dex Bot*
+📖 *Pump Dex Bot - Help*
 
-*Команды бота:*
-• /start - запустить бота и получить доступ к Mini App
-• /help - показать эту справку
-• /status - проверить статус Mini App
-• /about - информация о боте
+╔═══════════════════════╗
+║  🤖 *Bot Commands*       ║
+╚═══════════════════════╝
 
-*О Mini App:*
-Pump Dex Bot Mini App - это современное веб-приложение для анализа торговли токенами на блокчейне Solana. Приложение предоставляет:
+/start - Launch the bot and access Mini App
+/about - Learn about Pump Dex Bot
+/help - Show this help message
 
-🔍 *Реальное время* - данные обновляются каждые 30 секунд
-📊 *7 типов анализа* - от кластерных покупок до движений китов
-🎯 *Точные фильтры* - настраиваемые временные интервалы
-🔗 *Интеграция* - прямые ссылки на Pump.fun и DexScreener
+╔═══════════════════════╗
+║  🎨 *Mini App Tabs*      ║
+╚═══════════════════════╝
 
-*Поддержка:* @your_support_username
+📊 *About* - Introduction and statistics
+📈 *Analytics* - Algorithm explanations
+💼 *Portfolio* - Trader portfolios (300+ traders)
+🔥 *Cluster Buy* - Coordinated purchases (24h)
+🐋 *Whale Moves* - Large transactions (10+ SOL, 2h)
+📊 *Volume Surge* - High volume tokens (10+ SOL, 2h)
+👥 *Co-buy* - Simultaneous purchases (24h)
+🧠 *Smart Money* - Pro trader activity (24h)
+🌱 *Fresh Tokens* - New tokens (< 24h)
+🏆 *Most Bought* - Top tokens by buyers (24h)
+🪙 *Coins* - Market overview with filters
+📱 *Recent Activity* - Live BUY/SELL feed
+
+╔═══════════════════════╗
+║  💡 *Pro Tips*           ║
+╚═══════════════════════╝
+
+• Watch for cluster buys - often signals coordinated entries
+• Follow whale moves - they often know something you don't
+• Check fresh tokens early - catch gems before they pump
+• Monitor smart money - learn from proven traders
+
+━━━━━━━━━━━━━━━━━━━━
+Need support? Contact @your_support_bot
+━━━━━━━━━━━━━━━━━━━━
     `;
     
-    ctx.replyWithMarkdown(helpMessage);
+    ctx.replyWithMarkdown(helpMessage,
+        Markup.inlineKeyboard([
+            [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+            [Markup.button.callback('📊 About Bot', 'about')]
+        ])
+    );
 });
 
 // Обработчик команды /status
