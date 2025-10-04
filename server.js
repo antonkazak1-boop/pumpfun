@@ -315,7 +315,7 @@ app.get('/api/clusterbuy', async (req, res) => {
             GROUP BY token_mint
             HAVING COUNT(*) >= 10
             ORDER BY purchase_count DESC, latest_purchase DESC
-            LIMIT 20;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         res.json({ success: true, data: result.rows });
@@ -334,7 +334,7 @@ app.get('/api/whalemoves', async (req, res) => {
             FROM events
             WHERE side = 'BUY' AND sol_spent > 50 AND ts >= NOW() - INTERVAL '30 minutes'
             ORDER BY sol_spent DESC, ts DESC
-            LIMIT 20;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         let enrichedData = enrichWalletData(result.rows);
@@ -355,7 +355,7 @@ app.get('/api/volumesurge', async (req, res) => {
                 GROUP BY token_mint
             HAVING SUM(sol_spent) > 100
             ORDER BY total_volume DESC
-            LIMIT 15;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         res.json({ success: true, data: result.rows });
@@ -387,7 +387,7 @@ app.get('/api/cobuy', async (req, res) => {
             SELECT token_a, token_b, common_buyers, combined_volume
             FROM token_pairs
             ORDER BY common_buyers DESC, combined_volume DESC
-            LIMIT 10;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         res.json({ success: true, data: result.rows });
@@ -405,7 +405,7 @@ app.get('/api/smartmoney', async (req, res) => {
                 FROM events
                 WHERE side = 'BUY' AND ts > now() - interval '24 hours'
                 GROUP BY wallet
-                HAVING COUNT(DISTINCT token_mint) >= 1 AND AVG(sol_spent) > 1
+                HAVING COUNT(DISTINCT token_mint) >= 1 AND AVG(sol_spent) > 0.01
             )
             SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint, e.sol_spent as sol_spent_needs_price_lookup, e.ts, e.tx_signature
             FROM profitable_wallets p
@@ -413,7 +413,7 @@ app.get('/api/smartmoney', async (req, res) => {
                   FROM events 
                   WHERE side = 'BUY' AND ts > now() - interval '24 hours') e ON p.wallet = e.wallet
             ORDER BY p.unique_tokens DESC, e.ts DESC
-            LIMIT 15;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         let enrichedData = enrichWalletData(result.rows);
@@ -438,9 +438,9 @@ app.get('/api/freshtokens', async (req, res) => {
             JOIN first_appearance fa ON e.token_mint = fa.token_mint
             WHERE e.side = 'BUY' AND fa.first_seen > now() - interval '5 minutes' AND e.ts > now() - interval '5 minutes'
             GROUP BY e.token_mint, fa.first_seen
-            HAVING SUM(e.sol_spent) > 1
+            HAVING SUM(e.sol_spent) > 0.01
             ORDER BY fa.first_seen DESC
-            LIMIT 10;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         res.json({ success: true, data: result.rows });
@@ -460,7 +460,7 @@ app.get('/api/topgainers', async (req, res) => {
             GROUP BY token_mint
             HAVING SUM(sol_spent) > 100
             ORDER BY total_volume DESC
-            LIMIT 10;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         res.json({ success: true, data: result.rows });
@@ -592,7 +592,7 @@ app.get('/api/token/details/:mint', async (req, res) => {
             FROM events
             WHERE token_mint = $1 AND ts >= NOW() - INTERVAL '2 hours'
             ORDER BY ts DESC
-            LIMIT 50;
+            LIMIT 200;
         `;
         const result = await pool.query(query, [mint]);
         const enrichedData = enrichWalletData(result.rows);
@@ -658,7 +658,7 @@ app.get('/api/traders/list', async (req, res) => {
             WHERE ts >= NOW() - INTERVAL '30 days'
             GROUP BY wallet 
             ORDER BY total_volume DESC 
-            LIMIT 50
+            LIMIT 200
         `;
         
         const result = await pool.query(query);
@@ -680,7 +680,7 @@ app.get('/api/traders/list', async (req, res) => {
                     isVerified: !!walletMeta.wallet_name
                 };
             })
-                .filter(trader => trader.total_volume > 1); // Показываем всех активных трейдеров
+                .filter(trader => trader.total_volume > 0.01); // Показываем всех активных трейдеров
         
         console.log(`✅ After filtering: ${enrichedData.length} verified traders`);
         
@@ -714,9 +714,9 @@ app.get('/api/coins/market', async (req, res) => {
             WHERE e.side = 'BUY' 
             AND e.ts >= NOW() - INTERVAL '${timeInterval}'
             GROUP BY e.token_mint
-            HAVING COUNT(DISTINCT e.wallet) >= 1 AND SUM(e.sol_spent) > 1
+            HAVING COUNT(DISTINCT e.wallet) >= 1 AND SUM(e.sol_spent) > 0.01
             ORDER BY trader_count DESC, volume_sol DESC
-            LIMIT 50
+            LIMIT 200
         `;
         
         const result = await pool.query(query);
@@ -826,9 +826,9 @@ app.get('/api/clusterbuy', async (req, res) => {
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
-            HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 1
+            HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 0.01
             ORDER BY unique_buyers DESC, total_volume DESC
-            LIMIT 15;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         
@@ -857,9 +857,9 @@ app.get('/api/cobuy', async (req, res) => {
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
-            HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 1
+            HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 0.01
             ORDER BY simultaneous_buyers DESC, total_volume DESC
-            LIMIT 15;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         
@@ -889,7 +889,7 @@ app.get('/api/smartmoney', async (req, res) => {
                 FROM events
                 WHERE side = 'BUY' AND ts > now() - interval '24 hours'
                 GROUP BY wallet
-                HAVING COUNT(DISTINCT token_mint) >= 1 AND AVG(sol_spent) > 1
+                HAVING COUNT(DISTINCT token_mint) >= 1 AND AVG(sol_spent) > 0.01
             )
             SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint, e.sol_spent as sol_spent_needs_price_lookup, e.ts, e.tx_signature
             FROM profitable_wallets p
@@ -897,7 +897,7 @@ app.get('/api/smartmoney', async (req, res) => {
                   FROM events 
                   WHERE side = 'BUY' AND ts > now() - interval '24 hours') e ON p.wallet = e.wallet
             ORDER BY p.unique_tokens DESC, e.ts DESC
-            LIMIT 15;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         let enrichedData = enrichWalletData(result.rows);
@@ -922,9 +922,9 @@ app.get('/api/freshtokens', async (req, res) => {
             JOIN first_appearance fa ON e.token_mint = fa.token_mint
             WHERE e.side = 'BUY' AND fa.first_seen > now() - interval '5 minutes' AND e.ts > now() - interval '5 minutes'
             GROUP BY e.token_mint, fa.first_seen
-            HAVING SUM(e.sol_spent) > 1
+            HAVING SUM(e.sol_spent) > 0.01
             ORDER BY fa.first_seen DESC
-            LIMIT 10;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         res.json({ success: true, data: result.rows });
@@ -941,9 +941,9 @@ app.get('/api/topgainers', async (req, res) => {
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
-            HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 1
+            HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 0.01
             ORDER BY buyer_count DESC, total_volume DESC
-            LIMIT 15;
+            LIMIT 100;
         `;
         const result = await pool.query(query);
         
