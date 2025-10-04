@@ -517,7 +517,7 @@ function renderSmartMoney(data) {
         const latestTrade = walletData.trades[0]; // Первая торговля (самая свежая)
         
         // Получаем данные о трейдере из latest trade
-        const traderName = latestTrade.wallet_name || 'Анонимный трейдер';
+        const traderName = latestTrade.wallet_name || `Trader ${walletData.wallet.substring(0, 8)}`;
         const telegramLink = latestTrade.wallet_telegram;
         const twitterLink = latestTrade.wallet_twitter;
         

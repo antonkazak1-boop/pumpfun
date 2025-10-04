@@ -337,7 +337,8 @@ app.get('/api/whalemoves', async (req, res) => {
             LIMIT 20;
         `;
         const result = await pool.query(query);
-        const enrichedData = enrichWalletData(result.rows);
+        let enrichedData = enrichWalletData(result.rows);
+        enrichedData = await enrichTransactionData(enrichedData);
         res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Whalemoves error:', error);
@@ -679,7 +680,7 @@ app.get('/api/traders/list', async (req, res) => {
                     isVerified: !!walletMeta.wallet_name
                 };
             })
-                .filter(trader => trader.isVerified || trader.total_volume > 10); // Показываем верифицированных или активных трейдеров
+                .filter(trader => trader.total_volume > 1); // Показываем всех активных трейдеров
         
         console.log(`✅ After filtering: ${enrichedData.length} verified traders`);
         
