@@ -389,19 +389,24 @@ function renderVolumeSurge(data) {
     
     container.innerHTML = data.map((item, index) => {
         const pumpUrl = `https://pump.fun/coin/${item.token_mint}`;
-        const surgePercentage = parseFloat(item.surge_percentage || 0);
-        const surgeClass = surgePercentage > 50 ? 'positive' : 'neutral';
+        const dexUrl = `https://dexscreener.com/solana/${item.token_mint}`;
+        const tokenSymbol = item.symbol || item.token_mint.substring(0, 8);
+        const tokenName = item.name || 'Unknown Token';
         
         return `
             <div class="data-item surge-item">
                 <h3>
                     <i class="fas fa-chart-line"></i>
-                    ${index + 1}. ${shortenAddress(item.token_mint)}
+                    ${index + 1}. ${tokenSymbol} - ${tokenName}
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
-                        <div class="stat-label">Текущий объем (15м)</div>
-                        <div class="stat-value positive">${formatNumber(item.volume_15m)} SOL</div>
+                        <div class="stat-label">Total Volume (2h)</div>
+                        <div class="stat-value positive">${formatSOL(item.total_volume)}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Transactions</div>
+                        <div class="stat-value">${item.tx_count || 0}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Предыдущий объем</div>

@@ -358,7 +358,19 @@ app.get('/api/volumesurge', async (req, res) => {
             LIMIT 100;
         `;
         const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
+        
+        // Обогащаем данные метаданными токенов
+        const enrichedData = await Promise.all(result.rows.map(async (item) => {
+            const tokenMeta = getTokenMetadata(item.token_mint);
+            return {
+                ...item,
+                symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                name: tokenMeta?.name || 'Unknown Token',
+                image: tokenMeta?.image || '/img/token-placeholder.png'
+            };
+        }));
+        
+        res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Volume surge error:', error);
         res.status(500).json({ success: false, error: error.message });
