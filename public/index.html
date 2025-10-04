@@ -95,6 +95,11 @@
                     <span>Coins</span>
                     <small>market</small>
                 </button>
+                <button class="tab-button" data-tab="recentActivity">
+                    <i class="fas fa-history"></i>
+                    <span>Recent Activity</span>
+                    <small>live</small>
+                </button>
             </div>
         </nav>
 
@@ -415,6 +420,18 @@
 
                 <div id="coinsData" class="coins-grid">
                     <div class="loading-placeholder">Loading coins data...</div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Tab - ALL actions from DB -->
+            <div id="recentActivity" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-history"></i> 📊 Recent Activity (Live Feed)</h2>
+                    <p class="tab-description">All recent wallet actions from database - BUY/SELL transactions</p>
+                </div>
+
+                <div id="recentActivityData" class="data-list">
+                    <div class="loading-placeholder">Loading recent activity...</div>
                 </div>
             </div>
         </main>

@@ -760,6 +760,41 @@ app.get('/api/coins/market', async (req, res) => {
     }
 });
 
+// Recent Activity API - ВСЕ последние действия из БД
+app.get('/api/recentactivity', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                id, ts, wallet, token_mint, side, sol_spent, sol_received, 
+                token_amount, dex, tx_signature, usd_estimate
+            FROM events 
+            ORDER BY ts DESC 
+            LIMIT 100;
+        `;
+        const result = await pool.query(query);
+        
+        // Обогащаем данные
+        let enrichedData = enrichWalletData(result.rows);
+        enrichedData = await enrichTransactionData(enrichedData);
+        
+        // Добавляем метаданные токенов
+        enrichedData = await Promise.all(enrichedData.map(async (item) => {
+            const tokenMeta = getTokenMetadata(item.token_mint);
+            return {
+                ...item,
+                token_symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                token_name: tokenMeta?.name || 'Unknown Token',
+                token_image: tokenMeta?.image || '/img/token-placeholder.png'
+            };
+        }));
+        
+        res.json({ success: true, data: enrichedData });
+    } catch (error) {
+        console.error('Recent activity error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Получить трейдеров конкретной монеты
 app.get('/api/coins/traders/:tokenMint', async (req, res) => {
     try {

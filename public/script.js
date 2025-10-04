@@ -64,7 +64,8 @@ const TAB_API_MAP = {
     'smartMoney': 'smartmoney',
     'freshTokens': 'freshtokens',
     'topGainers': 'topgainers',
-    'coins': 'coins/market' // Coins tab API endpoint
+    'coins': 'coins/market', // Coins tab API endpoint
+    'recentActivity': 'recentactivity' // Recent Activity tab API endpoint
 };
 
 // Маппинг для рендеринга функций
@@ -79,7 +80,8 @@ const TAB_RENDER_MAP = {
     'smartMoney': renderSmartMoney,
     'freshTokens': renderFreshTokens,
     'topGainers': renderTopGainers,
-    'coins': renderCoins // Coins tab rendering function
+    'coins': renderCoins, // Coins tab rendering function
+    'recentActivity': renderRecentActivity // Recent Activity tab rendering function
 };
 
 // Инициализация Telegram Web App
@@ -1410,6 +1412,74 @@ function createTraderElement(trader, index) {
     `;
     
     return div;
+}
+
+// Функция рендеринга Recent Activity вкладки
+function renderRecentActivity(data) {
+    const container = document.getElementById('recentActivityData');
+    if (!container) return;
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <h3>No Recent Activity</h3>
+                <p>No transactions found in database</p>
+            </div>`;
+        return;
+    }
+    
+    container.innerHTML = data.map((item, index) => {
+        const isBuy = item.side === 'BUY';
+        const amount = isBuy ? item.sol_spent : item.sol_received;
+        const traderName = item.wallet_name || `Trader ${item.wallet.substring(0, 8)}`;
+        const tokenSymbol = item.token_symbol || 'UNKNOWN';
+        const tokenName = item.token_name || 'Unknown Token';
+        const timeAgo = formatTimeAgo(new Date(item.ts));
+        
+        return `
+            <div class="data-item activity-item ${isBuy ? 'buy-action' : 'sell-action'}">
+                <div class="activity-header">
+                    <div class="activity-type">
+                        <i class="fas ${isBuy ? 'fa-arrow-circle-up' : 'fa-arrow-circle-down'}"></i>
+                        <span class="action-label">${isBuy ? 'BUY' : 'SELL'}</span>
+                    </div>
+                    <div class="activity-time">${timeAgo}</div>
+                </div>
+                
+                <h3>
+                    <i class="fas fa-user-circle"></i>
+                    ${traderName}
+                    ${item.wallet_telegram ? `<a href="${item.wallet_telegram}" target="_blank" class="social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
+                    ${item.wallet_twitter ? `<a href="${item.wallet_twitter}" target="_blank" class="social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
+                </h3>
+                
+                <div class="activity-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Token:</span>
+                        <span class="detail-value">${tokenSymbol} - ${tokenName}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Amount:</span>
+                        <span class="detail-value ${isBuy ? 'positive' : 'negative'}">${formatSOL(amount)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">DEX:</span>
+                        <span class="detail-value">${item.dex || 'Unknown'}</span>
+                    </div>
+                </div>
+                
+                <div class="item-actions">
+                    <a href="https://solscan.io/tx/${item.tx_signature}" target="_blank" class="action-button">
+                        <i class="fas fa-external-link-alt"></i> Transaction
+                    </a>
+                    <a href="https://solscan.io/account/${item.wallet}" target="_blank" class="action-button">
+                        <i class="fas fa-wallet"></i> Wallet
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Функция рендеринга Coins вкладки
