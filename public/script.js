@@ -1429,7 +1429,11 @@ function renderRecentActivity(data) {
         return;
     }
     
-    container.innerHTML = data.map((item, index) => {
+    // Разделяем на SELL и BUY
+    const sellTransactions = data.filter(item => item.side === 'SELL');
+    const buyTransactions = data.filter(item => item.side === 'BUY');
+    
+    const renderTransaction = (item, index) => {
         const isBuy = item.side === 'BUY';
         const amount = isBuy ? item.sol_spent : item.sol_received;
         const traderName = item.wallet_name || `Trader ${item.wallet.substring(0, 8)}`;
@@ -1479,7 +1483,21 @@ function renderRecentActivity(data) {
                 </div>
             </div>
         `;
-    }).join('');
+    };
+    
+    // Создаем две колонки
+    container.innerHTML = `
+        <div class="activity-columns">
+            <div class="activity-column sell-column">
+                <h3 class="column-header"><i class="fas fa-arrow-circle-down"></i> SELL Transactions</h3>
+                ${sellTransactions.length > 0 ? sellTransactions.map(renderTransaction).join('') : '<div class="empty-column">No SELL transactions</div>'}
+            </div>
+            <div class="activity-column buy-column">
+                <h3 class="column-header"><i class="fas fa-arrow-circle-up"></i> BUY Transactions</h3>
+                ${buyTransactions.length > 0 ? buyTransactions.map(renderTransaction).join('') : '<div class="empty-column">No BUY transactions</div>'}
+            </div>
+        </div>
+    `;
 }
 
 // Функция рендеринга Coins вкладки

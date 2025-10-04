@@ -332,7 +332,7 @@ app.get('/api/whalemoves', async (req, res) => {
         const query = `
             SELECT token_mint, wallet, sol_spent, ts
             FROM events
-            WHERE side = 'BUY' AND sol_spent > 50 AND ts >= NOW() - INTERVAL '30 minutes'
+            WHERE side = 'BUY' AND sol_spent > 10 AND ts >= NOW() - INTERVAL '2 hours'
             ORDER BY sol_spent DESC, ts DESC
             LIMIT 100;
         `;
@@ -351,9 +351,9 @@ app.get('/api/volumesurge', async (req, res) => {
         const query = `
             SELECT token_mint, SUM(sol_spent) as total_volume, COUNT(*) as tx_count
                 FROM events
-            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '15 minutes'
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '2 hours'
                 GROUP BY token_mint
-            HAVING SUM(sol_spent) > 100
+            HAVING SUM(sol_spent) > 10
             ORDER BY total_volume DESC
             LIMIT 100;
         `;
