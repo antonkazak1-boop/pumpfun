@@ -409,20 +409,19 @@ function renderVolumeSurge(data) {
                         <div class="stat-value">${item.tx_count || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Предыдущий объем</div>
-                        <div class="stat-value">${formatNumber(item.volume_previous)} SOL</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Рост</div>
-                        <div class="stat-value ${surgeClass}">+${formatNumber(surgePercentage, 1)}%</div>
+                        <div class="stat-label">Token</div>
+                        <div class="stat-value">${shortenAddress(item.token_mint)}</div>
                     </div>
                 </div>
                 <div class="item-actions">
                     <a href="${pumpUrl}" target="_blank" class="action-button">
                         <i class="fas fa-external-link-alt"></i> Pump.fun
                     </a>
+                    <a href="${dexUrl}" target="_blank" class="action-button">
+                        <i class="fas fa-chart-bar"></i> DexScreener
+                    </a>
                     <button class="action-button secondary" onclick="showTokenDetails('${item.token_mint}')">
-                        <i class="fas fa-info-circle"></i> Детали
+                        <i class="fas fa-info-circle"></i> Details
                     </button>
                 </div>
             </div>
