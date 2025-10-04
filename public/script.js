@@ -1432,6 +1432,7 @@ function renderCoins(data) {
         <div class="coin-card" data-contract="${coin.token_mint}">
             <div class="coin-header">
                 <div class="coin-ticker">$${coin.symbol || 'UNKNOWN'}</div>
+                <div class="coin-name">${coin.name || 'Unknown Token'}</div>
                 <div class="coin-cap">${formatMarketCap(coin.market_cap)}</div>
             </div>
             <div class="coin-metrics">

@@ -311,7 +311,7 @@ app.get('/api/clusterbuy', async (req, res) => {
         const query = `
             SELECT token_mint, COUNT(*) as purchase_count, MAX(ts) as latest_purchase
             FROM events
-            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '10 minutes'
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
             HAVING COUNT(*) >= 10
             ORDER BY purchase_count DESC, latest_purchase DESC
@@ -402,7 +402,7 @@ app.get('/api/smartmoney', async (req, res) => {
             WITH profitable_wallets AS (
                 SELECT wallet, COUNT(DISTINCT token_mint) AS unique_tokens, AVG(sol_spent) AS avg_buy_size
                 FROM events
-                WHERE side = 'BUY' AND ts > now() - interval '1 hour'
+                WHERE side = 'BUY' AND ts > now() - interval '24 hours'
                 GROUP BY wallet
                 HAVING COUNT(DISTINCT token_mint) >= 3 AND AVG(sol_spent) > 5
             )
@@ -410,7 +410,7 @@ app.get('/api/smartmoney', async (req, res) => {
             FROM profitable_wallets p
             JOIN (SELECT wallet, token_mint, sol_spent, ts, tx_signature 
                   FROM events 
-                  WHERE side = 'BUY' AND ts > now() - interval '1 hour') e ON p.wallet = e.wallet
+                  WHERE side = 'BUY' AND ts > now() - interval '24 hours') e ON p.wallet = e.wallet
             ORDER BY p.unique_tokens DESC, e.ts DESC
             LIMIT 15;
         `;
@@ -654,7 +654,7 @@ app.get('/api/traders/list', async (req, res) => {
                    COUNT(DISTINCT token_mint) as unique_tokens,
                    MAX(ts) as last_activity
             FROM events 
-            WHERE ts >= NOW() - INTERVAL '7 days'
+            WHERE ts >= NOW() - INTERVAL '30 days'
             GROUP BY wallet 
             ORDER BY total_volume DESC 
             LIMIT 50
@@ -788,7 +788,7 @@ app.get('/api/clusterbuy', async (req, res) => {
         const query = `
             SELECT token_mint, COUNT(DISTINCT wallet) as unique_buyers, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size, MAX(ts) as last_activity
             FROM events
-            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '10 minutes'
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
             HAVING COUNT(DISTINCT wallet) >= 3 AND SUM(sol_spent) > 10
             ORDER BY unique_buyers DESC, total_volume DESC
@@ -819,7 +819,7 @@ app.get('/api/cobuy', async (req, res) => {
         const query = `
             SELECT token_mint, COUNT(DISTINCT wallet) as simultaneous_buyers, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size
             FROM events
-            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '20 minutes'
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
             HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 10
             ORDER BY simultaneous_buyers DESC, total_volume DESC
@@ -851,7 +851,7 @@ app.get('/api/smartmoney', async (req, res) => {
             WITH profitable_wallets AS (
                 SELECT wallet, COUNT(DISTINCT token_mint) AS unique_tokens, AVG(sol_spent) AS avg_buy_size
                 FROM events
-                WHERE side = 'BUY' AND ts > now() - interval '1 hour'
+                WHERE side = 'BUY' AND ts > now() - interval '24 hours'
                 GROUP BY wallet
                 HAVING COUNT(DISTINCT token_mint) >= 3 AND AVG(sol_spent) > 5
             )
@@ -859,7 +859,7 @@ app.get('/api/smartmoney', async (req, res) => {
             FROM profitable_wallets p
             JOIN (SELECT wallet, token_mint, sol_spent, ts, tx_signature 
                   FROM events 
-                  WHERE side = 'BUY' AND ts > now() - interval '1 hour') e ON p.wallet = e.wallet
+                  WHERE side = 'BUY' AND ts > now() - interval '24 hours') e ON p.wallet = e.wallet
             ORDER BY p.unique_tokens DESC, e.ts DESC
             LIMIT 15;
         `;
@@ -903,7 +903,7 @@ app.get('/api/topgainers', async (req, res) => {
         const query = `
             SELECT token_mint, COUNT(DISTINCT wallet) as buyer_count, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size
             FROM events
-            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '1 hour'
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
             GROUP BY token_mint
             HAVING COUNT(DISTINCT wallet) >= 2 AND SUM(sol_spent) > 20
             ORDER BY buyer_count DESC, total_volume DESC

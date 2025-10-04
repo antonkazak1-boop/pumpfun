@@ -2203,6 +2203,14 @@ body {
     font-size: 1.2rem;
     font-weight: 700;
     color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.coin-name {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
 }
 
 .coin-cap {
