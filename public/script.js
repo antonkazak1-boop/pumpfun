@@ -66,7 +66,8 @@ const TAB_API_MAP = {
     'topGainers': 'topgainers',
     'coins': 'coins/market', // Coins tab API endpoint
     'recentActivity': 'recentactivity', // Recent Activity tab API endpoint
-    'trendingMeta': 'pump/trending-meta' // Trending Meta Words tab API endpoint
+    'trendingMeta': 'pump/trending-meta', // Trending Meta Words tab API endpoint
+    'walletStats': null // Special tab without direct API
 };
 
 // Rendering functions mapping
@@ -83,7 +84,8 @@ const TAB_RENDER_MAP = {
     'topGainers': renderTopGainers,
     'coins': renderCoins, // Coins tab rendering function
     'recentActivity': renderRecentActivity, // Recent Activity tab rendering function
-    'trendingMeta': renderTrendingMeta // Trending Meta Words tab rendering function
+    'trendingMeta': renderTrendingMeta, // Trending Meta Words tab rendering function
+    'walletStats': null // Special tab with custom handling
 };
 
 // Инициализация Telegram Web App
@@ -1283,6 +1285,9 @@ async function initApp() {
     // Инициализация фильтров для Coins tab
     initCoinsFilters();
     
+    // Инициализация Wallet Stats
+    initWalletStats();
+    
     await loadTabData(currentTab);
     
     // Запуск автоматического обновления
@@ -1712,9 +1717,33 @@ function renderCoins(data) {
             <div class="coin-actions">
                 <button class="view-traders-btn" onclick="showCoinTraders('${coin.token_mint}')">
                     <i class="fas fa-users"></i>
-                    View Traders
+                    View Traders (${coin.trader_count})
                 </button>
+                <a href="https://pump.fun/coin/${coin.token_mint}" target="_blank" class="action-button">
+                    <i class="fas fa-external-link-alt"></i>
+                    Pump.fun
+                </a>
             </div>
+            
+            ${coin.top_traders && coin.top_traders.length > 0 ? `
+            <div class="coin-traders-preview">
+                <h4><i class="fas fa-users"></i> Top Traders</h4>
+                <div class="traders-list">
+                    ${coin.top_traders.slice(0, 3).map(trader => `
+                        <div class="trader-item">
+                            <div class="trader-wallet">${shortenAddress(trader.wallet)}</div>
+                            <div class="trader-stats">
+                                <span class="buy-volume">+${formatSOL(trader.buy_volume)}</span>
+                                <span class="sell-volume">-${formatSOL(trader.sell_volume)}</span>
+                                <span class="net-volume ${trader.net_volume >= 0 ? 'positive' : 'negative'}">
+                                    ${trader.net_volume >= 0 ? '+' : ''}${formatSOL(trader.net_volume)}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
         </div>
     `).join('');
     
@@ -1922,6 +1951,105 @@ function updateFilterButtonStates(capFilter, period) {
     });
 }
 
+// Функция рендеринга Wallet Stats (как на Kolscan)
+function renderWalletStats(data) {
+    const container = document.getElementById('walletStatsData');
+    if (!container) return;
+    
+    if (!data || !data.wallet) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-wallet"></i>
+                <h3>Enter Wallet Address</h3>
+                <p>Enter a Solana wallet address to view detailed analytics and performance metrics</p>
+            </div>`;
+        return;
+    }
+    
+    const { wallet, wallet_name, wallet_telegram, wallet_twitter, stats, token_pnl, metrics } = data;
+    
+    container.innerHTML = `
+        <div class="wallet-profile">
+            <div class="wallet-header">
+                <div class="wallet-info">
+                    <h3>
+                        <i class="fas fa-wallet"></i>
+                        ${wallet_name}
+                        ${wallet_telegram ? `<a href="${wallet_telegram}" target="_blank" class="social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
+                        ${wallet_twitter ? `<a href="${wallet_twitter}" target="_blank" class="social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
+                    </h3>
+                    <div class="wallet-address">${shortenAddress(wallet)}</div>
+                </div>
+                <div class="wallet-actions">
+                    <a href="https://solscan.io/account/${wallet}" target="_blank" class="action-button">
+                        <i class="fas fa-external-link-alt"></i> Solscan
+                    </a>
+                </div>
+            </div>
+            
+            <div class="wallet-metrics">
+                <div class="metric-card">
+                    <div class="metric-label">Win Rate</div>
+                    <div class="metric-value">${metrics.win_rate}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Avg Duration</div>
+                    <div class="metric-value">${metrics.avg_duration}m</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Top Win</div>
+                    <div class="metric-value positive">+${formatSOL(metrics.top_win)}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Volume</div>
+                    <div class="metric-value">$${formatNumber(metrics.total_volume * 227.96)}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Realized Profits</div>
+                    <div class="metric-value ${metrics.realized_profits >= 0 ? 'positive' : 'negative'}">
+                        ${metrics.realized_profits >= 0 ? '+' : ''}${formatSOL(metrics.realized_profits)}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="token-pnl-section">
+                <h4><i class="fas fa-coins"></i> Token PnL</h4>
+                <div class="token-pnl-list">
+                    ${token_pnl.map(token => `
+                        <div class="token-pnl-item">
+                            <div class="token-info">
+                                <div class="token-symbol">${token.symbol}</div>
+                                <div class="token-name">${token.name}</div>
+                            </div>
+                            <div class="token-stats">
+                                <div class="stat-row">
+                                    <span class="stat-label">Bought:</span>
+                                    <span class="stat-value">${formatSOL(token.total_bought_sol)}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Sold:</span>
+                                    <span class="stat-value">${formatSOL(token.total_sold_sol)}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">PnL:</span>
+                                    <span class="stat-value ${token.pnl_sol >= 0 ? 'positive' : 'negative'}">
+                                        ${token.pnl_sol >= 0 ? '+' : ''}${formatSOL(token.pnl_sol)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="token-actions">
+                                <a href="https://pump.fun/coin/${token.token_mint}" target="_blank" class="action-button small">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 // Функция рендеринга Trending Meta Words
 function renderTrendingMeta(data) {
     const container = document.getElementById('trendingMetaData');
@@ -1995,6 +2123,55 @@ function renderTrendingMeta(data) {
             </div>
         `;
     }).join('');
+}
+
+// Инициализация Wallet Stats
+function initWalletStats() {
+    const searchBtn = document.getElementById('searchWalletBtn');
+    const walletInput = document.getElementById('walletAddressInput');
+    
+    if (searchBtn && walletInput) {
+        searchBtn.addEventListener('click', async () => {
+            const address = walletInput.value.trim();
+            if (!address) {
+                alert('Please enter a wallet address');
+                return;
+            }
+            
+            try {
+                showLoading();
+                const response = await fetch(`/api/wallet/stats/${address}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderWalletStats(data.data);
+                } else {
+                    document.getElementById('walletStatsData').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Error</h3>
+                            <p>${data.error || 'Failed to load wallet data'}</p>
+                        </div>`;
+                }
+            } catch (error) {
+                console.error('Wallet stats error:', error);
+                document.getElementById('walletStatsData').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error</h3>
+                        <p>Failed to load wallet data</p>
+                    </div>`;
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        walletInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBtn.click();
+            }
+        });
+    }
 }
 
 // Запуск приложения после загрузки DOM

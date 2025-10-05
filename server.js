@@ -57,6 +57,21 @@ function enrichWalletData(data) {
     }
 }
 
+// Функция для расчета Win Rate
+function calculateWinRate(tokenPnl) {
+    if (!tokenPnl || tokenPnl.length === 0) return 0;
+    const profitableTrades = tokenPnl.filter(token => token.pnl_sol > 0).length;
+    return Math.round((profitableTrades / tokenPnl.length) * 100);
+}
+
+// Функция для расчета средней продолжительности
+function calculateAvgDuration(stats) {
+    if (!stats || !stats.first_trade || !stats.last_trade) return 0;
+    const durationMs = new Date(stats.last_trade) - new Date(stats.first_trade);
+    const durationMinutes = Math.round(durationMs / (1000 * 60));
+    return durationMinutes;
+}
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -603,6 +618,124 @@ async function testDatabaseConnection() {
     }
 }
 
+// Получение детальной статистики кошелька (как на Kolscan)
+app.get('/api/wallet/stats/:address', async (req, res) => {
+    try {
+        const { address } = req.params;
+        
+        // Основная статистика кошелька
+        const statsQuery = `
+            WITH wallet_stats AS (
+                SELECT 
+                    COUNT(*) as total_trades,
+                    COUNT(DISTINCT token_mint) as unique_tokens,
+                    SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as total_buy_volume,
+                    SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) as total_sell_volume,
+                    AVG(CASE WHEN side = 'BUY' THEN sol_spent ELSE NULL END) as avg_buy_size,
+                    AVG(CASE WHEN side = 'SELL' THEN sol_received ELSE NULL END) as avg_sell_size,
+                    MIN(ts) as first_trade,
+                    MAX(ts) as last_trade
+                FROM events 
+                WHERE wallet = $1
+            ),
+            token_pnl AS (
+                SELECT 
+                    token_mint,
+                    SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as total_bought_sol,
+                    SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) as total_sold_sol,
+                    COUNT(CASE WHEN side = 'BUY' THEN 1 END) as buy_count,
+                    COUNT(CASE WHEN side = 'SELL' THEN 1 END) as sell_count,
+                    MAX(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as max_buy,
+                    MAX(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) as max_sell
+                FROM events 
+                WHERE wallet = $1
+                GROUP BY token_mint
+            )
+            SELECT 
+                ws.*,
+                COALESCE(SUM(tp.total_sold_sol - tp.total_bought_sol), 0) as realized_pnl,
+                COALESCE(COUNT(tp.token_mint), 0) as tokens_traded
+            FROM wallet_stats ws
+            LEFT JOIN token_pnl tp ON true
+            GROUP BY ws.total_trades, ws.unique_tokens, ws.total_buy_volume, 
+                     ws.total_sell_volume, ws.avg_buy_size, ws.avg_sell_size, 
+                     ws.first_trade, ws.last_trade;
+        `;
+        
+        const statsResult = await pool.query(statsQuery, [address]);
+        
+        // Детальная статистика по токенам
+        const tokenPnlQuery = `
+            SELECT 
+                e.token_mint,
+                SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) as total_bought_sol,
+                SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) as total_sold_sol,
+                COUNT(CASE WHEN e.side = 'BUY' THEN 1 END) as buy_count,
+                COUNT(CASE WHEN e.side = 'SELL' THEN 1 END) as sell_count,
+                MAX(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) as max_buy,
+                MAX(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) as max_sell,
+                MIN(e.ts) as first_trade,
+                MAX(e.ts) as last_trade,
+                (SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) - 
+                 SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END)) as pnl_sol
+            FROM events e
+            WHERE e.wallet = $1
+            GROUP BY e.token_mint
+            HAVING COUNT(*) > 0
+            ORDER BY pnl_sol DESC
+            LIMIT 50;
+        `;
+        
+        const tokenPnlResult = await pool.query(tokenPnlQuery, [address]);
+        
+        // Получаем метаданные токенов
+        const tokenMints = tokenPnlResult.rows.map(row => row.token_mint);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        
+        // Обогащаем данные метаданными токенов
+        const enrichedTokenPnl = tokenPnlResult.rows.map((item) => {
+            const tokenMeta = metadataMap.get(item.token_mint) || getTokenMetadata(item.token_mint);
+            return {
+                ...item,
+                symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                name: tokenMeta?.name || 'Unknown Token',
+                image: tokenMeta?.image || '/img/token-placeholder.png',
+                market_cap: tokenMeta?.market_cap,
+                price: tokenMeta?.price,
+                source: tokenMeta?.source || 'fallback'
+            };
+        });
+        
+        // Получаем данные о кошельке из walletMap
+        const walletMeta = resolveWalletMeta(address);
+        
+        const response = {
+            success: true,
+            data: {
+                wallet: address,
+                wallet_name: walletMeta.wallet_name || `Trader ${address.substring(0, 8)}`,
+                wallet_telegram: walletMeta.wallet_telegram,
+                wallet_twitter: walletMeta.wallet_twitter,
+                stats: statsResult.rows[0] || {},
+                token_pnl: enrichedTokenPnl,
+                // Добавляем расчетные метрики
+                metrics: {
+                    win_rate: calculateWinRate(enrichedTokenPnl),
+                    avg_duration: calculateAvgDuration(statsResult.rows[0]),
+                    top_win: Math.max(...enrichedTokenPnl.map(t => t.pnl_sol || 0), 0),
+                    total_volume: (statsResult.rows[0]?.total_buy_volume || 0) + (statsResult.rows[0]?.total_sell_volume || 0),
+                    realized_profits: enrichedTokenPnl.reduce((sum, t) => sum + (t.pnl_sol || 0), 0)
+                }
+            }
+        };
+        
+        res.json(response);
+    } catch (error) {
+        console.error('Wallet stats error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Получение списка известных трейдеров для Portfolio вкладки
 app.get('/api/traders/list', async (req, res) => {
     try {
@@ -669,25 +802,67 @@ app.get('/api/coins/market', async (req, res) => {
         }
 
         const query = `
+            WITH token_stats AS (
+                SELECT 
+                    e.token_mint,
+                    COUNT(DISTINCT e.wallet) as trader_count,
+                    COUNT(*) as total_trades,
+                    SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) as buy_volume,
+                    SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) as sell_volume,
+                    AVG(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE NULL END) as avg_buy_size,
+                    AVG(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE NULL END) as avg_sell_size,
+                    MIN(e.ts) as first_activity,
+                    MAX(e.ts) as last_activity
+                FROM events e
+                LEFT JOIN tokens t ON e.token_mint = t.address
+                WHERE e.side IN ('BUY', 'SELL')
+                AND e.ts >= NOW() - INTERVAL '${timeInterval}'
+                ${marketCapFilter}
+                GROUP BY e.token_mint
+                HAVING COUNT(DISTINCT e.wallet) >= 1 AND SUM(e.sol_spent) > 0.01
+            ),
+            top_traders AS (
+                SELECT 
+                    e.token_mint,
+                    e.wallet,
+                    SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) as trader_buy_volume,
+                    SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) as trader_sell_volume,
+                    COUNT(CASE WHEN e.side = 'BUY' THEN 1 END) as trader_buy_count,
+                    COUNT(CASE WHEN e.side = 'SELL' THEN 1 END) as trader_sell_count,
+                    MAX(e.ts) as trader_last_activity,
+                    ROW_NUMBER() OVER (PARTITION BY e.token_mint ORDER BY SUM(e.sol_spent) DESC) as trader_rank
+                FROM events e
+                LEFT JOIN tokens t ON e.token_mint = t.address
+                WHERE e.side IN ('BUY', 'SELL')
+                AND e.ts >= NOW() - INTERVAL '${timeInterval}'
+                ${marketCapFilter}
+                GROUP BY e.token_mint, e.wallet
+            )
             SELECT 
-                e.token_mint,
-                COUNT(DISTINCT e.wallet) as trader_count,
-                COUNT(*) as total_trades,
-                SUM(e.sol_spent) as volume_sol,
-                AVG(e.sol_spent) as avg_trade_size,
-                MIN(e.ts) as first_buy,
-                MAX(e.ts) as last_activity,
-                SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) as buy_volume,
-                SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) as sell_volume
-            FROM events e
-            LEFT JOIN tokens t ON e.token_mint = t.address
-            WHERE e.side IN ('BUY', 'SELL')
-            AND e.ts >= NOW() - INTERVAL '${timeInterval}'
-            ${marketCapFilter}
-            GROUP BY e.token_mint
-            HAVING COUNT(DISTINCT e.wallet) >= 1 AND SUM(e.sol_spent) > 0.01
-            ORDER BY trader_count DESC, volume_sol DESC
-            LIMIT 200
+                ts.*,
+                (ts.buy_volume + ts.sell_volume) as total_volume,
+                COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'wallet', tt.wallet,
+                            'buy_volume', tt.trader_buy_volume,
+                            'sell_volume', tt.trader_sell_volume,
+                            'buy_count', tt.trader_buy_count,
+                            'sell_count', tt.trader_sell_count,
+                            'net_volume', (tt.trader_sell_volume - tt.trader_buy_volume),
+                            'last_activity', tt.trader_last_activity,
+                            'rank', tt.trader_rank
+                        ) ORDER BY tt.trader_rank
+                    ) FILTER (WHERE tt.trader_rank <= 10), 
+                    '[]'::json
+                ) as top_traders
+            FROM token_stats ts
+            LEFT JOIN top_traders tt ON ts.token_mint = tt.token_mint
+            GROUP BY ts.token_mint, ts.trader_count, ts.total_trades, ts.buy_volume, 
+                     ts.sell_volume, ts.avg_buy_size, ts.avg_sell_size, 
+                     ts.first_activity, ts.last_activity
+            ORDER BY ts.trader_count DESC, ts.total_volume DESC
+            LIMIT 200;
         `;
         
         const result = await pool.query(query);
