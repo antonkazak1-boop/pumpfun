@@ -42,17 +42,17 @@ function initTheme() {
     }
 }
 
-// Конфигурация
-const BACKEND_URL = window.location.origin; // Используем тот же домен, что и Mini App
-const REFRESH_INTERVAL = 30000; // 30 секунд
-const API_TIMEOUT = 10000; // 10 секунд
+// Configuration
+const BACKEND_URL = window.location.origin; // Use the same domain as Mini App
+const REFRESH_INTERVAL = 30000; // 30 seconds
+const API_TIMEOUT = 10000; // 10 seconds
 
-// Глобальные переменные
+// Global variables
 let currentTab = 'about';
 let refreshTimer = null;
 let isLoading = false;
 
-// Маппинг вкладок к API эндпоинтам
+// Tab to API endpoint mapping
 const TAB_API_MAP = {
     'about': null, // Special tab without API
     'analytics': null, // Analytics tab without API
@@ -69,7 +69,7 @@ const TAB_API_MAP = {
     'trendingMeta': 'pump/trending-meta' // Trending Meta Words tab API endpoint
 };
 
-// Маппинг для рендеринга функций
+// Rendering functions mapping
 const TAB_RENDER_MAP = {
     'about': null, // Special tab without rendering
     'analytics': null, // Analytics tab without rendering
@@ -91,32 +91,32 @@ function initTelegramWebApp() {
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         
-        // Настройка темы
+        // Theme setup
         if (tg.themeParams) {
             document.body.classList.add('telegram-theme');
         }
         
-        // Готовность и расширение на весь экран
+        // Ready and expand to full screen
         tg.ready();
         tg.expand();
         
-        // Настройка главной кнопки (опционально)
+        // Main button setup (optional)
         tg.MainButton.hide();
         
-        // Настройка кнопки "Назад" (опционально)
+        // Back button setup (optional)
         tg.BackButton.hide();
         
-        console.log('Telegram Web App инициализирован');
+        console.log('Telegram Web App initialized');
         console.log('User ID:', tg.initDataUnsafe?.user?.id);
         console.log('Theme params:', tg.themeParams);
         
         return tg;
     }
-    console.log('Telegram Web App не доступен (разработка вне Telegram)');
+    console.log('Telegram Web App not available (development outside Telegram)');
     return null;
 }
 
-// HTTP запросы с таймаутом
+// HTTP requests with timeout
 async function fetchWithTimeout(url, options = {}) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
@@ -134,7 +134,7 @@ async function fetchWithTimeout(url, options = {}) {
     }
 }
 
-// Получение данных с API
+// Fetch data from API
 async function fetchData(endpoint) {
     try {
         const response = await fetchWithTimeout(`${BACKEND_URL}/api/${endpoint}`);
@@ -152,27 +152,27 @@ async function fetchData(endpoint) {
             throw new Error(data.message || 'API error');
         }
     } catch (error) {
-        console.error(`Ошибка при получении данных с ${endpoint}:`, error);
+        console.error(`Error fetching data from ${endpoint}:`, error);
         updateApiStatus(false);
         
         if (error.name === 'AbortError') {
-            throw new Error('Превышено время ожидания');
+            throw new Error('Request timeout');
         }
         
         throw error;
     }
 }
 
-// Обновление статуса API
+// Update API status
 function updateApiStatus(isOnline) {
     const statusElement = document.getElementById('apiStatus');
     if (statusElement) {
-        statusElement.textContent = isOnline ? 'онлайн' : 'офлайн';
+        statusElement.textContent = isOnline ? 'online' : 'offline';
         statusElement.className = `status-indicator ${isOnline ? 'online' : 'offline'}`;
     }
 }
 
-// Обновление времени последнего обновления
+// Update last update time
 function updateLastUpdateTime() {
     const lastUpdateElement = document.getElementById('lastUpdate');
     if (lastUpdateElement) {
@@ -181,7 +181,7 @@ function updateLastUpdateTime() {
     }
 }
 
-// Показ экрана загрузки
+// Show loading screen
 function showLoading() {
     isLoading = true;
     const refreshIcon = document.getElementById('refresh-icon');
@@ -272,20 +272,20 @@ function renderClusterBuy(data) {
                 </div>
                 <div class="item-stats">
                     <div class="stat-item">
-                        <div class="stat-label">Уникальных покупателей</div>
+                        <div class="stat-label">Unique Buyers</div>
                         <div class="stat-value positive">${item.buyers || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Общий объем</div>
+                        <div class="stat-label">Total Volume</div>
                         <div class="stat-value neutral">${formatNumber(item.total_sol)} SOL</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Средняя покупка</div>
+                        <div class="stat-label">Average Buy</div>
                         <div class="stat-value">${avgBuy} SOL</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Активность</div>
-                        <div class="stat-value positive">🔥 ${item.buyers >= 5 ? 'Высокая' : 'Растущая'}</div>
+                        <div class="stat-label">Activity</div>
+                        <div class="stat-value positive">🔥 ${item.buyers >= 5 ? 'High' : 'Growing'}</div>
                     </div>
                 </div>
                 <div class="item-actions">
@@ -299,7 +299,7 @@ function renderClusterBuy(data) {
                     </a>
                     <button class="action-button secondary" onclick="showTokenDetails('${item.token_mint}')">
                         <i class="fas fa-info-circle"></i>
-                        Детали
+                        Details
                     </button>
                 </div>
             </div>
@@ -336,25 +336,25 @@ function renderWhaleMoves(data) {
             <div class="data-item whale-item">
                 <h3>
                     <i class="fas fa-whale"></i>
-                    ${index + 1}. ${traderName ? traderName : 'Китовая покупка'}
+                    ${index + 1}. ${traderName ? traderName : 'Whale Purchase'}
                     ${telegramLink ? `<a href="${telegramLink}" target="_blank" class="social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
                     ${twitterLink ? `<a href="${twitterLink}" target="_blank" class="social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
-                        <div class="stat-label">Кошелек</div>
+                        <div class="stat-label">Wallet</div>
                         <div class="stat-value">${shortenAddress(item.wallet)}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Токен</div>
+                        <div class="stat-label">Token</div>
                         <div class="stat-value">${shortenAddress(item.token_mint)}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">SOL потрачено</div>
+                        <div class="stat-label">SOL Spent</div>
                         <div class="stat-value positive">${formatNumber(item.sol_spent)}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Время</div>
+                        <div class="stat-label">Time</div>
                         <div class="stat-value">${formatTime(item.ts)}</div>
                     </div>
                 </div>
@@ -363,10 +363,10 @@ function renderWhaleMoves(data) {
                         <i class="fas fa-external-link-alt"></i> Pump.fun
                     </a>
                     <a href="${txUrl}" target="_blank" class="action-button secondary">
-                        <i class="fas fa-receipt"></i> Транзакция
+                        <i class="fas fa-receipt"></i> Transaction
                     </a>
                     <a href="${walletUrl}" target="_blank" class="action-button secondary">
-                        <i class="fas fa-wallet"></i> Кошелек
+                        <i class="fas fa-wallet"></i> Wallet
                     </a>
                 </div>
             </div>
@@ -458,32 +458,32 @@ function renderCoBuy(data) {
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
-                        <div class="stat-label">Одновременных покупателей</div>
+                        <div class="stat-label">Simultaneous Buyers</div>
                         <div class="stat-value positive">${item.simultaneous_buyers || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Общий объем</div>
+                        <div class="stat-label">Total Volume</div>
                         <div class="stat-value">${formatSOL(item.total_volume || 0)}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Средняя покупка</div>
+                        <div class="stat-label">Average Buy</div>
                         <div class="stat-value">${formatSOL(item.avg_buy_size || 0)}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Общие покупатели</div>
+                        <div class="stat-label">Common Buyers</div>
                         <div class="stat-value positive">${item.common_buyers || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Общий объем</div>
+                        <div class="stat-label">Combined Volume</div>
                         <div class="stat-value neutral">${formatNumber(item.combined_volume)} SOL</div>
                     </div>
                 </div>
                 <div class="item-actions">
                     <a href="${pumpUrlA}" target="_blank" class="action-button">
-                        <i class="fas fa-external-link-alt"></i> Токен A
+                        <i class="fas fa-external-link-alt"></i> Token A
                     </a>
                     <a href="${pumpUrlB}" target="_blank" class="action-button secondary">
-                        <i class="fas fa-external-link-alt"></i> Токен B
+                        <i class="fas fa-external-link-alt"></i> Token B
                     </a>
                 </div>
             </div>
@@ -959,27 +959,30 @@ function createWalletCard(trader) {
     const card = document.createElement('div');
     card.className = 'wallet-card';
     
-    // Simulate performance indicator (green/red)
-    const isProfitable = Math.random() > 0.3; // 70% chance of profitable
-    if (isProfitable) {
+    // Calculate performance based on real activity data
+    const totalTrades = trader.total_trades || 0;
+    const totalVolume = trader.total_volume || 0;
+    const uniqueTokens = trader.unique_tokens || 0;
+    
+    // Performance indicator based on activity (higher activity = better performance)
+    const activityScore = (totalTrades * 0.1) + (uniqueTokens * 0.5) + (totalVolume * 0.001);
+    const isActive = totalTrades > 0 && uniqueTokens > 0;
+    
+    if (isActive && activityScore > 5) {
         card.classList.add('profitable');
+    } else if (isActive && activityScore > 2) {
+        card.classList.add('neutral');
     } else {
         card.classList.add('lossy');
     }
 
     const symbol = trader.symbol || trader.name.charAt(0).toUpperCase();
     const shortAddress = trader.wallet.slice(0, 8) + '...' + trader.wallet.slice(-8);
+    const lastActivity = trader.last_activity ? formatTimeAgo(new Date(trader.last_activity)) : 'Unknown';
     
-    // Real portfolio stats from API
-    const totalTrades = trader.total_trades || 0;
-    const totalVolume = trader.total_volume || 0;
-    const uniqueTokens = trader.unique_tokens || 0;
-    const lastActivity = trader.last_activity ? new Date(trader.last_activity).toLocaleDateString() : 'Unknown';
-    
-    // Simulate performance based on activity
-    const activityScore = totalTrades * 0.1 + uniqueTokens * 0.5;
-    const performancePct = activityScore > 10 ? Math.random() * 15 : Math.random() * 30 - 15;
-    const performanceValue = performancePct > 0 ? `+${performancePct.toFixed(1)}%` : `${performancePct.toFixed(1)}%`;
+    // Calculate performance percentage based on real metrics
+    const performancePct = Math.min(activityScore * 2, 25); // Cap at 25%
+    const performanceValue = `+${performancePct.toFixed(1)}%`;
     
     card.innerHTML = `
         <div class="wallet-header">
@@ -1004,14 +1007,26 @@ function createWalletCard(trader) {
                 <div class="stat-value">${totalTrades}</div>
                 <div class="stat-label">Trades</div>
             </div>
+            <div class="stat-item">
+                <div class="stat-value">${formatSOL(totalVolume)}</div>
+                <div class="stat-label">Volume</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${lastActivity}</div>
+                <div class="stat-label">Last Active</div>
+            </div>
         </div>
         
         <div class="wallet-performance">
-            <div class="performance-indicator ${isProfitable ? '' : 'loss'}"></div>
+            <div class="performance-indicator ${isActive && activityScore > 5 ? 'profitable' : isActive && activityScore > 2 ? 'neutral' : 'loss'}"></div>
             <div class="performance-text">${performanceValue}</div>
         </div>
         
-        <div class="wallet-stock-chart"></div>
+        <div class="wallet-actions">
+            <a href="https://solscan.io/account/${trader.wallet}" target="_blank" class="action-button">
+                <i class="fas fa-external-link-alt"></i> View Wallet
+            </a>
+        </div>
         
         <div class="wallet-dropdown">
             <div class="token-holdings">

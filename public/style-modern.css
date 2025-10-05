@@ -1749,6 +1749,10 @@ body {
     background: linear-gradient(45deg, #00b894, #00a69a, #00d084, #00ff8c, #00b894);
 }
 
+.wallet-card.neutral::after {
+    background: linear-gradient(45deg, #f39c12, #f1c40f, #e67e22, #d35400, #f39c12);
+}
+
 .wallet-card.lossy::after {
     background: linear-gradient(45deg, #d63031, #f84a4a, #e17055, #ff7675, #d63031);
 }
@@ -1912,6 +1916,26 @@ body {
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
+}
+
+.wallet-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.wallet-actions .action-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .wallet-dropdown {
