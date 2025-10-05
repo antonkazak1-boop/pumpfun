@@ -70,12 +70,44 @@ function calculateAvgDuration(stats) {
     const durationMs = new Date(stats.last_trade) - new Date(stats.first_trade);
     const durationMinutes = Math.round(durationMs / (1000 * 60));
     
-    // Ограничиваем максимальную продолжительность до 30 дней (43200 минут)
-    return Math.min(durationMinutes, 43200);
+    // Если продолжительность меньше 1 минуты, возвращаем 0
+    if (durationMinutes < 1) return 0;
+    
+    // Возвращаем реальную продолжительность без ограничений
+    return durationMinutes;
 }
 
-// Функция для расчета объема в USD (используем SOL price из Pump.fun)
-function calculateVolumeUSD(totalVolumeSOL, solPrice = 227.96) {
+// Функция для получения актуальной цены SOL
+async function getSOLPrice() {
+    try {
+        // Пытаемся получить цену из Pump.fun API
+        const response = await fetch('https://frontend-api-v3.pump.fun/coins/So11111111111111111111111111111111111111112');
+        if (response.ok) {
+            const data = await response.json();
+            return data.usd_market_cap / data.total_supply; // Примерный расчет цены
+        }
+    } catch (error) {
+        console.log('⚠️ Failed to get SOL price from Pump.fun, using fallback');
+    }
+    
+    // Fallback - получаем цену из CoinGecko
+    try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+        if (response.ok) {
+            const data = await response.json();
+            return data.solana.usd;
+        }
+    } catch (error) {
+        console.log('⚠️ Failed to get SOL price from CoinGecko, using default');
+    }
+    
+    // Последний fallback
+    return 227.96;
+}
+
+// Функция для расчета объема в USD (используем актуальную цену SOL)
+async function calculateVolumeUSD(totalVolumeSOL) {
+    const solPrice = await getSOLPrice();
     return totalVolumeSOL * solPrice;
 }
 
@@ -783,7 +815,7 @@ app.get('/api/traders/stats', async (req, res) => {
         const result = await pool.query(query);
         
         // Обогащаем данные информацией о кошельках
-        const enrichedData = result.rows.map(row => {
+        const enrichedData = await Promise.all(result.rows.map(async row => {
             const walletMeta = resolveWalletMeta(row.wallet);
             const totalVolumeSOL = row.total_volume;
             
@@ -792,11 +824,11 @@ app.get('/api/traders/stats', async (req, res) => {
                 wallet_name: walletMeta.wallet_name || `Trader ${row.wallet.substring(0, 8)}`,
                 wallet_telegram: walletMeta.wallet_telegram,
                 wallet_twitter: walletMeta.wallet_twitter,
-                total_volume_usd: calculateVolumeUSD(totalVolumeSOL),
-                avg_duration: Math.min(Math.round(row.duration_minutes), 43200), // Max 30 days
+                total_volume_usd: await calculateVolumeUSD(totalVolumeSOL),
+                avg_duration: Math.round(row.duration_minutes), // Real duration
                 win_rate: row.realized_pnl > 0 ? 100 : (row.realized_pnl < 0 ? 0 : 50) // Simple win rate
             };
-        });
+        }));
         
         res.json({ 
             success: true, 
@@ -925,7 +957,7 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
                     avg_duration: calculateAvgDuration(stats),
                     top_win: Math.max(...enrichedTokenPnl.map(t => t.pnl_sol || 0), 0),
                     total_volume_sol: totalVolumeSOL,
-                    total_volume_usd: calculateVolumeUSD(totalVolumeSOL),
+                    total_volume_usd: await calculateVolumeUSD(totalVolumeSOL),
                     realized_profits: enrichedTokenPnl.reduce((sum, t) => sum + (t.pnl_sol || 0), 0)
                 }
             }

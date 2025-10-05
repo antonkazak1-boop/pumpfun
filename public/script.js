@@ -1786,6 +1786,21 @@ function formatTimeAgo(date) {
     return `${diffDay}d ago`;
 }
 
+// Функция для расчета продолжительности между двумя датами
+function calculateDuration(firstDate, lastDate) {
+    const first = new Date(firstDate);
+    const last = new Date(lastDate);
+    const diffMs = last - first;
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h`;
+    if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m`;
+    if (diffMinutes > 0) return `${diffMinutes}m`;
+    return '< 1m';
+}
+
 // Показать трейдеров для конкретной монеты
 function showCoinTraders(tokenMint) {
     const coinCard = document.querySelector(`[data-contract="${tokenMint}"]`);
@@ -2043,6 +2058,10 @@ function renderWalletStats(data) {
                                        <div class="stat-row">
                                            <span class="stat-label">Last Trade:</span>
                                            <span class="stat-value">${formatTimeAgo(new Date(token.last_trade))}</span>
+                                       </div>
+                                       <div class="stat-row">
+                                           <span class="stat-label">Duration:</span>
+                                           <span class="stat-value">${calculateDuration(token.first_trade, token.last_trade)}</span>
                                        </div>
                                    </div>
                             <div class="token-actions">
