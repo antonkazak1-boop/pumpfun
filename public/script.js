@@ -65,7 +65,8 @@ const TAB_API_MAP = {
     'freshTokens': 'freshtokens',
     'topGainers': 'topgainers',
     'coins': 'coins/market', // Coins tab API endpoint
-    'recentActivity': 'recentactivity' // Recent Activity tab API endpoint
+    'recentActivity': 'recentactivity', // Recent Activity tab API endpoint
+    'trendingMeta': 'pump/trending-meta' // Trending Meta Words tab API endpoint
 };
 
 // Маппинг для рендеринга функций
@@ -81,7 +82,8 @@ const TAB_RENDER_MAP = {
     'freshTokens': renderFreshTokens,
     'topGainers': renderTopGainers,
     'coins': renderCoins, // Coins tab rendering function
-    'recentActivity': renderRecentActivity // Recent Activity tab rendering function
+    'recentActivity': renderRecentActivity, // Recent Activity tab rendering function
+    'trendingMeta': renderTrendingMeta // Trending Meta Words tab rendering function
 };
 
 // Инициализация Telegram Web App
@@ -1893,6 +1895,81 @@ function updateFilterButtonStates(capFilter, period) {
             btn.classList.add('active');
         }
     });
+}
+
+// Функция рендеринга Trending Meta Words
+function renderTrendingMeta(data) {
+    const container = document.getElementById('trendingMetaData');
+    if (!container) return;
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-fire"></i>
+                <h3>No Trending Meta Words</h3>
+                <p>No trending meta words found from Pump.fun</p>
+            </div>`;
+        return;
+    }
+    
+    container.innerHTML = data.map((meta, index) => {
+        const relatedTokens = meta.relatedTokens || [];
+        const pumpFunUrl = meta.pumpFunUrl || `https://pump.fun/search?q=${encodeURIComponent(meta.word)}`;
+        
+        return `
+            <div class="data-item trending-meta-item">
+                <div class="meta-header">
+                    <div class="meta-word">
+                        <i class="fas fa-fire"></i>
+                        <span class="word-text">${meta.word || 'Unknown'}</span>
+                    </div>
+                    <div class="meta-stats">
+                        <span class="trending-badge">🔥 TRENDING</span>
+                    </div>
+                </div>
+                
+                <div class="meta-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Search:</span>
+                        <a href="${pumpFunUrl}" target="_blank" class="detail-value link">
+                            <i class="fas fa-external-link-alt"></i> View on Pump.fun
+                        </a>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Related Tokens:</span>
+                        <span class="detail-value">${relatedTokens.length} found</span>
+                    </div>
+                </div>
+                
+                ${relatedTokens.length > 0 ? `
+                    <div class="related-tokens">
+                        <h4><i class="fas fa-coins"></i> Related Tokens:</h4>
+                        <div class="tokens-grid">
+                            ${relatedTokens.map(token => `
+                                <div class="token-card">
+                                    <div class="token-info">
+                                        <div class="token-symbol">${token.symbol || token.address?.substring(0, 8) || 'Unknown'}</div>
+                                        <div class="token-name">${token.name || 'Unknown Token'}</div>
+                                    </div>
+                                    <div class="token-actions">
+                                        <a href="https://pump.fun/coin/${token.address}" target="_blank" class="action-button small">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="item-actions">
+                    <a href="${pumpFunUrl}" target="_blank" class="action-button">
+                        <i class="fas fa-fire"></i> View on Pump.fun
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Запуск приложения после загрузки DOM

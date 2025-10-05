@@ -100,6 +100,11 @@
                     <span>Recent Activity</span>
                     <small>live</small>
                 </button>
+                <button class="tab-button" data-tab="trendingMeta">
+                    <i class="fas fa-fire"></i>
+                    <span>Trending Meta</span>
+                    <small>hot</small>
+                </button>
             </div>
         </nav>
 
@@ -432,6 +437,18 @@
 
                 <div id="recentActivityData" class="data-list">
                     <div class="loading-placeholder">Loading recent activity...</div>
+                </div>
+            </div>
+
+            <!-- Trending Meta Words Tab -->
+            <div id="trendingMeta" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-fire"></i> 🔥 Trending Meta Words</h2>
+                    <p class="tab-description">Hot trending words and related tokens from Pump.fun</p>
+                </div>
+
+                <div id="trendingMetaData" class="data-list">
+                    <div class="loading-placeholder">Loading trending meta words...</div>
                 </div>
             </div>
         </main>
