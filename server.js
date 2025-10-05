@@ -69,7 +69,26 @@ function calculateAvgDuration(stats) {
     if (!stats || !stats.first_trade || !stats.last_trade) return 0;
     const durationMs = new Date(stats.last_trade) - new Date(stats.first_trade);
     const durationMinutes = Math.round(durationMs / (1000 * 60));
-    return durationMinutes;
+    
+    // Ограничиваем максимальную продолжительность до 30 дней (43200 минут)
+    return Math.min(durationMinutes, 43200);
+}
+
+// Функция для расчета объема в USD (используем SOL price из Pump.fun)
+function calculateVolumeUSD(totalVolumeSOL, solPrice = 227.96) {
+    return totalVolumeSOL * solPrice;
+}
+
+// Функция для получения периода времени для фильтра
+function getTimeInterval(period) {
+    switch (period) {
+        case '1d': return '1 day';
+        case '3d': return '3 days';
+        case '7d': return '7 days';
+        case '14d': return '14 days';
+        case '30d': return '30 days';
+        default: return '30 days';
+    }
 }
 
 // Функция для кэширования данных
@@ -710,12 +729,97 @@ async function testDatabaseConnection() {
     }
 }
 
+// API endpoint для получения списка всех трейдеров с их статистикой
+app.get('/api/traders/stats', async (req, res) => {
+    try {
+        const { period = '30d' } = req.query;
+        const timeInterval = getTimeInterval(period);
+        
+        console.log(`📊 Getting traders stats for period: ${timeInterval}`);
+        
+        const query = `
+            WITH trader_stats AS (
+                SELECT 
+                    wallet,
+                    COUNT(*) as total_trades,
+                    COUNT(DISTINCT token_mint) as unique_tokens,
+                    SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as total_buy_volume,
+                    SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) as total_sell_volume,
+                    MIN(ts) as first_trade,
+                    MAX(ts) as last_trade,
+                    AVG(CASE WHEN side = 'BUY' THEN sol_spent ELSE NULL END) as avg_buy_size
+                FROM events 
+                WHERE ts >= NOW() - INTERVAL '${timeInterval}'
+                GROUP BY wallet
+                HAVING COUNT(*) >= 5 AND SUM(sol_spent) > 0.1
+            ),
+            trader_pnl AS (
+                SELECT 
+                    wallet,
+                    SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) - 
+                    SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl
+                FROM events 
+                WHERE ts >= NOW() - INTERVAL '${timeInterval}'
+                GROUP BY wallet
+            )
+            SELECT 
+                ts.wallet,
+                ts.total_trades,
+                ts.unique_tokens,
+                ts.total_buy_volume,
+                ts.total_sell_volume,
+                (ts.total_buy_volume + ts.total_sell_volume) as total_volume,
+                ts.first_trade,
+                ts.last_trade,
+                ts.avg_buy_size,
+                COALESCE(tp.realized_pnl, 0) as realized_pnl,
+                EXTRACT(EPOCH FROM (ts.last_trade - ts.first_trade)) / 60 as duration_minutes
+            FROM trader_stats ts
+            LEFT JOIN trader_pnl tp ON ts.wallet = tp.wallet
+            ORDER BY ts.total_volume DESC
+            LIMIT 100;
+        `;
+        
+        const result = await pool.query(query);
+        
+        // Обогащаем данные информацией о кошельках
+        const enrichedData = result.rows.map(row => {
+            const walletMeta = resolveWalletMeta(row.wallet);
+            const totalVolumeSOL = row.total_volume;
+            
+            return {
+                ...row,
+                wallet_name: walletMeta.wallet_name || `Trader ${row.wallet.substring(0, 8)}`,
+                wallet_telegram: walletMeta.wallet_telegram,
+                wallet_twitter: walletMeta.wallet_twitter,
+                total_volume_usd: calculateVolumeUSD(totalVolumeSOL),
+                avg_duration: Math.min(Math.round(row.duration_minutes), 43200), // Max 30 days
+                win_rate: row.realized_pnl > 0 ? 100 : (row.realized_pnl < 0 ? 0 : 50) // Simple win rate
+            };
+        });
+        
+        res.json({ 
+            success: true, 
+            data: enrichedData,
+            period: period,
+            time_interval: timeInterval
+        });
+    } catch (error) {
+        console.error('Traders stats error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Получение детальной статистики кошелька (как на Kolscan)
 app.get('/api/wallet/stats/:address', async (req, res) => {
     try {
         const { address } = req.params;
+        const { period = '30d' } = req.query;
         
-        // Основная статистика кошелька
+        const timeInterval = getTimeInterval(period);
+        console.log(`📊 Getting wallet stats for ${address} for period: ${timeInterval}`);
+        
+        // Основная статистика кошелька с фильтром по времени
         const statsQuery = `
             WITH wallet_stats AS (
                 SELECT 
@@ -728,7 +832,7 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
                     MIN(ts) as first_trade,
                     MAX(ts) as last_trade
                 FROM events 
-                WHERE wallet = $1
+                WHERE wallet = $1 AND ts >= NOW() - INTERVAL '${timeInterval}'
             ),
             token_pnl AS (
                 SELECT 
@@ -740,7 +844,7 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
                     MAX(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as max_buy,
                     MAX(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) as max_sell
                 FROM events 
-                WHERE wallet = $1
+                WHERE wallet = $1 AND ts >= NOW() - INTERVAL '${timeInterval}'
                 GROUP BY token_mint
             )
             SELECT 
@@ -756,7 +860,7 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
         
         const statsResult = await pool.query(statsQuery, [address]);
         
-        // Детальная статистика по токенам
+        // Детальная статистика по токенам с фильтром по времени
         const tokenPnlQuery = `
             SELECT 
                 e.token_mint,
@@ -771,7 +875,7 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
                 (SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) - 
                  SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END)) as pnl_sol
             FROM events e
-            WHERE e.wallet = $1
+            WHERE e.wallet = $1 AND e.ts >= NOW() - INTERVAL '${timeInterval}'
             GROUP BY e.token_mint
             HAVING COUNT(*) > 0
             ORDER BY pnl_sol DESC
@@ -801,6 +905,9 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
         // Получаем данные о кошельке из walletMap
         const walletMeta = resolveWalletMeta(address);
         
+        const stats = statsResult.rows[0] || {};
+        const totalVolumeSOL = (stats.total_buy_volume || 0) + (stats.total_sell_volume || 0);
+        
         const response = {
             success: true,
             data: {
@@ -808,14 +915,17 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
                 wallet_name: walletMeta.wallet_name || `Trader ${address.substring(0, 8)}`,
                 wallet_telegram: walletMeta.wallet_telegram,
                 wallet_twitter: walletMeta.wallet_twitter,
-                stats: statsResult.rows[0] || {},
+                stats: stats,
                 token_pnl: enrichedTokenPnl,
+                period: period,
+                time_interval: timeInterval,
                 // Добавляем расчетные метрики
                 metrics: {
                     win_rate: calculateWinRate(enrichedTokenPnl),
-                    avg_duration: calculateAvgDuration(statsResult.rows[0]),
+                    avg_duration: calculateAvgDuration(stats),
                     top_win: Math.max(...enrichedTokenPnl.map(t => t.pnl_sol || 0), 0),
-                    total_volume: (statsResult.rows[0]?.total_buy_volume || 0) + (statsResult.rows[0]?.total_sell_volume || 0),
+                    total_volume_sol: totalVolumeSOL,
+                    total_volume_usd: calculateVolumeUSD(totalVolumeSOL),
                     realized_profits: enrichedTokenPnl.reduce((sum, t) => sum + (t.pnl_sol || 0), 0)
                 }
             }

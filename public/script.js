@@ -2000,10 +2000,10 @@ function renderWalletStats(data) {
                     <div class="metric-label">Top Win</div>
                     <div class="metric-value positive">+${formatSOL(metrics.top_win)}</div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-label">Volume</div>
-                    <div class="metric-value">$${formatNumber(metrics.total_volume * 227.96)}</div>
-                </div>
+                       <div class="metric-card">
+                           <div class="metric-label">Volume</div>
+                           <div class="metric-value">$${formatNumber(metrics.total_volume_usd)}</div>
+                       </div>
                 <div class="metric-card">
                     <div class="metric-label">Realized Profits</div>
                     <div class="metric-value ${metrics.realized_profits >= 0 ? 'positive' : 'negative'}">
@@ -2021,22 +2021,30 @@ function renderWalletStats(data) {
                                 <div class="token-symbol">${token.symbol}</div>
                                 <div class="token-name">${token.name}</div>
                             </div>
-                            <div class="token-stats">
-                                <div class="stat-row">
-                                    <span class="stat-label">Bought:</span>
-                                    <span class="stat-value">${formatSOL(token.total_bought_sol)}</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">Sold:</span>
-                                    <span class="stat-value">${formatSOL(token.total_sold_sol)}</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">PnL:</span>
-                                    <span class="stat-value ${token.pnl_sol >= 0 ? 'positive' : 'negative'}">
-                                        ${token.pnl_sol >= 0 ? '+' : ''}${formatSOL(token.pnl_sol)}
-                                    </span>
-                                </div>
-                            </div>
+                                   <div class="token-stats">
+                                       <div class="stat-row">
+                                           <span class="stat-label">Bought:</span>
+                                           <span class="stat-value">${formatSOL(token.total_bought_sol)}</span>
+                                       </div>
+                                       <div class="stat-row">
+                                           <span class="stat-label">Sold:</span>
+                                           <span class="stat-value">${formatSOL(token.total_sold_sol)}</span>
+                                       </div>
+                                       <div class="stat-row">
+                                           <span class="stat-label">PnL:</span>
+                                           <span class="stat-value ${token.pnl_sol >= 0 ? 'positive' : 'negative'}">
+                                               ${token.pnl_sol >= 0 ? '+' : ''}${formatSOL(token.pnl_sol)}
+                                           </span>
+                                       </div>
+                                       <div class="stat-row">
+                                           <span class="stat-label">First Trade:</span>
+                                           <span class="stat-value">${formatTimeAgo(new Date(token.first_trade))}</span>
+                                       </div>
+                                       <div class="stat-row">
+                                           <span class="stat-label">Last Trade:</span>
+                                           <span class="stat-value">${formatTimeAgo(new Date(token.last_trade))}</span>
+                                       </div>
+                                   </div>
                             <div class="token-actions">
                                 <a href="https://pump.fun/coin/${token.token_mint}" target="_blank" class="action-button small">
                                     <i class="fas fa-external-link-alt"></i>
@@ -2129,7 +2137,14 @@ function renderTrendingMeta(data) {
 function initWalletStats() {
     const searchBtn = document.getElementById('searchWalletBtn');
     const walletInput = document.getElementById('walletAddressInput');
+    const timeFilters = document.querySelectorAll('.time-btn');
     
+    let currentPeriod = '1d';
+    
+    // Загружаем всех трейдеров при открытии страницы
+    loadTradersStats(currentPeriod);
+    
+    // Обработчик поиска кошелька
     if (searchBtn && walletInput) {
         searchBtn.addEventListener('click', async () => {
             const address = walletInput.value.trim();
@@ -2140,7 +2155,7 @@ function initWalletStats() {
             
             try {
                 showLoading();
-                const response = await fetch(`/api/wallet/stats/${address}`);
+                const response = await fetch(`/api/wallet/stats/${address}?period=${currentPeriod}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -2171,6 +2186,152 @@ function initWalletStats() {
                 searchBtn.click();
             }
         });
+    }
+    
+    // Обработчики фильтров по времени
+    timeFilters.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Обновляем активную кнопку
+            timeFilters.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            currentPeriod = btn.dataset.period;
+            
+            // Если есть поисковый запрос, обновляем его
+            if (walletInput.value.trim()) {
+                searchBtn.click();
+            } else {
+                // Иначе загружаем всех трейдеров
+                loadTradersStats(currentPeriod);
+            }
+        });
+    });
+}
+
+// Функция для загрузки статистики всех трейдеров
+async function loadTradersStats(period) {
+    try {
+        showLoading();
+        const response = await fetch(`/api/traders/stats?period=${period}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            renderTradersStats(data.data, period);
+        } else {
+            document.getElementById('walletStatsData').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error</h3>
+                    <p>${data.error || 'Failed to load traders data'}</p>
+                </div>`;
+        }
+    } catch (error) {
+        console.error('Traders stats error:', error);
+        document.getElementById('walletStatsData').innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error</h3>
+                <p>Failed to load traders data</p>
+            </div>`;
+    } finally {
+        hideLoading();
+    }
+}
+
+// Функция для отображения статистики всех трейдеров
+function renderTradersStats(traders, period) {
+    const container = document.getElementById('walletStatsData');
+    if (!container) return;
+    
+    if (!traders || traders.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h3>No Active Traders</h3>
+                <p>No trader activity found for the selected period</p>
+            </div>`;
+        return;
+    }
+    
+    const periodText = {
+        '1d': '1 Day',
+        '3d': '3 Days',
+        '7d': '7 Days',
+        '14d': '14 Days',
+        '30d': '30 Days'
+    };
+    
+    container.innerHTML = `
+        <div class="traders-overview">
+            <h3><i class="fas fa-chart-line"></i> Top Traders - ${periodText[period]}</h3>
+            <div class="traders-grid">
+                ${traders.map((trader, index) => `
+                    <div class="trader-card" onclick="analyzeTrader('${trader.wallet}')">
+                        <div class="trader-header">
+                            <div class="trader-rank">#${index + 1}</div>
+                            <div class="trader-info">
+                                <h4>${trader.wallet_name}</h4>
+                                <div class="trader-address">${shortenAddress(trader.wallet)}</div>
+                                ${trader.wallet_telegram || trader.wallet_twitter ? `
+                                <div class="trader-socials">
+                                    ${trader.wallet_telegram ? `<a href="${trader.wallet_telegram}" target="_blank" class="social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
+                                    ${trader.wallet_twitter ? `<a href="${trader.wallet_twitter}" target="_blank" class="social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
+                                </div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="trader-metrics">
+                            <div class="metric-item">
+                                <div class="metric-label">Win Rate</div>
+                                <div class="metric-value">${trader.win_rate}%</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Avg Duration</div>
+                                <div class="metric-value">${trader.avg_duration}m</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Top Win</div>
+                                <div class="metric-value positive">+${formatSOL(trader.realized_pnl)}</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Volume</div>
+                                <div class="metric-value">$${formatNumber(trader.total_volume_usd)}</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Realized Profits</div>
+                                <div class="metric-value ${trader.realized_pnl >= 0 ? 'positive' : 'negative'}">
+                                    ${trader.realized_pnl >= 0 ? '+' : ''}${formatSOL(trader.realized_pnl)}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="trader-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Trades:</span>
+                                <span class="stat-value">${trader.total_trades}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Tokens:</span>
+                                <span class="stat-value">${trader.unique_tokens}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Last Active:</span>
+                                <span class="stat-value">${formatTimeAgo(new Date(trader.last_trade))}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// Функция для анализа конкретного трейдера
+async function analyzeTrader(walletAddress) {
+    const walletInput = document.getElementById('walletAddressInput');
+    if (walletInput) {
+        walletInput.value = walletAddress;
+        document.getElementById('searchWalletBtn').click();
     }
 }
 

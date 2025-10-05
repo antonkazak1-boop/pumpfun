@@ -464,23 +464,31 @@
                 <p class="tab-description">Detailed wallet statistics and performance metrics like Kolscan</p>
             </div>
 
-            <div class="wallet-stats-container">
-                <div class="wallet-search">
-                    <input type="text" id="walletAddressInput" placeholder="Enter wallet address..." class="wallet-input">
-                    <button id="searchWalletBtn" class="search-btn">
-                        <i class="fas fa-search"></i>
-                        Analyze Wallet
-                    </button>
-                </div>
+           <div class="wallet-stats-container">
+               <div class="wallet-search">
+                   <input type="text" id="walletAddressInput" placeholder="Enter wallet address..." class="wallet-input">
+                   <button id="searchWalletBtn" class="search-btn">
+                       <i class="fas fa-search"></i>
+                       Analyze Wallet
+                   </button>
+               </div>
 
-                <div id="walletStatsData" class="wallet-stats-content">
-                    <div class="empty-state">
-                        <i class="fas fa-wallet"></i>
-                        <h3>Enter Wallet Address</h3>
-                        <p>Enter a Solana wallet address to view detailed analytics and performance metrics</p>
-                    </div>
-                </div>
-            </div>
+               <div class="time-filters">
+                   <button class="time-btn active" data-period="1d">1 Day</button>
+                   <button class="time-btn" data-period="3d">3 Days</button>
+                   <button class="time-btn" data-period="7d">7 Days</button>
+                   <button class="time-btn" data-period="14d">14 Days</button>
+                   <button class="time-btn" data-period="30d">30 Days</button>
+               </div>
+
+               <div id="walletStatsData" class="wallet-stats-content">
+                   <div class="empty-state">
+                       <i class="fas fa-wallet"></i>
+                       <h3>Enter Wallet Address</h3>
+                       <p>Enter a Solana wallet address to view detailed analytics and performance metrics</p>
+                   </div>
+               </div>
+           </div>
         </div>
         </main>
 
