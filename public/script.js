@@ -1565,8 +1565,18 @@ function updateActivityContent(data, type) {
         const tokenName = item.token_name || 'Unknown Token';
         const timeAgo = formatTimeAgo(new Date(item.ts));
         
+        // Calculate gradient intensity based on transaction size (max 6 SOL = 100% brightness)
+        const amountNum = parseFloat(amount) || 0;
+        const intensity = Math.min(amountNum / 6, 1); // 0-1 scale
+        const opacity = 0.3 + (intensity * 0.7); // 0.3-1.0 opacity
+        
+        // Generate gradient styles
+        const gradientStyle = isBuy 
+            ? `background: linear-gradient(135deg, rgba(34, 197, 94, ${opacity}) 0%, rgba(22, 163, 74, ${opacity * 0.8}) 100%)`
+            : `background: linear-gradient(135deg, rgba(239, 68, 68, ${opacity}) 0%, rgba(220, 38, 38, ${opacity * 0.8}) 100%)`;
+        
         return `
-            <div class="data-item activity-item ${isBuy ? 'buy-action' : 'sell-action'}">
+            <div class="data-item activity-item ${isBuy ? 'buy-action' : 'sell-action'}" style="${gradientStyle}">
                 <div class="activity-header">
                     <div class="activity-type">
                         <i class="fas ${isBuy ? 'fa-arrow-circle-up' : 'fa-arrow-circle-down'}"></i>
@@ -1610,20 +1620,15 @@ function updateActivityContent(data, type) {
     };
     
     if (type === 'all') {
-        // Показываем две колонки
-        const sellTransactions = data.filter(item => item.side === 'SELL');
-        const buyTransactions = data.filter(item => item.side === 'BUY');
+        // Показываем все транзакции в хронологическом порядке с градиентной окраской
+        const sortedData = [...data].sort((a, b) => new Date(b.ts) - new Date(a.ts)); // Сортируем по времени (новые сверху)
         
         activityContent.innerHTML = `
-            <div class="activity-columns">
-                <div class="activity-column sell-column">
-                    <h3 class="column-header"><i class="fas fa-arrow-circle-down"></i> SELL Transactions</h3>
-                    ${sellTransactions.length > 0 ? sellTransactions.map(renderTransaction).join('') : '<div class="empty-column">No SELL transactions</div>'}
-                </div>
-                <div class="activity-column buy-column">
-                    <h3 class="column-header"><i class="fas fa-arrow-circle-up"></i> BUY Transactions</h3>
-                    ${buyTransactions.length > 0 ? buyTransactions.map(renderTransaction).join('') : '<div class="empty-column">No BUY transactions</div>'}
-                </div>
+            <div class="activity-single-column">
+                <h3 class="column-header">
+                    <i class="fas fa-list"></i> All Activity (${data.length} transactions)
+                </h3>
+                ${sortedData.length > 0 ? sortedData.map(renderTransaction).join('') : '<div class="empty-column">No transactions found</div>'}
             </div>
         `;
     } else {

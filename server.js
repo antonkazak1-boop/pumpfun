@@ -427,110 +427,6 @@ app.get('/api/volumesurge', async (req, res) => {
     }
 });
 
-app.get('/api/cobuy', async (req, res) => {
-    try {
-        const query = `
-            WITH wallet_tokens AS (
-                SELECT wallet, token_mint, SUM(sol_spent) AS total_spent
-                FROM events
-                WHERE side = 'BUY' AND ts > now() - interval '20 minutes'
-                GROUP BY wallet, token_mint
-                HAVING SUM(sol_spent) > 10
-            ),
-            token_pairs AS (
-                SELECT w1.token_mint AS token_a, w2.token_mint AS token_b,
-                       COUNT(DISTINCT w1.wallet) AS common_buyers,
-                       SUM(w1.total_spent + w2.total_spent) AS combined_volume
-                FROM wallet_tokens w1
-                JOIN wallet_tokens w2 ON w1.wallet = w2.wallet AND w1.token_mint < w2.token_mint
-                GROUP BY w1.token_mint, w2.token_mint
-                HAVING COUNT(DISTINCT w1.wallet) >= 2
-            )
-            SELECT token_a, token_b, common_buyers, combined_volume
-            FROM token_pairs
-            ORDER BY common_buyers DESC, combined_volume DESC
-            LIMIT 100;
-        `;
-        const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
-    } catch (error) {
-        console.error('Co-buy error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/smartmoney', async (req, res) => {
-    try {
-        const query = `
-            WITH profitable_wallets AS (
-                SELECT wallet, COUNT(DISTINCT token_mint) AS unique_tokens, AVG(sol_spent) AS avg_buy_size
-                FROM events
-                WHERE side = 'BUY' AND ts > now() - interval '24 hours'
-                GROUP BY wallet
-                HAVING COUNT(DISTINCT token_mint) >= 1 AND AVG(sol_spent) > 0.01
-            )
-            SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint, e.sol_spent as sol_spent_needs_price_lookup, e.ts, e.tx_signature
-            FROM profitable_wallets p
-            JOIN (SELECT wallet, token_mint, sol_spent, ts, tx_signature 
-                  FROM events 
-                  WHERE side = 'BUY' AND ts > now() - interval '24 hours') e ON p.wallet = e.wallet
-            ORDER BY p.unique_tokens DESC, e.ts DESC
-            LIMIT 100;
-        `;
-        const result = await pool.query(query);
-        let enrichedData = enrichWalletData(result.rows);
-        enrichedData = await enrichTransactionData(enrichedData);
-        res.json({ success: true, data: enrichedData });
-    } catch (error) {
-        console.error('Smart money error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/freshtokens', async (req, res) => {
-    try {
-        const query = `
-            WITH first_appearance AS (
-                SELECT token_mint, MIN(ts) AS first_seen
-                FROM events
-                GROUP BY token_mint
-            )
-            SELECT e.token_mint, COUNT(DISTINCT e.wallet) AS early_buyers, SUM(e.sol_spent) AS total_volume, fa.first_seen
-            FROM events e
-            JOIN first_appearance fa ON e.token_mint = fa.token_mint
-            WHERE e.side = 'BUY' AND fa.first_seen > now() - interval '5 minutes' AND e.ts > now() - interval '5 minutes'
-            GROUP BY e.token_mint, fa.first_seen
-            HAVING SUM(e.sol_spent) > 0.01
-            ORDER BY fa.first_seen DESC
-            LIMIT 100;
-        `;
-        const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
-    } catch (error) {
-        console.error('Fresh tokens error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/topgainers', async (req, res) => {
-    try {
-        const query = `
-            SELECT token_mint, COUNT(DISTINCT wallet) AS total_buyers, SUM(sol_spent) AS total_volume, 
-                   AVG(sol_spent) AS avg_buy_size, MAX(sol_spent) AS largest_buy
-            FROM events
-            WHERE side = 'BUY' AND ts > now() - interval '1 hour'
-            GROUP BY token_mint
-            HAVING SUM(sol_spent) > 100
-            ORDER BY total_volume DESC
-            LIMIT 100;
-        `;
-        const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
-    } catch (error) {
-        console.error('Top gainers error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
 
 // Дополнительные эндпоинты из n8n SQL
 app.get('/api/clusterbuy5m', async (req, res) => {
@@ -979,6 +875,25 @@ app.get('/api/smartmoney', async (req, res) => {
         const result = await pool.query(query);
         let enrichedData = enrichWalletData(result.rows);
         enrichedData = await enrichTransactionData(enrichedData);
+        
+        // Массово получаем метаданные токенов
+        const tokenMints = enrichedData.map(item => item.token_mint);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        
+        // Обогащаем данные метаданными токенов
+        enrichedData = enrichedData.map((item) => {
+            const tokenMeta = metadataMap.get(item.token_mint) || getTokenMetadata(item.token_mint);
+            return {
+                ...item,
+                token_symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                token_name: tokenMeta?.name || 'Unknown Token',
+                token_image: tokenMeta?.image || '/img/token-placeholder.png',
+                token_market_cap: tokenMeta?.market_cap,
+                token_price: tokenMeta?.price,
+                token_source: tokenMeta?.source || 'fallback'
+            };
+        });
+        
         res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Smart money error:', error);
@@ -1004,7 +919,26 @@ app.get('/api/freshtokens', async (req, res) => {
             LIMIT 100;
         `;
         const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
+        
+        // Массово получаем метаданные через Pump.fun + DexScreener + Jupiter
+        const tokenMints = result.rows.map(row => row.token_mint);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        
+        // Обогащаем данные метаданными токенов
+        const enrichedData = result.rows.map((item) => {
+            const tokenMeta = metadataMap.get(item.token_mint) || getTokenMetadata(item.token_mint);
+            return {
+                ...item,
+                symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                name: tokenMeta?.name || 'Unknown Token',
+                image: tokenMeta?.image || '/img/token-placeholder.png',
+                market_cap: tokenMeta?.market_cap,
+                price: tokenMeta?.price,
+                source: tokenMeta?.source || 'fallback'
+            };
+        });
+        
+        res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Fresh tokens error:', error);
         res.status(500).json({ success: false, error: error.message });
