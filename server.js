@@ -340,7 +340,25 @@ app.get('/api/clusterbuy', async (req, res) => {
             LIMIT 100;
         `;
         const result = await pool.query(query);
-        res.json({ success: true, data: result.rows });
+        
+        // Массово получаем метаданные через Pump.fun + DexScreener + Jupiter
+        const tokenMints = result.rows.map(row => row.token_mint);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        
+        // Обогащаем данные метаданными токенов
+        const enrichedData = result.rows.map((item) => {
+            const tokenMeta = metadataMap.get(item.token_mint) || getTokenMetadata(item.token_mint);
+            return {
+                ...item,
+                symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                name: tokenMeta?.name || 'Unknown Token',
+                image: tokenMeta?.image || '/img/token-placeholder.png',
+                price: tokenMeta?.price || 0,
+                market_cap: tokenMeta?.market_cap || 0
+            };
+        });
+        
+        res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Clusterbuy error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -381,16 +399,22 @@ app.get('/api/volumesurge', async (req, res) => {
         `;
         const result = await pool.query(query);
         
+        // Массово получаем метаданные через Pump.fun + DexScreener + Jupiter
+        const tokenMints = result.rows.map(row => row.token_mint);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        
         // Обогащаем данные метаданными токенов
-        const enrichedData = await Promise.all(result.rows.map(async (item) => {
-            const tokenMeta = getTokenMetadata(item.token_mint);
+        const enrichedData = result.rows.map((item) => {
+            const tokenMeta = metadataMap.get(item.token_mint) || getTokenMetadata(item.token_mint);
             return {
                 ...item,
                 symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
                 name: tokenMeta?.name || 'Unknown Token',
-                image: tokenMeta?.image || '/img/token-placeholder.png'
+                image: tokenMeta?.image || '/img/token-placeholder.png',
+                price: tokenMeta?.price || 0,
+                market_cap: tokenMeta?.market_cap || 0
             };
-        }));
+        });
         
         res.json({ success: true, data: enrichedData });
     } catch (error) {
