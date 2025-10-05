@@ -878,7 +878,7 @@ app.get('/api/traders/stats', async (req, res) => {
             FROM trader_stats ts
             LEFT JOIN trader_pnl tp ON ts.wallet = tp.wallet
             LEFT JOIN trader_avg_duration tad ON ts.wallet = tad.wallet
-            ORDER BY ts.total_volume DESC
+            ORDER BY (ts.total_buy_volume + ts.total_sell_volume) DESC
             LIMIT 100;
         `;
         

@@ -3074,6 +3074,56 @@ body {
     border-color: var(--accent-color);
 }
 
+.trader-type-filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.trader-type-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.trader-type-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-color);
+}
+
+.trader-type-btn.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.trader-type-btn[data-type="sonic"]:not(.active) {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.trader-type-btn[data-type="scalper"]:not(.active) {
+    border-color: #f59e0b;
+    color: #f59e0b;
+}
+
+.trader-type-btn[data-type="day"]:not(.active) {
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.trader-type-btn[data-type="swing"]:not(.active) {
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+}
+
 /* ================================
    TRADERS OVERVIEW STYLES
    ================================ */

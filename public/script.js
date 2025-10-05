@@ -967,24 +967,28 @@ function createWalletCard(trader) {
     const uniqueTokens = trader.unique_tokens || 0;
     
     // Performance indicator based on activity (higher activity = better performance)
-    const activityScore = (totalTrades * 0.1) + (uniqueTokens * 0.5) + (totalVolume * 0.001);
-    const isActive = totalTrades > 0 && uniqueTokens > 0;
+    // Calculate real performance based on PnL data
+    const realizedPnl = trader.realized_pnl || 0;
+    const totalVolumeSOL = trader.total_volume || 1; // Avoid division by zero
+    const performancePct = (realizedPnl / totalVolumeSOL) * 100;
     
-    if (isActive && activityScore > 5) {
+    const isActive = totalTrades > 0 && uniqueTokens > 0;
+    const isProfitable = realizedPnl > 0;
+    
+    if (isActive && isProfitable) {
         card.classList.add('profitable');
-    } else if (isActive && activityScore > 2) {
-        card.classList.add('neutral');
-    } else {
+    } else if (isActive && !isProfitable) {
         card.classList.add('lossy');
+    } else {
+        card.classList.add('neutral');
     }
 
     const symbol = trader.symbol || trader.name.charAt(0).toUpperCase();
     const shortAddress = trader.wallet.slice(0, 8) + '...' + trader.wallet.slice(-8);
     const lastActivity = trader.last_activity ? formatTimeAgo(new Date(trader.last_activity)) : 'Unknown';
     
-    // Calculate performance percentage based on real metrics
-    const performancePct = Math.min(activityScore * 2, 25); // Cap at 25%
-    const performanceValue = `+${performancePct.toFixed(1)}%`;
+    // Display real performance percentage
+    const performanceValue = isProfitable ? `+${performancePct.toFixed(1)}%` : `${performancePct.toFixed(1)}%`;
     
     card.innerHTML = `
         <div class="wallet-header">
@@ -2157,11 +2161,13 @@ function initWalletStats() {
     const searchBtn = document.getElementById('searchWalletBtn');
     const walletInput = document.getElementById('walletAddressInput');
     const timeFilters = document.querySelectorAll('.time-btn');
+    const traderTypeFilters = document.querySelectorAll('.trader-type-btn');
     
     let currentPeriod = '1d';
+    let currentTraderType = 'all';
     
     // Загружаем всех трейдеров при открытии страницы
-    loadTradersStats(currentPeriod);
+    loadTradersStats(currentPeriod, currentTraderType);
     
     // Обработчик поиска кошелька
     if (searchBtn && walletInput) {
@@ -2221,21 +2227,41 @@ function initWalletStats() {
                 searchBtn.click();
             } else {
                 // Иначе загружаем всех трейдеров
-                loadTradersStats(currentPeriod);
+                loadTradersStats(currentPeriod, currentTraderType);
+            }
+        });
+    });
+    
+    // Обработчики фильтров по типу трейдеров
+    traderTypeFilters.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Обновляем активную кнопку
+            traderTypeFilters.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            currentTraderType = btn.dataset.type;
+            
+            // Если есть поисковый запрос, обновляем его
+            if (walletInput.value.trim()) {
+                searchBtn.click();
+            } else {
+                // Иначе загружаем всех трейдеров
+                loadTradersStats(currentPeriod, currentTraderType);
             }
         });
     });
 }
 
 // Функция для загрузки статистики всех трейдеров
-async function loadTradersStats(period) {
+async function loadTradersStats(period, traderType = 'all') {
     try {
         showLoading();
         const response = await fetch(`/api/traders/stats?period=${period}`);
         const data = await response.json();
         
         if (data.success) {
-            renderTradersStats(data.data, period);
+            const filteredData = filterTradersByType(data.data, traderType);
+            renderTradersStats(filteredData, period, traderType);
         } else {
             document.getElementById('walletStatsData').innerHTML = `
                 <div class="empty-state">
@@ -2257,8 +2283,30 @@ async function loadTradersStats(period) {
     }
 }
 
+// Функция для фильтрации трейдеров по типу
+function filterTradersByType(traders, traderType) {
+    if (traderType === 'all') return traders;
+    
+    return traders.filter(trader => {
+        const duration = trader.avg_duration;
+        
+        switch (traderType) {
+            case 'sonic':
+                return duration < 5; // < 5 минут
+            case 'scalper':
+                return duration >= 5 && duration <= 30; // 5-30 минут
+            case 'day':
+                return duration > 30 && duration <= 1440; // 1-24 часа (1440 минут)
+            case 'swing':
+                return duration > 1440 && duration <= 10080; // 1-7 дней (10080 минут)
+            default:
+                return true;
+        }
+    });
+}
+
 // Функция для отображения статистики всех трейдеров
-function renderTradersStats(traders, period) {
+function renderTradersStats(traders, period, traderType = 'all') {
     const container = document.getElementById('walletStatsData');
     if (!container) return;
     
@@ -2267,7 +2315,7 @@ function renderTradersStats(traders, period) {
             <div class="empty-state">
                 <i class="fas fa-users"></i>
                 <h3>No Active Traders</h3>
-                <p>No trader activity found for the selected period</p>
+                <p>No trader activity found for the selected period and type</p>
             </div>`;
         return;
     }
@@ -2280,9 +2328,17 @@ function renderTradersStats(traders, period) {
         '30d': '30 Days'
     };
     
+    const traderTypeText = {
+        'all': 'All Traders',
+        'sonic': 'SonicFast Traders (< 5m)',
+        'scalper': 'Scalpers (5-30m)',
+        'day': 'Day Traders (1-24h)',
+        'swing': 'Swing Traders (1-7d)'
+    };
+    
     container.innerHTML = `
         <div class="traders-overview">
-            <h3><i class="fas fa-chart-line"></i> Top Traders - ${periodText[period]}</h3>
+            <h3><i class="fas fa-chart-line"></i> ${traderTypeText[traderType]} - ${periodText[period]}</h3>
             <div class="traders-grid">
                 ${traders.map((trader, index) => `
                     <div class="trader-card" onclick="analyzeTrader('${trader.wallet}')">
