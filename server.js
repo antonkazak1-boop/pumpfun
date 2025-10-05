@@ -4,7 +4,13 @@ const path = require('path');
 
 // Импорт wallet map модуля
 const { resolveWalletMeta } = require('./walletMap');
-const { initializeTokenMetadata, enrichTransactionData, getTokenMetadata } = require('./tokenMetadata');
+const { 
+    initializeTokenMetadata, 
+    enrichTransactionData, 
+    getTokenMetadata, 
+    getTokenMetadataAsync,
+    fetchMultipleTokenMetadata 
+} = require('./tokenMetadata');
 const { 
     getNewPumpTokens, 
     getPumpTokenDetails, 
@@ -740,17 +746,28 @@ app.get('/api/coins/market', async (req, res) => {
         
         const result = await pool.query(query);
         
+        // Получаем уникальные токены
+        const tokenMints = result.rows.map(row => row.token_mint);
+        console.log(`🔍 Fetching metadata for ${tokenMints.length} tokens...`);
+        
+        // Массово получаем метаданные через DexScreener + Jupiter
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        
         // Обогащаем данные метаданными токенов
-        let enrichedData = await Promise.all(result.rows.map(async (coin) => {
-            const tokenMeta = getTokenMetadata(coin.token_mint);
+        let enrichedData = result.rows.map((coin) => {
+            const tokenMeta = metadataMap.get(coin.token_mint) || getTokenMetadata(coin.token_mint);
             return {
                 ...coin,
                 symbol: tokenMeta?.symbol || coin.token_mint.substring(0, 8),
                 name: tokenMeta?.name || 'Unknown Token',
                 image: tokenMeta?.image || '/img/token-placeholder.png',
-                market_cap: tokenMeta?.market_cap || 0
+                market_cap: tokenMeta?.market_cap || 0,
+                price: tokenMeta?.price || 0,
+                source: tokenMeta?.source || 'unknown'
             };
-        }));
+        });
+        
+        console.log(`✅ Enriched ${enrichedData.length} tokens (Sources: ${enrichedData.filter(t => t.source === 'dexscreener').length} DexScreener, ${enrichedData.filter(t => t.source === 'jupiter').length} Jupiter)`);
         
         // Применяем фильтрацию по market cap
         if (cap !== 'all') {
@@ -882,16 +899,20 @@ app.get('/api/cobuy', async (req, res) => {
         `;
         const result = await pool.query(query);
         
+        // Массово получаем метаданные через DexScreener + Jupiter
+        const tokenMints = result.rows.map(row => row.token_mint);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        
         // Обогащаем данные метаданными токенов
-        const enrichedData = await Promise.all(result.rows.map(async (item) => {
-            const tokenMeta = getTokenMetadata(item.token_mint);
+        const enrichedData = result.rows.map((item) => {
+            const tokenMeta = metadataMap.get(item.token_mint) || getTokenMetadata(item.token_mint);
             return {
                 ...item,
                 symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
                 name: tokenMeta?.name || 'Unknown Token',
                 image: tokenMeta?.image || '/img/token-placeholder.png'
             };
-        }));
+        });
         
         res.json({ success: true, data: enrichedData });
     } catch (error) {
@@ -966,16 +987,22 @@ app.get('/api/topgainers', async (req, res) => {
         `;
         const result = await pool.query(query);
         
+        // Массово получаем метаданные через DexScreener + Jupiter
+        const tokenMints = result.rows.map(row => row.token_mint);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        
         // Обогащаем данные метаданными токенов
-        const enrichedData = await Promise.all(result.rows.map(async (item) => {
-            const tokenMeta = getTokenMetadata(item.token_mint);
+        const enrichedData = result.rows.map((item) => {
+            const tokenMeta = metadataMap.get(item.token_mint) || getTokenMetadata(item.token_mint);
             return {
                 ...item,
                 symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
                 name: tokenMeta?.name || 'Unknown Token',
-                image: tokenMeta?.image || '/img/token-placeholder.png'
+                image: tokenMeta?.image || '/img/token-placeholder.png',
+                price: tokenMeta?.price || 0,
+                market_cap: tokenMeta?.market_cap || 0
             };
-        }));
+        });
         
         res.json({ success: true, data: enrichedData });
     } catch (error) {
