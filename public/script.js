@@ -501,33 +501,24 @@ function renderSmartMoney(data) {
             <div class="empty-state">
                 <i class="fas fa-brain"></i>
                 <h3>No Smart Money Activity</h3>
-                <p>No experienced trader activity detected in the last hour</p>
+                <p>No experienced trader activity detected in the last 24 hours</p>
             </div>`;
         return;
     }
     
-    // Группируем данные по кошелькам
-    const walletGroups = data.reduce((groups, item) => {
-        if (!groups[item.wallet]) {
-            groups[item.wallet] = {
-                wallet: item.wallet,
-                unique_tokens: item.unique_tokens,
-                avg_buy_size: item.avg_buy_size,
-                trades: []
-            };
-        }
-        groups[item.wallet].trades.push(item);
-        return groups;
-    }, {});
-    
-    container.innerHTML = Object.values(walletGroups).map((walletData, index) => {
-        const walletUrl = `https://solscan.io/account/${walletData.wallet}`;
-        const latestTrade = walletData.trades[0]; // Первая торговля (самая свежая)
+    container.innerHTML = data.map((item, index) => {
+        const walletUrl = `https://solscan.io/account/${item.wallet}`;
+        const timeAgo = formatTimeAgo(new Date(item.last_activity));
         
-        // Получаем данные о трейдере из latest trade
-        const traderName = latestTrade.wallet_name || `Trader ${walletData.wallet.substring(0, 8)}`;
-        const telegramLink = latestTrade.wallet_telegram;
-        const twitterLink = latestTrade.wallet_twitter;
+        // Получаем данные о трейдере
+        const traderName = item.wallet_name || `Trader ${item.wallet.substring(0, 8)}`;
+        const telegramLink = item.wallet_telegram;
+        const twitterLink = item.wallet_twitter;
+        
+        // Информация о последней сделке
+        const latestToken = item.token_name || 'Unknown Token';
+        const latestSymbol = item.token_symbol || 'Unknown';
+        const latestAmount = item.sol_spent ? formatSOL(item.sol_spent) : 'N/A';
         
         return `
             <div class="data-item smart-item">
@@ -539,44 +530,55 @@ function renderSmartMoney(data) {
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
-                        <div class="stat-label">Кошелек</div>
-                        <div class="stat-value">${shortenAddress(walletData.wallet)}</div>
+                        <div class="stat-label">Wallet</div>
+                        <div class="stat-value">${shortenAddress(item.wallet)}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Токенов торговал</div>
-                        <div class="stat-value positive">${latestTrade.total_tokens_traded || walletData.unique_tokens || 0}</div>
+                        <div class="stat-label">Unique Tokens</div>
+                        <div class="stat-value positive">${item.unique_tokens || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Средний размер</div>
-                        <div class="stat-value neutral">${formatSOL(walletData.avg_buy_size)}</div>
+                        <div class="stat-label">Total Trades</div>
+                        <div class="stat-value neutral">${item.total_trades || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Последний токен</div>
-                        <div class="stat-value">${latestTrade.token_symbol || 'UNKNOWN'} - ${latestTrade.token_name || 'Unknown'}</div>
+                        <div class="stat-label">Total Volume</div>
+                        <div class="stat-value positive">${formatSOL(item.total_volume || 0)}</div>
                     </div>
-                    ${latestTrade.most_buy_token ? `
                     <div class="stat-item">
-                        <div class="stat-label">Most Buy</div>
-                        <div class="stat-value positive">${latestTrade.most_buy_token.symbol} (${formatSOL(latestTrade.most_buy_token.amount)})</div>
+                        <div class="stat-label">Avg Buy Size</div>
+                        <div class="stat-value neutral">${formatSOL(item.avg_buy_size || 0)}</div>
                     </div>
-                    ` : ''}
-                    ${latestTrade.most_sell_token ? `
                     <div class="stat-item">
-                        <div class="stat-label">Most Sell</div>
-                        <div class="stat-value negative">${latestTrade.most_sell_token.symbol} (${formatSOL(latestTrade.most_sell_token.amount)})</div>
+                        <div class="stat-label">Last Activity</div>
+                        <div class="stat-value">${timeAgo}</div>
+                    </div>
+                    ${item.token_symbol ? `
+                    <div class="stat-item">
+                        <div class="stat-label">Latest Token</div>
+                        <div class="stat-value">${item.token_symbol} - ${latestToken}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Latest Amount</div>
+                        <div class="stat-value positive">${latestAmount}</div>
                     </div>
                     ` : ''}
                 </div>
+                
                 <div class="item-actions">
-                    <a href="https://pump.fun/coin/${latestTrade.token_mint}" target="_blank" class="action-button">
-                        <i class="fas fa-external-link-alt"></i> Последний токен
+                    <a href="${walletUrl}" target="_blank" class="action-button">
+                        <i class="fas fa-wallet"></i> Wallet
                     </a>
-                    <a href="${walletUrl}" target="_blank" class="action-button secondary">
-                        <i class="fas fa-wallet"></i> Кошелек
+                    ${item.tx_signature ? `
+                    <a href="https://solscan.io/tx/${item.tx_signature}" target="_blank" class="action-button">
+                        <i class="fas fa-external-link-alt"></i> Last Trade
                     </a>
-                    <button class="action-button secondary" onclick="showTokenDetails('${latestTrade.token_mint}')">
-                        <i class="fas fa-info-circle"></i> Детали
-                    </button>
+                    ` : ''}
+                    ${item.token_mint ? `
+                    <a href="https://pump.fun/coin/${item.token_mint}" target="_blank" class="action-button">
+                        <i class="fas fa-coins"></i> Token
+                    </a>
+                    ` : ''}
                 </div>
             </div>
         `;

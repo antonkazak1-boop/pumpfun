@@ -857,27 +857,53 @@ app.get('/api/cobuy', async (req, res) => {
 app.get('/api/smartmoney', async (req, res) => {
     try {
         const query = `
-            WITH profitable_wallets AS (
-                SELECT wallet, COUNT(DISTINCT token_mint) AS unique_tokens, AVG(sol_spent) AS avg_buy_size
+            WITH wallet_stats AS (
+                SELECT 
+                    wallet,
+                    COUNT(DISTINCT token_mint) AS unique_tokens,
+                    COUNT(*) AS total_trades,
+                    SUM(sol_spent) AS total_volume,
+                    AVG(sol_spent) AS avg_buy_size,
+                    MAX(ts) AS last_activity,
+                    STRING_AGG(DISTINCT token_mint, ',') AS token_list
                 FROM events
                 WHERE side = 'BUY' AND ts > now() - interval '24 hours'
                 GROUP BY wallet
                 HAVING COUNT(DISTINCT token_mint) >= 1 AND AVG(sol_spent) > 0.01
+            ),
+            recent_trades AS (
+                SELECT 
+                    wallet,
+                    token_mint,
+                    sol_spent,
+                    ts,
+                    tx_signature,
+                    ROW_NUMBER() OVER (PARTITION BY wallet ORDER BY ts DESC) as rn
+                FROM events 
+                WHERE side = 'BUY' AND ts > now() - interval '24 hours'
             )
-            SELECT p.wallet, p.unique_tokens, p.avg_buy_size, e.token_mint, e.sol_spent as sol_spent_needs_price_lookup, e.ts, e.tx_signature
-            FROM profitable_wallets p
-            JOIN (SELECT wallet, token_mint, sol_spent, ts, tx_signature 
-                  FROM events 
-                  WHERE side = 'BUY' AND ts > now() - interval '24 hours') e ON p.wallet = e.wallet
-            ORDER BY p.unique_tokens DESC, e.ts DESC
-            LIMIT 100;
+            SELECT 
+                ws.wallet,
+                ws.unique_tokens,
+                ws.total_trades,
+                ws.total_volume,
+                ws.avg_buy_size,
+                ws.last_activity,
+                rt.token_mint,
+                rt.sol_spent,
+                rt.ts,
+                rt.tx_signature
+            FROM wallet_stats ws
+            LEFT JOIN recent_trades rt ON ws.wallet = rt.wallet AND rt.rn = 1
+            ORDER BY ws.unique_tokens DESC, ws.total_volume DESC
+            LIMIT 50;
         `;
         const result = await pool.query(query);
         let enrichedData = enrichWalletData(result.rows);
         enrichedData = await enrichTransactionData(enrichedData);
         
         // Массово получаем метаданные токенов
-        const tokenMints = enrichedData.map(item => item.token_mint);
+        const tokenMints = enrichedData.map(item => item.token_mint).filter(Boolean);
         const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
         
         // Обогащаем данные метаданными токенов
@@ -885,7 +911,7 @@ app.get('/api/smartmoney', async (req, res) => {
             const tokenMeta = metadataMap.get(item.token_mint) || getTokenMetadata(item.token_mint);
             return {
                 ...item,
-                token_symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
+                token_symbol: tokenMeta?.symbol || item.token_mint?.substring(0, 8) || 'Unknown',
                 token_name: tokenMeta?.name || 'Unknown Token',
                 token_image: tokenMeta?.image || '/img/token-placeholder.png',
                 token_market_cap: tokenMeta?.market_cap,
