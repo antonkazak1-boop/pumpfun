@@ -72,6 +72,98 @@ function calculateAvgDuration(stats) {
     return durationMinutes;
 }
 
+// Функция для кэширования данных
+async function cacheData(key, data, ttlMinutes = 15) {
+    try {
+        const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
+        await pool.query(
+            'INSERT INTO analytics_cache (cache_key, data, expires_at) VALUES ($1, $2, $3) ON CONFLICT (cache_key) DO UPDATE SET data = $2, expires_at = $3',
+            [key, JSON.stringify(data), expiresAt]
+        );
+        console.log(`✅ Cached data for key: ${key}`);
+    } catch (error) {
+        console.error('❌ Cache error:', error);
+    }
+}
+
+// Функция для получения данных из кэша
+async function getCachedData(key) {
+    try {
+        const result = await pool.query(
+            'SELECT data FROM analytics_cache WHERE cache_key = $1 AND expires_at > NOW()',
+            [key]
+        );
+        
+        if (result.rows.length > 0) {
+            console.log(`✅ Cache hit for key: ${key}`);
+            return JSON.parse(result.rows[0].data);
+        }
+        
+        console.log(`❌ Cache miss for key: ${key}`);
+        return null;
+    } catch (error) {
+        console.error('❌ Cache retrieval error:', error);
+        return null;
+    }
+}
+
+// Функция для кэширования токенов
+async function cacheTokenMetadata(tokenMint, metadata) {
+    try {
+        await pool.query(
+            `INSERT INTO tokens (address, symbol, name, image, market_cap, price, source, last_updated)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+             ON CONFLICT (address) 
+             DO UPDATE SET 
+                 symbol = EXCLUDED.symbol,
+                 name = EXCLUDED.name,
+                 image = EXCLUDED.image,
+                 market_cap = EXCLUDED.market_cap,
+                 price = EXCLUDED.price,
+                 source = EXCLUDED.source,
+                 last_updated = NOW()`,
+            [
+                tokenMint,
+                metadata.symbol,
+                metadata.name,
+                metadata.image,
+                metadata.market_cap,
+                metadata.price,
+                metadata.source
+            ]
+        );
+    } catch (error) {
+        console.error('❌ Token cache error:', error);
+    }
+}
+
+// Функция для получения кэшированных токенов
+async function getCachedTokens(tokenMints) {
+    try {
+        const result = await pool.query(
+            'SELECT address, symbol, name, image, market_cap, price, source FROM tokens WHERE address = ANY($1)',
+            [tokenMints]
+        );
+        
+        const tokenMap = new Map();
+        result.rows.forEach(row => {
+            tokenMap.set(row.address, {
+                symbol: row.symbol,
+                name: row.name,
+                image: row.image,
+                market_cap: row.market_cap,
+                price: row.price,
+                source: row.source
+            });
+        });
+        
+        return tokenMap;
+    } catch (error) {
+        console.error('❌ Token retrieval error:', error);
+        return new Map();
+    }
+}
+
 const app = express();
 const port = process.env.PORT || 3000;
 

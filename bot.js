@@ -2,7 +2,7 @@ const { Telegraf, Markup } = require('telegraf');
 
 // Конфигурация бота
 const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_TELEGRAM_BOT_TOKEN';
-const MINI_APP_URL = process.env.MINI_APP_URL || 'YOUR_MINI_APP_HTTPS_URL';
+const MINI_APP_URL = process.env.MINI_APP_URL || 'https://pumpfun-u7av.onrender.com';
 
 // Проверка конфигурации
 if (!BOT_TOKEN || BOT_TOKEN === 'YOUR_TELEGRAM_BOT_TOKEN') {

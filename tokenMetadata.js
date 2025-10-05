@@ -292,10 +292,114 @@ async function fetchMultipleTokenMetadata(tokenMints) {
     const uniqueTokens = [...new Set(tokenMints)];
     const results = new Map();
     
+    // Сначала проверяем кэш в базе данных
+    try {
+        const { Pool } = require('pg');
+        const pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+        });
+        
+        const cachedTokens = await getCachedTokens(uniqueTokens, pool);
+        const uncachedTokens = uniqueTokens.filter(mint => !cachedTokens.has(mint));
+        
+        console.log(`✅ Found ${cachedTokens.size} cached tokens, fetching ${uncachedTokens.length} new ones`);
+        
+        // Добавляем кэшированные токены в результаты
+        cachedTokens.forEach((metadata, mint) => {
+            results.set(mint, metadata);
+        });
+        
+        if (uncachedTokens.length === 0) {
+            await pool.end();
+            return results;
+        }
+        
+        // Получаем метаданные для некэшированных токенов
+        const newMetadata = await fetchNewTokenMetadata(uncachedTokens);
+        
+        // Кэшируем новые метаданные
+        for (const [tokenMint, metadata] of newMetadata) {
+            await cacheTokenMetadata(tokenMint, metadata, pool);
+            results.set(tokenMint, metadata);
+        }
+        
+        await pool.end();
+        console.log(`✅ Total metadata: ${results.size} tokens (${cachedTokens.size} cached, ${newMetadata.size} new)`);
+        return results;
+        
+    } catch (error) {
+        console.error('❌ Cache error, falling back to direct fetch:', error);
+        return await fetchNewTokenMetadata(uniqueTokens);
+    }
+}
+
+// Функция для получения кэшированных токенов из БД
+async function getCachedTokens(tokenMints, pool) {
+    try {
+        const result = await pool.query(
+            'SELECT address, symbol, name, image, market_cap, price, source FROM tokens WHERE address = ANY($1)',
+            [tokenMints]
+        );
+        
+        const tokenMap = new Map();
+        result.rows.forEach(row => {
+            tokenMap.set(row.address, {
+                address: row.address,
+                symbol: row.symbol,
+                name: row.name,
+                image: row.image,
+                market_cap: row.market_cap,
+                price: row.price,
+                source: row.source || 'fallback'
+            });
+        });
+        
+        return tokenMap;
+    } catch (error) {
+        console.error('❌ Token retrieval error:', error);
+        return new Map();
+    }
+}
+
+// Функция для кэширования токенов в БД
+async function cacheTokenMetadata(tokenMint, metadata, pool) {
+    try {
+        await pool.query(
+            `INSERT INTO tokens (address, symbol, name, image, market_cap, price, source, last_updated)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+             ON CONFLICT (address) 
+             DO UPDATE SET 
+                 symbol = EXCLUDED.symbol,
+                 name = EXCLUDED.name,
+                 image = EXCLUDED.image,
+                 market_cap = EXCLUDED.market_cap,
+                 price = EXCLUDED.price,
+                 source = EXCLUDED.source,
+                 last_updated = NOW()`,
+            [
+                tokenMint,
+                metadata.symbol,
+                metadata.name,
+                metadata.image,
+                metadata.market_cap,
+                metadata.price,
+                metadata.source
+            ]
+        );
+    } catch (error) {
+        console.error('❌ Token cache error:', error);
+    }
+}
+
+// Функция для получения новых метаданных токенов
+async function fetchNewTokenMetadata(tokenMints) {
+    const results = new Map();
+    
     // Сначала пытаемся получить через Pump.fun API (батчевый запрос)
     try {
-        console.log(`🔥 Trying Pump.fun batch API for ${uniqueTokens.length} tokens...`);
-        const pumpResults = await getMultiplePumpTokens(uniqueTokens);
+        console.log(`🔥 Trying Pump.fun batch API for ${tokenMints.length} tokens...`);
+        const pumpResults = await getMultiplePumpTokens(tokenMints);
         
         // Добавляем результаты из Pump.fun
         pumpResults.forEach(token => {
@@ -326,7 +430,7 @@ async function fetchMultipleTokenMetadata(tokenMints) {
     }
     
     // Для токенов которые не нашли в Pump.fun - получаем индивидуально
-    const notFoundTokens = uniqueTokens.filter(mint => !results.has(mint));
+    const notFoundTokens = tokenMints.filter(mint => !results.has(mint));
     
     if (notFoundTokens.length > 0) {
         console.log(`🔍 Fetching individual metadata for ${notFoundTokens.length} remaining tokens...`);
