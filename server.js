@@ -1247,7 +1247,8 @@ async function startServer() {
             if (process.env.BOT_TOKEN) {
                 try {
                     console.log('\n🤖 Starting Telegram Bot...');
-                    require('./bot.js');
+                    const { startBot } = require('./bot.js');
+                    await startBot();
                     console.log('✅ Telegram Bot started successfully!');
                 } catch (error) {
                     console.log('⚠️ Telegram Bot not started:', error.message);
