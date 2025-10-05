@@ -64,17 +64,51 @@ function calculateWinRate(tokenPnl) {
     return Math.round((profitableTrades / tokenPnl.length) * 100);
 }
 
-// Функция для расчета средней продолжительности
-function calculateAvgDuration(stats) {
-    if (!stats || !stats.first_trade || !stats.last_trade) return 0;
-    const durationMs = new Date(stats.last_trade) - new Date(stats.first_trade);
-    const durationMinutes = Math.round(durationMs / (1000 * 60));
-    
-    // Если продолжительность меньше 1 минуты, возвращаем 0
-    if (durationMinutes < 1) return 0;
-    
-    // Возвращаем реальную продолжительность без ограничений
-    return durationMinutes;
+// Функция для расчета средней продолжительности от покупки до первой продажи
+async function calculateAvgDuration(wallet, timeInterval) {
+    try {
+        const query = `
+            WITH token_trades AS (
+                SELECT 
+                    token_mint,
+                    side,
+                    ts,
+                    ROW_NUMBER() OVER (PARTITION BY token_mint ORDER BY ts) as trade_sequence
+                FROM events 
+                WHERE wallet = $1 AND ts >= NOW() - INTERVAL '${timeInterval}'
+                ORDER BY token_mint, ts
+            ),
+            buy_sell_pairs AS (
+                SELECT 
+                    b.token_mint,
+                    b.ts as buy_time,
+                    s.ts as sell_time,
+                    EXTRACT(EPOCH FROM (s.ts - b.ts)) / 60 as duration_minutes
+                FROM token_trades b
+                JOIN token_trades s ON b.token_mint = s.token_mint 
+                    AND s.trade_sequence = (
+                        SELECT MIN(trade_sequence) 
+                        FROM token_trades 
+                        WHERE token_mint = b.token_mint 
+                            AND side = 'SELL' 
+                            AND trade_sequence > b.trade_sequence
+                    )
+                WHERE b.side = 'BUY' AND s.side = 'SELL'
+                    AND s.ts > b.ts
+            )
+            SELECT AVG(duration_minutes) as avg_duration
+            FROM buy_sell_pairs
+            WHERE duration_minutes > 0;
+        `;
+        
+        const result = await pool.query(query, [wallet]);
+        const avgDuration = result.rows[0]?.avg_duration;
+        
+        return avgDuration ? Math.round(avgDuration) : 0;
+    } catch (error) {
+        console.error('❌ Error calculating avg duration:', error);
+        return 0;
+    }
 }
 
 // Функция для получения актуальной цены SOL
@@ -770,7 +804,7 @@ app.get('/api/traders/stats', async (req, res) => {
         console.log(`📊 Getting traders stats for period: ${timeInterval}`);
         
         const query = `
-            WITH trader_stats AS (
+            WITH             trader_stats AS (
                 SELECT 
                     wallet,
                     COUNT(*) as total_trades,
@@ -784,6 +818,41 @@ app.get('/api/traders/stats', async (req, res) => {
                 WHERE ts >= NOW() - INTERVAL '${timeInterval}'
                 GROUP BY wallet
                 HAVING COUNT(*) >= 5 AND SUM(sol_spent) > 0.1
+            ),
+            trader_avg_duration AS (
+                SELECT 
+                    wallet,
+                    AVG(duration_minutes) as avg_duration_minutes
+                FROM (
+                    WITH token_trades AS (
+                        SELECT 
+                            wallet,
+                            token_mint,
+                            side,
+                            ts,
+                            ROW_NUMBER() OVER (PARTITION BY wallet, token_mint ORDER BY ts) as trade_sequence
+                        FROM events 
+                        WHERE ts >= NOW() - INTERVAL '${timeInterval}'
+                        ORDER BY wallet, token_mint, ts
+                    )
+                    SELECT 
+                        b.wallet,
+                        EXTRACT(EPOCH FROM (s.ts - b.ts)) / 60 as duration_minutes
+                    FROM token_trades b
+                    JOIN token_trades s ON b.wallet = s.wallet 
+                        AND b.token_mint = s.token_mint
+                        AND s.trade_sequence = (
+                            SELECT MIN(trade_sequence) 
+                            FROM token_trades 
+                            WHERE wallet = b.wallet 
+                                AND token_mint = b.token_mint 
+                                AND side = 'SELL' 
+                                AND trade_sequence > b.trade_sequence
+                        )
+                    WHERE b.side = 'BUY' AND s.side = 'SELL'
+                        AND s.ts > b.ts
+                ) buy_sell_pairs
+                GROUP BY wallet
             ),
             trader_pnl AS (
                 SELECT 
@@ -805,9 +874,10 @@ app.get('/api/traders/stats', async (req, res) => {
                 ts.last_trade,
                 ts.avg_buy_size,
                 COALESCE(tp.realized_pnl, 0) as realized_pnl,
-                EXTRACT(EPOCH FROM (ts.last_trade - ts.first_trade)) / 60 as duration_minutes
+                COALESCE(tad.avg_duration_minutes, 0) as duration_minutes
             FROM trader_stats ts
             LEFT JOIN trader_pnl tp ON ts.wallet = tp.wallet
+            LEFT JOIN trader_avg_duration tad ON ts.wallet = tad.wallet
             ORDER BY ts.total_volume DESC
             LIMIT 100;
         `;
@@ -825,7 +895,7 @@ app.get('/api/traders/stats', async (req, res) => {
                 wallet_telegram: walletMeta.wallet_telegram,
                 wallet_twitter: walletMeta.wallet_twitter,
                 total_volume_usd: await calculateVolumeUSD(totalVolumeSOL),
-                avg_duration: Math.round(row.duration_minutes), // Real duration
+                avg_duration: Math.round(row.duration_minutes), // Duration from first to last trade
                 win_rate: row.realized_pnl > 0 ? 100 : (row.realized_pnl < 0 ? 0 : 50) // Simple win rate
             };
         }));
@@ -954,7 +1024,7 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
                 // Добавляем расчетные метрики
                 metrics: {
                     win_rate: calculateWinRate(enrichedTokenPnl),
-                    avg_duration: calculateAvgDuration(stats),
+                    avg_duration: await calculateAvgDuration(address, timeInterval),
                     top_win: Math.max(...enrichedTokenPnl.map(t => t.pnl_sol || 0), 0),
                     total_volume_sol: totalVolumeSOL,
                     total_volume_usd: await calculateVolumeUSD(totalVolumeSOL),

@@ -2009,7 +2009,7 @@ function renderWalletStats(data) {
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Avg Duration</div>
-                    <div class="metric-value">${metrics.avg_duration}m</div>
+                    <div class="metric-value" title="Average time from buy to first sell">${metrics.avg_duration}m</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Top Win</div>
@@ -2306,7 +2306,7 @@ function renderTradersStats(traders, period) {
                             </div>
                             <div class="metric-item">
                                 <div class="metric-label">Avg Duration</div>
-                                <div class="metric-value">${trader.avg_duration}m</div>
+                                <div class="metric-value" title="Average time from buy to first sell">${trader.avg_duration}m</div>
                             </div>
                             <div class="metric-item">
                                 <div class="metric-label">Top Win</div>
