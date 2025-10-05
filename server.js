@@ -659,6 +659,15 @@ app.get('/api/coins/market', async (req, res) => {
         if (period === '7d') timeInterval = '7 days';
         if (period === '30d') timeInterval = '30 days';
         
+        let marketCapFilter = '';
+        if (cap === 'low') {
+            marketCapFilter = 'AND (t.market_cap IS NULL OR t.market_cap < 100000)'; // 0-99K
+        } else if (cap === 'mid') {
+            marketCapFilter = 'AND t.market_cap >= 100000 AND t.market_cap < 1000000'; // 100K-999K
+        } else if (cap === 'high') {
+            marketCapFilter = 'AND t.market_cap >= 1000000'; // 1M+
+        }
+
         const query = `
             SELECT 
                 e.token_mint,
@@ -667,10 +676,14 @@ app.get('/api/coins/market', async (req, res) => {
                 SUM(e.sol_spent) as volume_sol,
                 AVG(e.sol_spent) as avg_trade_size,
                 MIN(e.ts) as first_buy,
-                MAX(e.ts) as last_activity
+                MAX(e.ts) as last_activity,
+                SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) as buy_volume,
+                SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) as sell_volume
             FROM events e
-            WHERE e.side = 'BUY' 
+            LEFT JOIN tokens t ON e.token_mint = t.address
+            WHERE e.side IN ('BUY', 'SELL')
             AND e.ts >= NOW() - INTERVAL '${timeInterval}'
+            ${marketCapFilter}
             GROUP BY e.token_mint
             HAVING COUNT(DISTINCT e.wallet) >= 1 AND SUM(e.sol_spent) > 0.01
             ORDER BY trader_count DESC, volume_sol DESC

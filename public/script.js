@@ -1697,7 +1697,15 @@ function renderCoins(data) {
                     <span class="metric-value">${coin.total_trades}</span>
                 </div>
                 <div class="metric">
-                    <span class="metric-label">Volume</span>
+                    <span class="metric-label">Buy Volume</span>
+                    <span class="metric-value positive">${formatSOL(coin.buy_volume || 0)}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Sell Volume</span>
+                    <span class="metric-value negative">${formatSOL(coin.sell_volume || 0)}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Net Volume</span>
                     <span class="metric-value">${formatSOL(coin.volume_sol)}</span>
                 </div>
             </div>
