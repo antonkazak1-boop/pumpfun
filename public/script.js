@@ -858,7 +858,7 @@ async function loadTabData(tabName) {
     if (tabName === 'coins') {
         try {
             showLoading();
-            await loadCoinsData('all', '24h'); // Load with default filters
+            await loadCoinsData('low', '24h'); // Load with default filters (Low Caps, 24h)
             updateLastUpdateTime();
         } catch (error) {
             console.error(`Ошибка загрузки данных для ${tabName}:`, error);
@@ -1820,34 +1820,39 @@ function initCoinsFilters() {
     
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Убираем active класс со всех кнопок
-            filterButtons.forEach(b => b.classList.remove('active'));
-            // Добавляем active класс к нажатой кнопке
-            btn.classList.add('active');
+            // Get current active period
+            const activeTimeBtn = document.querySelector('.time-btn.active');
+            const currentPeriod = activeTimeBtn ? activeTimeBtn.dataset.period : '24h';
             
-            // Перезагружаем данные с новым фильтром
+            // Get new cap filter
             const capFilter = btn.dataset.cap;
-            loadCoinsData(capFilter);
+            
+            // Reload data with new filter and current period
+            loadCoinsData(capFilter, currentPeriod);
         });
     });
     
     timeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Убираем active класс со всех кнопок
-            timeButtons.forEach(b => b.classList.remove('active'));
-            // Добавляем active класс к нажатой кнопке
-            btn.classList.add('active');
+            // Get current active cap filter
+            const activeFilterBtn = document.querySelector('.filter-btn.active');
+            const currentCapFilter = activeFilterBtn ? activeFilterBtn.dataset.cap : 'low';
             
-            // Перезагружаем данные с новым периодом
+            // Get new period
             const period = btn.dataset.period;
-            loadCoinsData(null, period);
+            
+            // Reload data with current cap filter and new period
+            loadCoinsData(currentCapFilter, period);
         });
     });
 }
 
 // Загрузка данных Coins с фильтрами
-async function loadCoinsData(capFilter = 'all', period = '24h') {
+async function loadCoinsData(capFilter = 'low', period = '24h') {
     try {
+        // Update active states for filter buttons
+        updateFilterButtonStates(capFilter, period);
+        
         const params = new URLSearchParams();
         if (capFilter && capFilter !== 'all') {
             params.append('cap', capFilter);
@@ -1867,6 +1872,27 @@ async function loadCoinsData(capFilter = 'all', period = '24h') {
         console.error('Error loading coins data:', error);
         renderCoins([]);
     }
+}
+
+// Update filter button active states
+function updateFilterButtonStates(capFilter, period) {
+    // Update cap filter buttons
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.cap === capFilter) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Update time filter buttons
+    const timeButtons = document.querySelectorAll('.time-btn');
+    timeButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.period === period) {
+            btn.classList.add('active');
+        }
+    });
 }
 
 // Запуск приложения после загрузки DOM
