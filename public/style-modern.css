@@ -2478,3 +2478,244 @@ body {
 .theme-light .trader-name {
     color: #1a1a1a !important;
 }
+
+/* ================================
+   RECENT ACTIVITY TOGGLE STYLES
+   ================================ */
+
+.activity-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.toggle-btn.active {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.toggle-btn i {
+    font-size: 1rem;
+}
+
+/* Activity columns styles */
+.activity-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.activity-single-column {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 1rem;
+}
+
+.activity-column {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sell-column {
+    border-left: 4px solid var(--danger);
+}
+
+.buy-column {
+    border-left: 4px solid var(--success);
+}
+
+.column-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.column-header i {
+    font-size: 1.2rem;
+}
+
+.sell-column .column-header i {
+    color: var(--danger);
+}
+
+.buy-column .column-header i {
+    color: var(--success);
+}
+
+.empty-column {
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 2rem;
+}
+
+/* Activity item styles */
+.activity-item {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.activity-item.buy-action {
+    border-left: 3px solid var(--success);
+}
+
+.activity-item.sell-action {
+    border-left: 3px solid var(--danger);
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.activity-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.action-label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.activity-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.activity-details {
+    margin: 0.5rem 0;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.detail-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.detail-value {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.detail-value.positive {
+    color: var(--success);
+}
+
+.detail-value.negative {
+    color: var(--danger);
+}
+
+/* Light theme adjustments for activity toggle */
+.theme-light .activity-toggle {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+.theme-light .toggle-btn {
+    color: #555555 !important;
+}
+
+.theme-light .toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: #1a1a1a !important;
+}
+
+.theme-light .toggle-btn.active {
+    background: var(--gradient-primary) !important;
+    color: white !important;
+}
+
+.theme-light .activity-column,
+.theme-light .activity-single-column {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+.theme-light .column-header {
+    color: #1a1a1a !important;
+}
+
+.theme-light .activity-item {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.theme-light .detail-label {
+    color: #555555 !important;
+}
+
+.theme-light .detail-value {
+    color: #1a1a1a !important;
+}
+
+.theme-light .activity-time {
+    color: #555555 !important;
+}
+
+/* Responsive activity toggle */
+@media (max-width: 768px) {
+    .activity-toggle {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .toggle-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .activity-columns {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}

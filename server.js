@@ -1,6 +1,7 @@
 const express = require('express');
 const { Pool } = require('pg');
 const path = require('path');
+const axios = require('axios');
 
 // Импорт wallet map модуля
 const { resolveWalletMeta } = require('./walletMap');
@@ -27,6 +28,9 @@ const {
     getVolatileTokens,
     searchPumpTokens
 } = require('./pumpfunRealAPI');
+
+// Pump.fun API endpoints
+const FRONTEND_API_V3 = 'https://frontend-api-v3.pump.fun';
 
 // Helper функция для обогащения данных информацией о кошельках
 function enrichWalletData(data) {
@@ -1046,6 +1050,68 @@ app.get('/api/topgainers', async (req, res) => {
 
 // --- Pump.fun API endpoints ---
 
+// Trending Meta Words
+app.get('/api/pump/trending-meta', async (req, res) => {
+    try {
+        console.log('🔥 Fetching trending meta words from Pump.fun...');
+        
+        // Получаем trending meta words
+        const response = await axios.get(`${FRONTEND_API_V3}/metas/current`, {
+            headers: {
+                'Origin': 'https://pump.fun',
+                'Referer': 'https://pump.fun/'
+            },
+            timeout: 10000
+        });
+        
+        const metaWords = response.data || [];
+        console.log(`✅ Found ${metaWords.length} trending meta words`);
+        
+        // Для каждого meta word получаем связанные токены
+        const enrichedMetaWords = await Promise.all(metaWords.map(async (meta) => {
+            try {
+                // Ищем токены по meta word
+                const searchResponse = await axios.get(`${FRONTEND_API_V3}/search`, {
+                    params: { q: meta.word },
+                    headers: {
+                        'Origin': 'https://pump.fun',
+                        'Referer': 'https://pump.fun/'
+                    },
+                    timeout: 5000
+                });
+                
+                const relatedTokens = searchResponse.data?.coins || [];
+                
+                return {
+                    ...meta,
+                    relatedTokens: relatedTokens.slice(0, 5), // Топ 5 токенов
+                    pumpFunUrl: `https://pump.fun/search?q=${encodeURIComponent(meta.word)}`
+                };
+            } catch (error) {
+                console.log(`⚠️ Failed to fetch tokens for meta "${meta.word}": ${error.message}`);
+                return {
+                    ...meta,
+                    relatedTokens: [],
+                    pumpFunUrl: `https://pump.fun/search?q=${encodeURIComponent(meta.word)}`
+                };
+            }
+        }));
+        
+        res.json({ 
+            success: true, 
+            data: enrichedMetaWords,
+            source: 'pumpfun_trending_meta'
+        });
+    } catch (error) {
+        console.error('❌ Trending meta error:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message,
+            fallback: 'Failed to fetch trending meta words from Pump.fun'
+        });
+    }
+});
+
 // Получить новые токены с Pump.fun (через DexScreener - старый)
 app.get('/api/pump/new', async (req, res) => {
     try {
@@ -1230,6 +1296,7 @@ async function startServer() {
             console.log(`   - /api/coins/market - рынок монет с фильтрами`);
             console.log(`   - /api/coins/traders/:tokenMint - трейдеры конкретной монеты`);
             console.log(`🔥 Pump.fun integration endpoints:`);
+            console.log(`   - /api/pump/trending-meta - trending meta words + связанные токены`);
             console.log(`   - /api/pump/latest - самые новые токены (настоящий API)`);
             console.log(`   - /api/pump/live - токены которые сейчас торгуются`);
             console.log(`   - /api/pump/top-runners - топ перформеры`);

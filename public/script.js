@@ -1437,6 +1437,21 @@ function renderRecentActivity(data) {
     const sellTransactions = data.filter(item => item.side === 'SELL');
     const buyTransactions = data.filter(item => item.side === 'BUY');
     
+    // Создаем переключатель
+    const toggleHTML = `
+        <div class="activity-toggle">
+            <button class="toggle-btn active" data-type="all">
+                <i class="fas fa-list"></i> All Activity
+            </button>
+            <button class="toggle-btn" data-type="buy">
+                <i class="fas fa-arrow-circle-up"></i> BUY (${buyTransactions.length})
+            </button>
+            <button class="toggle-btn" data-type="sell">
+                <i class="fas fa-arrow-circle-down"></i> SELL (${sellTransactions.length})
+            </button>
+        </div>
+    `;
+    
     const renderTransaction = (item, index) => {
         const isBuy = item.side === 'BUY';
         const amount = isBuy ? item.sol_spent : item.sol_received;
@@ -1489,19 +1504,140 @@ function renderRecentActivity(data) {
         `;
     };
     
-    // Создаем две колонки
+    // Создаем контент с переключателем
     container.innerHTML = `
-        <div class="activity-columns">
-            <div class="activity-column sell-column">
-                <h3 class="column-header"><i class="fas fa-arrow-circle-down"></i> SELL Transactions</h3>
-                ${sellTransactions.length > 0 ? sellTransactions.map(renderTransaction).join('') : '<div class="empty-column">No SELL transactions</div>'}
-            </div>
-            <div class="activity-column buy-column">
-                <h3 class="column-header"><i class="fas fa-arrow-circle-up"></i> BUY Transactions</h3>
-                ${buyTransactions.length > 0 ? buyTransactions.map(renderTransaction).join('') : '<div class="empty-column">No BUY transactions</div>'}
+        ${toggleHTML}
+        <div class="activity-content" id="activityContent">
+            <div class="activity-columns">
+                <div class="activity-column sell-column">
+                    <h3 class="column-header"><i class="fas fa-arrow-circle-down"></i> SELL Transactions</h3>
+                    ${sellTransactions.length > 0 ? sellTransactions.map(renderTransaction).join('') : '<div class="empty-column">No SELL transactions</div>'}
+                </div>
+                <div class="activity-column buy-column">
+                    <h3 class="column-header"><i class="fas fa-arrow-circle-up"></i> BUY Transactions</h3>
+                    ${buyTransactions.length > 0 ? buyTransactions.map(renderTransaction).join('') : '<div class="empty-column">No BUY transactions</div>'}
+                </div>
             </div>
         </div>
     `;
+    
+    // Добавляем обработчики для переключателя
+    setupActivityToggle(data);
+}
+
+// Настройка переключателя для Recent Activity
+function setupActivityToggle(data) {
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    const activityContent = document.getElementById('activityContent');
+    
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Убираем active класс со всех кнопок
+            toggleButtons.forEach(btn => btn.classList.remove('active'));
+            // Добавляем active класс к нажатой кнопке
+            button.classList.add('active');
+            
+            const type = button.dataset.type;
+            let filteredData = data;
+            
+            if (type === 'buy') {
+                filteredData = data.filter(item => item.side === 'BUY');
+            } else if (type === 'sell') {
+                filteredData = data.filter(item => item.side === 'SELL');
+            }
+            
+            // Обновляем контент
+            updateActivityContent(filteredData, type);
+        });
+    });
+}
+
+// Обновление контента Recent Activity
+function updateActivityContent(data, type) {
+    const activityContent = document.getElementById('activityContent');
+    if (!activityContent) return;
+    
+    const renderTransaction = (item, index) => {
+        const isBuy = item.side === 'BUY';
+        const amount = isBuy ? item.sol_spent : item.sol_received;
+        const traderName = item.wallet_name || `Trader ${item.wallet.substring(0, 8)}`;
+        const tokenSymbol = item.token_symbol || 'UNKNOWN';
+        const tokenName = item.token_name || 'Unknown Token';
+        const timeAgo = formatTimeAgo(new Date(item.ts));
+        
+        return `
+            <div class="data-item activity-item ${isBuy ? 'buy-action' : 'sell-action'}">
+                <div class="activity-header">
+                    <div class="activity-type">
+                        <i class="fas ${isBuy ? 'fa-arrow-circle-up' : 'fa-arrow-circle-down'}"></i>
+                        <span class="action-label">${isBuy ? 'BUY' : 'SELL'}</span>
+                    </div>
+                    <div class="activity-time">${timeAgo}</div>
+                </div>
+                
+                <h3>
+                    <i class="fas fa-user-circle"></i>
+                    ${traderName}
+                    ${item.wallet_telegram ? `<a href="${item.wallet_telegram}" target="_blank" class="social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
+                    ${item.wallet_twitter ? `<a href="${item.wallet_twitter}" target="_blank" class="social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
+                </h3>
+                
+                <div class="activity-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Token:</span>
+                        <span class="detail-value">${tokenSymbol} - ${tokenName}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Amount:</span>
+                        <span class="detail-value ${isBuy ? 'positive' : 'negative'}">${formatSOL(amount)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">DEX:</span>
+                        <span class="detail-value">${item.dex || 'Unknown'}</span>
+                    </div>
+                </div>
+                
+                <div class="item-actions">
+                    <a href="https://solscan.io/tx/${item.tx_signature}" target="_blank" class="action-button">
+                        <i class="fas fa-external-link-alt"></i> Transaction
+                    </a>
+                    <a href="https://solscan.io/account/${item.wallet}" target="_blank" class="action-button">
+                        <i class="fas fa-wallet"></i> Wallet
+                    </a>
+                </div>
+            </div>
+        `;
+    };
+    
+    if (type === 'all') {
+        // Показываем две колонки
+        const sellTransactions = data.filter(item => item.side === 'SELL');
+        const buyTransactions = data.filter(item => item.side === 'BUY');
+        
+        activityContent.innerHTML = `
+            <div class="activity-columns">
+                <div class="activity-column sell-column">
+                    <h3 class="column-header"><i class="fas fa-arrow-circle-down"></i> SELL Transactions</h3>
+                    ${sellTransactions.length > 0 ? sellTransactions.map(renderTransaction).join('') : '<div class="empty-column">No SELL transactions</div>'}
+                </div>
+                <div class="activity-column buy-column">
+                    <h3 class="column-header"><i class="fas fa-arrow-circle-up"></i> BUY Transactions</h3>
+                    ${buyTransactions.length > 0 ? buyTransactions.map(renderTransaction).join('') : '<div class="empty-column">No BUY transactions</div>'}
+                </div>
+            </div>
+        `;
+    } else {
+        // Показываем одну колонку
+        activityContent.innerHTML = `
+            <div class="activity-single-column">
+                <h3 class="column-header">
+                    <i class="fas ${type === 'buy' ? 'fa-arrow-circle-up' : 'fa-arrow-circle-down'}"></i> 
+                    ${type.toUpperCase()} Transactions (${data.length})
+                </h3>
+                ${data.length > 0 ? data.map(renderTransaction).join('') : '<div class="empty-column">No transactions found</div>'}
+            </div>
+        `;
+    }
 }
 
 // Функция рендеринга Coins вкладки
