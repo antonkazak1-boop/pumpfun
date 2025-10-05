@@ -19,6 +19,15 @@ const {
     getTokenStats
 } = require('./pumpfunAPI');
 
+const {
+    getLatestPumpTokens,
+    getCurrentlyLiveTokens,
+    getTopRunners,
+    getFreshPumpTokens,
+    getVolatileTokens,
+    searchPumpTokens
+} = require('./pumpfunRealAPI');
+
 // Helper функция для обогащения данных информацией о кошельках
 function enrichWalletData(data) {
     if (!data) return data;
@@ -1013,7 +1022,7 @@ app.get('/api/topgainers', async (req, res) => {
 
 // --- Pump.fun API endpoints ---
 
-// Получить новые токены с Pump.fun
+// Получить новые токены с Pump.fun (через DexScreener - старый)
 app.get('/api/pump/new', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 50;
@@ -1021,6 +1030,85 @@ app.get('/api/pump/new', async (req, res) => {
         res.json({ success: true, data: tokens, count: tokens.length });
     } catch (error) {
         console.error('Pump.fun new tokens error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить самые новые токены с Pump.fun (настоящий API)
+app.get('/api/pump/latest', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        const tokens = await getLatestPumpTokens(limit);
+        res.json({ success: true, data: tokens, count: tokens.length });
+    } catch (error) {
+        console.error('Pump.fun latest tokens error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить токены которые сейчас торгуются
+app.get('/api/pump/live', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        const tokens = await getCurrentlyLiveTokens(limit);
+        res.json({ success: true, data: tokens, count: tokens.length });
+    } catch (error) {
+        console.error('Pump.fun live tokens error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить топ перформеры
+app.get('/api/pump/top-runners', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 20;
+        const tokens = await getTopRunners(limit);
+        res.json({ success: true, data: tokens, count: tokens.length });
+    } catch (error) {
+        console.error('Pump.fun top runners error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить свежие токены (созданные за последние N минут)
+app.get('/api/pump/fresh', async (req, res) => {
+    try {
+        const minutesAgo = parseInt(req.query.minutes) || 60;
+        const limit = parseInt(req.query.limit) || 50;
+        const tokens = await getFreshPumpTokens(minutesAgo, limit);
+        res.json({ success: true, data: tokens, count: tokens.length });
+    } catch (error) {
+        console.error('Pump.fun fresh tokens error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Получить волатильные токены
+app.get('/api/pump/volatile', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 20;
+        const tokens = await getVolatileTokens(limit);
+        res.json({ success: true, data: tokens, count: tokens.length });
+    } catch (error) {
+        console.error('Pump.fun volatile tokens error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Поиск токенов на Pump.fun
+app.get('/api/pump/search', async (req, res) => {
+    try {
+        const query = req.query.q;
+        const limit = parseInt(req.query.limit) || 20;
+        
+        if (!query) {
+            return res.status(400).json({ success: false, error: 'Query parameter "q" is required' });
+        }
+        
+        const tokens = await searchPumpTokens(query, limit);
+        res.json({ success: true, data: tokens, count: tokens.length });
+    } catch (error) {
+        console.error('Pump.fun search error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -1118,10 +1206,16 @@ async function startServer() {
             console.log(`   - /api/coins/market - рынок монет с фильтрами`);
             console.log(`   - /api/coins/traders/:tokenMint - трейдеры конкретной монеты`);
             console.log(`🔥 Pump.fun integration endpoints:`);
-            console.log(`   - /api/pump/new - новые токены с Pump.fun`);
+            console.log(`   - /api/pump/latest - самые новые токены (настоящий API)`);
+            console.log(`   - /api/pump/live - токены которые сейчас торгуются`);
+            console.log(`   - /api/pump/top-runners - топ перформеры`);
+            console.log(`   - /api/pump/fresh - свежие токены (за N минут)`);
+            console.log(`   - /api/pump/volatile - волатильные токены`);
+            console.log(`   - /api/pump/search - поиск токенов`);
+            console.log(`   - /api/pump/token/:address - детали токена`);
+            console.log(`   - /api/pump/new - новые токены (через DexScreener)`);
             console.log(`   - /api/pump/top - топ токенов по объему`);
             console.log(`   - /api/pump/trending - trending токены`);
-            console.log(`   - /api/pump/token/:address - детали токена`);
             console.log(`   - /api/pump/stats/:address - статистика токена`);
             
             // Запускаем Telegram бота параллельно (если BOT_TOKEN настроен)

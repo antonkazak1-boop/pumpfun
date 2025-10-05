@@ -3,6 +3,11 @@
 
 const fetch = require('node-fetch');
 const axios = require('axios');
+const { 
+    getPumpTokenDetails, 
+    getMultiplePumpTokens,
+    isPumpFunToken 
+} = require('./pumpfunRealAPI');
 
 // Кеш для избежания повторных запросов
 const tokenMetadataCache = new Map();
@@ -130,7 +135,42 @@ function getTokenMetadata(tokenMint) {
 }
 
 /**
- * Получение метаданных токена (асинхронная версия с DexScreener)
+ * Получение метаданных токена из Pump.fun API (для новых токенов)
+ * @param {string} tokenMint 
+ * @returns {Promise<Object|null>}
+ */
+async function fetchFromPumpFun(tokenMint) {
+    try {
+        const pumpData = await getPumpTokenDetails(tokenMint);
+        if (pumpData) {
+            return {
+                address: pumpData.mint,
+                name: pumpData.name || 'Unknown Token',
+                symbol: pumpData.symbol || tokenMint.slice(0, 4).toUpperCase(),
+                image: pumpData.image || '/img/token-placeholder.png',
+                decimals: 6,
+                price: pumpData.price || 0,
+                priceChange: pumpData.price_change_24h || 0,
+                market_cap: pumpData.market_cap || 0,
+                volume24h: pumpData.volume_24h || 0,
+                holders: pumpData.holders || 0,
+                verified: false,
+                source: 'pumpfun_direct',
+                creator: pumpData.creator,
+                created_timestamp: pumpData.created_timestamp,
+                is_complete: pumpData.is_complete,
+                is_raydium: pumpData.is_raydium
+            };
+        }
+        return null;
+    } catch (error) {
+        // Не логируем ошибку - это нормально если токен не найден
+        return null;
+    }
+}
+
+/**
+ * Получение метаданных токена (асинхронная версия с Pump.fun + DexScreener)
  * @param {string} tokenMint 
  * @returns {Promise<Object>}
  */
@@ -138,20 +178,27 @@ async function getTokenMetadataAsync(tokenMint) {
     // Проверяем кеш
     if (tokenMetadataCache.has(tokenMint)) {
         const cached = tokenMetadataCache.get(tokenMint);
-        // Если это fallback - пытаемся обновить из DexScreener
+        // Если это fallback - пытаемся обновить из Pump.fun или DexScreener
         if (cached.source !== 'fallback') {
             return cached;
         }
     }
 
-    // Сначала пытаемся получить из DexScreener (молодые токены, Pump.fun)
+    // 1. Сначала пытаемся получить из Pump.fun API (новые токены)
+    const pumpData = await fetchFromPumpFun(tokenMint);
+    if (pumpData) {
+        tokenMetadataCache.set(tokenMint, pumpData);
+        return pumpData;
+    }
+
+    // 2. Если не нашли в Pump.fun - пытаемся DexScreener (DEX токены)
     const dexData = await fetchFromDexScreener(tokenMint);
     if (dexData) {
         tokenMetadataCache.set(tokenMint, dexData);
         return dexData;
     }
 
-    // Если не нашли - используем синхронную версию (Jupiter + fallback)
+    // 3. Если не нашли - используем синхронную версию (Jupiter + fallback)
     return getTokenMetadata(tokenMint);
 }
 
@@ -245,17 +292,57 @@ async function fetchMultipleTokenMetadata(tokenMints) {
     const uniqueTokens = [...new Set(tokenMints)];
     const results = new Map();
     
-    // Получаем метаданные параллельно (батчами по 10)
-    const batchSize = 10;
-    for (let i = 0; i < uniqueTokens.length; i += batchSize) {
-        const batch = uniqueTokens.slice(i, i + batchSize);
-        const batchResults = await Promise.all(
-            batch.map(async (mint) => {
-                const metadata = await getTokenMetadataAsync(mint);
-                return [mint, metadata];
-            })
-        );
-        batchResults.forEach(([mint, metadata]) => results.set(mint, metadata));
+    // Сначала пытаемся получить через Pump.fun API (батчевый запрос)
+    try {
+        console.log(`🔥 Trying Pump.fun batch API for ${uniqueTokens.length} tokens...`);
+        const pumpResults = await getMultiplePumpTokens(uniqueTokens);
+        
+        // Добавляем результаты из Pump.fun
+        pumpResults.forEach(token => {
+            const metadata = {
+                address: token.mint,
+                name: token.name || 'Unknown Token',
+                symbol: token.symbol || token.mint.slice(0, 4).toUpperCase(),
+                image: token.image || '/img/token-placeholder.png',
+                decimals: 6,
+                price: token.price || 0,
+                priceChange: token.price_change_24h || 0,
+                market_cap: token.market_cap || 0,
+                volume24h: token.volume_24h || 0,
+                holders: token.holders || 0,
+                verified: false,
+                source: 'pumpfun_batch',
+                creator: token.creator,
+                created_timestamp: token.created_timestamp,
+                is_complete: token.is_complete,
+                is_raydium: token.is_raydium
+            };
+            results.set(token.mint, metadata);
+        });
+        
+        console.log(`✅ Pump.fun batch: found ${pumpResults.length} tokens`);
+    } catch (error) {
+        console.log(`⚠️ Pump.fun batch failed: ${error.message}`);
+    }
+    
+    // Для токенов которые не нашли в Pump.fun - получаем индивидуально
+    const notFoundTokens = uniqueTokens.filter(mint => !results.has(mint));
+    
+    if (notFoundTokens.length > 0) {
+        console.log(`🔍 Fetching individual metadata for ${notFoundTokens.length} remaining tokens...`);
+        
+        // Получаем метаданные параллельно (батчами по 10)
+        const batchSize = 10;
+        for (let i = 0; i < notFoundTokens.length; i += batchSize) {
+            const batch = notFoundTokens.slice(i, i + batchSize);
+            const batchResults = await Promise.all(
+                batch.map(async (mint) => {
+                    const metadata = await getTokenMetadataAsync(mint);
+                    return [mint, metadata];
+                })
+            );
+            batchResults.forEach(([mint, metadata]) => results.set(mint, metadata));
+        }
     }
     
     return results;
