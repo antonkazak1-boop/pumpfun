@@ -39,82 +39,104 @@
         <!-- Navigation tabs -->
         <nav class="tabs-nav">
             <div class="tabs-scroll">
-                <!-- Main Navigation - 3 main buttons -->
-                <button class="tab-button main-tab active" data-tab="about">
-                    <i class="fas fa-info-circle"></i>
-                    <span>About Bot</span>
-                    <small>info & analytics</small>
-                </button>
-                
-                <button class="tab-button main-tab" data-tab="coBuy">
-                    <i class="fas fa-users"></i>
-                    <span>Co-buy Analysis</span>
-                    <small>20 minutes</small>
-                </button>
-                
-                <button class="tab-button main-tab" data-tab="walletStats">
-                    <i class="fas fa-wallet"></i>
-                    <span>Wallet Analytics</span>
-                    <small>KOL scan</small>
-                </button>
-                
-                <!-- Hidden detailed tabs (will be shown in dropdowns) -->
-                <div class="detailed-tabs" style="display: none;">
-                    <button class="tab-button" data-tab="freshTokens">
-                        <i class="fas fa-seedling"></i>
-                        <span>Fresh Tokens</span>
-                        <small>5m</small>
-                    </button>
-                    <button class="tab-button" data-tab="topGainers">
-                        <i class="fas fa-trophy"></i>
-                        <span>Most Bought</span>
-                        <small>1h</small>
-                    </button>
-                    <button class="tab-button" data-tab="trendingMeta">
-                        <i class="fas fa-fire"></i>
-                        <span>Trending Meta</span>
-                        <small>hot</small>
-                    </button>
-                    <button class="tab-button" data-tab="smartMoney">
-                        <i class="fas fa-brain"></i>
-                        <span>KOL Wallet Scan</span>
-                        <small>1h</small>
-                    </button>
-                    <button class="tab-button" data-tab="portfolio">
-                        <i class="fas fa-chart-pie"></i>
-                        <span>Trader Portfolio</span>
-                        <small>analysis</small>
-                    </button>
-                    <button class="tab-button" data-tab="analytics">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Analytics</span>
-                        <small>data</small>
-                    </button>
-                    <button class="tab-button" data-tab="coins">
+                <!-- Group 1: Coins Analysis -->
+                <div class="tab-group">
+                    <div class="group-header">
                         <i class="fas fa-coins"></i>
-                        <span>Coins Market</span>
-                        <small>market</small>
-                    </button>
-                    <button class="tab-button" data-tab="whaleMoves">
-                        <i class="fas fa-fish"></i>
-                        <span>Whale Moves</span>
-                        <small>2h</small>
-                    </button>
-                    <button class="tab-button" data-tab="volumeSurge">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Volume Surge</span>
-                        <small>2h</small>
-                    </button>
-                    <button class="tab-button" data-tab="clusterBuy">
-                        <i class="fas fa-fire"></i>
-                        <span>Cluster Buy</span>
-                        <small>10m</small>
-                    </button>
-                    <button class="tab-button" data-tab="recentActivity">
-                        <i class="fas fa-history"></i>
-                        <span>Recent Activity</span>
-                        <small>live</small>
-                    </button>
+                        <span>Coins Analysis</span>
+                    </div>
+                    <div class="group-tabs">
+                        <button class="tab-button active" data-tab="about">
+                            <i class="fas fa-info-circle"></i>
+                            <span>About Bot</span>
+                            <small>info</small>
+                        </button>
+                        <button class="tab-button" data-tab="freshTokens">
+                            <i class="fas fa-seedling"></i>
+                            <span>Fresh Tokens</span>
+                            <small>5m</small>
+                        </button>
+                        <button class="tab-button" data-tab="topGainers">
+                            <i class="fas fa-trophy"></i>
+                            <span>Most Bought Tokens</span>
+                            <small>1h</small>
+                        </button>
+                        <button class="tab-button" data-tab="trendingMeta">
+                            <i class="fas fa-fire"></i>
+                            <span>Trending Meta</span>
+                            <small>hot</small>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Group 2: Wallet Analysis -->
+                <div class="tab-group">
+                    <div class="group-header">
+                        <i class="fas fa-wallet"></i>
+                        <span>Wallet Analysis</span>
+                    </div>
+                    <div class="group-tabs">
+                        <button class="tab-button" data-tab="smartMoney">
+                            <i class="fas fa-brain"></i>
+                            <span>KOL Wallet Scan</span>
+                            <small>1h</small>
+                        </button>
+                        <button class="tab-button" data-tab="portfolio">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Trader Portfolio Analysis</span>
+                            <small>wallet analysis</small>
+                        </button>
+                        <button class="tab-button" data-tab="walletStats">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Wallet Analytics</span>
+                            <small>detailed analysis</small>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Group 3: Market Analysis -->
+                <div class="tab-group">
+                    <div class="group-header">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Market Analysis</span>
+                    </div>
+                    <div class="group-tabs">
+                        <button class="tab-button" data-tab="analytics">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analytics</span>
+                            <small>data</small>
+                        </button>
+                        <button class="tab-button" data-tab="coins">
+                            <i class="fas fa-coins"></i>
+                            <span>Coins Market</span>
+                            <small>market</small>
+                        </button>
+                        <button class="tab-button" data-tab="whaleMoves">
+                            <i class="fas fa-fish"></i>
+                            <span>Whale Moves</span>
+                            <small>2h</small>
+                        </button>
+                        <button class="tab-button" data-tab="volumeSurge">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Volume Surge</span>
+                            <small>2h</small>
+                        </button>
+                        <button class="tab-button" data-tab="clusterBuy">
+                            <i class="fas fa-fire"></i>
+                            <span>Cluster Buy</span>
+                            <small>10m</small>
+                        </button>
+                        <button class="tab-button" data-tab="coBuy">
+                            <i class="fas fa-users"></i>
+                            <span>Co-buy</span>
+                            <small>20m</small>
+                        </button>
+                        <button class="tab-button" data-tab="recentActivity">
+                            <i class="fas fa-history"></i>
+                            <span>Recent Activity</span>
+                            <small>live</small>
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>
