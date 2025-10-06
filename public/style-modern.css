@@ -3833,9 +3833,8 @@ body {
 .subscription-plans-container {
     position: relative;
     overflow: hidden;
-    max-width: 400px;
     width: 100%;
-    margin: 0 auto;
+    margin: 0;
 }
 
 .subscription-plans {
@@ -3848,16 +3847,19 @@ body {
     flex: 0 0 50%;
     width: 50%;
     box-sizing: border-box;
+    padding: 1.5rem;
+    margin: 0;
 }
 
 .plan-card {
     background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 20px;
     padding: 2rem;
     position: relative;
     transition: all 0.3s ease;
     overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .plan-card:hover {
@@ -4024,80 +4026,127 @@ body {
 /* Mobile responsive */
 @media (max-width: 768px) {
     .subscription-menu {
-        padding: 0.5rem;
+        padding: 0.25rem;
     }
     
     .subscription-plans-container {
-        max-width: 100%;
+        width: 100%;
         margin: 0;
     }
     
     .plan-card {
-        padding: 1.5rem;
-        margin: 0 0.5rem;
+        padding: 2rem 1.5rem;
+        margin: 0;
+        border-radius: 20px;
     }
     
     .plan-header h4 {
-        font-size: 1.25rem;
-    }
-    
-    .plan-price .price {
         font-size: 1.5rem;
     }
     
+    .plan-price .price {
+        font-size: 2rem;
+    }
+    
+    .plan-features {
+        margin: 1.5rem 0;
+    }
+    
+    .plan-features li {
+        padding: 0.75rem 0;
+        font-size: 1rem;
+    }
+    
     .plan-buttons {
-        gap: 0.5rem;
+        gap: 0.75rem;
     }
     
     .pay-btn {
-        padding: 0.6rem 1rem;
-        font-size: 0.85rem;
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+        border-radius: 15px;
     }
 }
 
 /* iPhone specific fixes */
 @media (max-width: 480px) {
     .subscription-menu {
-        padding: 0.25rem;
+        padding: 0.1rem;
     }
     
     .subscription-menu-header h3 {
-        font-size: 1.25rem;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
     }
     
     .plan-card {
-        padding: 1rem;
-        margin: 0 0.25rem;
+        padding: 2.5rem 1.5rem;
+        margin: 0;
+        border-radius: 25px;
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
     
     .plan-header h4 {
-        font-size: 1.1rem;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
     }
     
     .plan-price .price {
-        font-size: 1.3rem;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .plan-price .stars {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
     }
     
     .plan-features {
-        margin: 1rem 0;
+        margin: 2rem 0;
+        flex-grow: 1;
     }
     
     .plan-features li {
-        padding: 0.3rem 0;
-        font-size: 0.9rem;
+        padding: 1rem 0;
+        font-size: 1.1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .plan-features li:last-child {
+        border-bottom: none;
     }
     
     .plan-buttons {
-        gap: 0.4rem;
+        gap: 1rem;
+        margin-top: auto;
     }
     
     .pay-btn {
-        padding: 0.5rem 0.8rem;
-        font-size: 0.8rem;
+        padding: 1.2rem 2rem;
+        font-size: 1.1rem;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+    
+    .subscription-footer {
+        margin-top: 1rem;
     }
     
     .subscription-footer p {
-        font-size: 0.8rem;
+        font-size: 0.9rem;
+        margin: 0.75rem 0;
+    }
+    
+    .plan-indicators {
+        margin-top: 1.5rem;
+    }
+    
+    .plan-indicators .indicator {
+        width: 12px;
+        height: 12px;
     }
 }
 
