@@ -1,23 +1,20 @@
 -- Supabase Database Tables for Pump Dex Mini App Subscription System
 -- Run this script in your Supabase SQL Editor
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    telegram_user_id BIGINT UNIQUE,
-    username VARCHAR(255),
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    trial_started_at TIMESTAMP,
-    trial_used BOOLEAN DEFAULT FALSE,
-    subscription_type VARCHAR(50) DEFAULT 'trial',
-    subscription_expires_at TIMESTAMP,
-    total_spent_sol DECIMAL(20, 8) DEFAULT 0,
-    kolscan_balance DECIMAL(20, 8) DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE
-);
+-- Users table - Add subscription columns to existing table
+ALTER TABLE users 
+ADD COLUMN IF NOT EXISTS telegram_user_id BIGINT UNIQUE,
+ADD COLUMN IF NOT EXISTS username VARCHAR(255),
+ADD COLUMN IF NOT EXISTS first_name VARCHAR(255),
+ADD COLUMN IF NOT EXISTS last_name VARCHAR(255),
+ADD COLUMN IF NOT EXISTS last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMP,
+ADD COLUMN IF NOT EXISTS trial_used BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS subscription_type VARCHAR(50) DEFAULT 'trial',
+ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMP,
+ADD COLUMN IF NOT EXISTS total_spent_sol DECIMAL(20, 8) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS kolscan_balance DECIMAL(20, 8) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
 -- Subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (
