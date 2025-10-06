@@ -91,13 +91,13 @@ const SUBSCRIPTION_TABLES = {
 const SUBSCRIPTION_PRICES = {
     basic: {
         sol: 0.1,
-        stars: 100,        // Stars amount (what user sees and API gets)
-        stars_cents: 100   // Same as stars for Telegram API
+        stars: 1,          // Stars amount (what user sees and API gets) - TESTING
+        stars_cents: 1     // Same as stars for Telegram API - TESTING
     },
     pro: {
         sol: 0.25,
-        stars: 250,        // Stars amount (what user sees and API gets)
-        stars_cents: 250   // Same as stars for Telegram API
+        stars: 2,          // Stars amount (what user sees and API gets) - TESTING
+        stars_cents: 2     // Same as stars for Telegram API - TESTING
     }
 };
 

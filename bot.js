@@ -25,13 +25,13 @@ const bot = new Telegraf(BOT_TOKEN);
 const SUBSCRIPTION_PRICES = {
     basic: {
         sol: 0.1,
-        stars: 100,        // Stars amount (what user sees and API gets)
-        stars_cents: 100   // Same as stars for Telegram API
+        stars: 1,          // Stars amount (what user sees and API gets) - TESTING
+        stars_cents: 1     // Same as stars for Telegram API - TESTING
     },
     pro: {
         sol: 0.25,
-        stars: 250,        // Stars amount (what user sees and API gets)
-        stars_cents: 250   // Same as stars for Telegram API
+        stars: 2,          // Stars amount (what user sees and API gets) - TESTING
+        stars_cents: 2     // Same as stars for Telegram API - TESTING
     }
 };
 
@@ -908,9 +908,31 @@ bot.on('successful_payment', async (ctx) => {
         ])
     );
     
-    // TODO: Update user subscription in database
-    // This would integrate with your subscription system
-    console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan`);
+    // Update user subscription in database
+    try {
+        // Get pool from server.js
+        const { Pool } = require('pg');
+        const pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+        });
+        
+        const { SubscriptionSystem } = require('./subscriptionSystem.js');
+        const subscriptionSystem = new SubscriptionSystem(pool);
+        
+        // Create subscription record
+        const subscription = await subscriptionSystem.createSubscription({
+            telegram_user_id: user.id,
+            subscription_type: subscriptionType,
+            payment_method: 'telegram_stars',
+            amount: payment.total_amount,
+            currency: payment.currency
+        });
+        
+        console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan - DB updated`);
+    } catch (error) {
+        console.error('❌ Error updating subscription in database:', error);
+    }
 });
 
 // Обработчик проверки статуса подписки
