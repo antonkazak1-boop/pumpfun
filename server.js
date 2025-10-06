@@ -1155,7 +1155,7 @@ app.get('/api/traders/list', async (req, res) => {
     }
 });
 
-// Coins Market API - аналог Kolscan.io/tokens
+// Coins Market API - упрощенная версия для стабильности
 app.get('/api/coins/market', async (req, res) => {
     try {
         const { cap = 'all', period = '24h' } = req.query;
@@ -1165,80 +1165,36 @@ app.get('/api/coins/market', async (req, res) => {
         if (period === '7d') timeInterval = '7 days';
         if (period === '30d') timeInterval = '30 days';
         
-        let marketCapFilter = '';
-        if (cap === 'low') {
-            marketCapFilter = 'AND (t.market_cap IS NULL OR t.market_cap < 100000)'; // 0-99K
-        } else if (cap === 'mid') {
-            marketCapFilter = 'AND t.market_cap >= 100000 AND t.market_cap < 1000000'; // 100K-999K
-        } else if (cap === 'high') {
-            marketCapFilter = 'AND t.market_cap >= 1000000'; // 1M+
-        }
-
+        // Упрощенный запрос без сложных JOIN'ов
         const query = `
-            WITH token_stats AS (
-                SELECT 
-                    e.token_mint,
-                    COUNT(DISTINCT e.wallet) as trader_count,
-                    COUNT(*) as total_trades,
-                    SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) as buy_volume,
-                    SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) as sell_volume,
-                    AVG(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE NULL END) as avg_buy_size,
-                    AVG(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE NULL END) as avg_sell_size,
-                    MIN(e.ts) as first_activity,
-                    MAX(e.ts) as last_activity
-                FROM events e
-                LEFT JOIN tokens t ON e.token_mint = t.address
-                WHERE e.side IN ('BUY', 'SELL')
-                AND e.ts >= NOW() - INTERVAL '${timeInterval}'
-                ${marketCapFilter}
-                GROUP BY e.token_mint
-                HAVING COUNT(DISTINCT e.wallet) >= 1 AND SUM(e.sol_spent) > 0.01
-            ),
-            top_traders AS (
-                SELECT 
-                    e.token_mint,
-                    e.wallet,
-                    SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) as trader_buy_volume,
-                    SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) as trader_sell_volume,
-                    COUNT(CASE WHEN e.side = 'BUY' THEN 1 END) as trader_buy_count,
-                    COUNT(CASE WHEN e.side = 'SELL' THEN 1 END) as trader_sell_count,
-                    MAX(e.ts) as trader_last_activity,
-                    ROW_NUMBER() OVER (PARTITION BY e.token_mint ORDER BY SUM(e.sol_spent) DESC) as trader_rank
-                FROM events e
-                LEFT JOIN tokens t ON e.token_mint = t.address
-                WHERE e.side IN ('BUY', 'SELL')
-                AND e.ts >= NOW() - INTERVAL '${timeInterval}'
-                ${marketCapFilter}
-                GROUP BY e.token_mint, e.wallet
-            )
             SELECT 
-                ts.*,
-                (ts.buy_volume + ts.sell_volume) as total_volume,
-                COALESCE(
-                    json_agg(
-                        json_build_object(
-                            'wallet', tt.wallet,
-                            'buy_volume', tt.trader_buy_volume,
-                            'sell_volume', tt.trader_sell_volume,
-                            'buy_count', tt.trader_buy_count,
-                            'sell_count', tt.trader_sell_count,
-                            'net_volume', (tt.trader_sell_volume - tt.trader_buy_volume),
-                            'last_activity', tt.trader_last_activity,
-                            'rank', tt.trader_rank
-                        ) ORDER BY tt.trader_rank
-                    ) FILTER (WHERE tt.trader_rank <= 10), 
-                    '[]'::json
-                ) as top_traders
-            FROM token_stats ts
-            LEFT JOIN top_traders tt ON ts.token_mint = tt.token_mint
-            GROUP BY ts.token_mint, ts.trader_count, ts.total_trades, ts.buy_volume, 
-                     ts.sell_volume, ts.avg_buy_size, ts.avg_sell_size, 
-                     ts.first_activity, ts.last_activity
-            ORDER BY ts.trader_count DESC, ts.total_volume DESC
-            LIMIT 200;
-        `;
+                e.token_mint,
+                COUNT(DISTINCT e.wallet) as trader_count,
+                COUNT(*) as total_trades,
+                SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) as buy_volume,
+                SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END) as sell_volume,
+                AVG(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE NULL END) as avg_buy_size,
+                AVG(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE NULL END) as avg_sell_size,
+                MIN(e.ts) as first_activity,
+                MAX(e.ts) as last_activity,
+                (SUM(CASE WHEN e.side = 'BUY' THEN e.sol_spent ELSE 0 END) + 
+                 SUM(CASE WHEN e.side = 'SELL' THEN e.sol_received ELSE 0 END)) as total_volume
+            FROM events e
+            WHERE e.side IN ('BUY', 'SELL')
+            AND e.ts >= NOW() - INTERVAL '${timeInterval}'
+            GROUP BY e.token_mint
+            HAVING COUNT(DISTINCT e.wallet) >= 1 AND SUM(e.sol_spent) > 0.01
+            ORDER BY trader_count DESC, total_volume DESC
+            LIMIT 50;
+`;
         
-        const result = await pool.query(query);
+        // Добавляем таймаут для запроса
+        const queryPromise = pool.query(query);
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Query timeout')), 10000)
+        );
+        
+        const result = await Promise.race([queryPromise, timeoutPromise]);
         
         // Получаем уникальные токены
         const tokenMints = result.rows.map(row => row.token_mint);
@@ -1283,6 +1239,7 @@ app.get('/api/coins/market', async (req, res) => {
         // Ограничиваем результат
         enrichedData = enrichedData.slice(0, 20);
         
+        console.log(`✅ Coin Market API: returning ${enrichedData.length} coins`);
         res.json({ success: true, data: enrichedData });
     } catch (error) {
         console.error('Coins market error:', error);

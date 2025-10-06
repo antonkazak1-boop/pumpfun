@@ -275,14 +275,11 @@ function renderClusterBuy(data) {
             <div class="data-item">
                 <div class="data-header">
                     <div class="data-title">
-                        <div class="icon fire-icon">
-                            <i class="fas fa-fire"></i>
+                        <div class="icon token-icon">
+                            <img src="${item.image || '/img/token-placeholder.png'}" alt="${item.symbol || 'UNKNOWN'}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
                         </div>
                         <div>
-                            <h3>
-                                <img src="${item.image || '/img/token-placeholder.png'}" alt="${item.symbol || 'UNKNOWN'}" class="token-avatar-small" onerror="this.src='/img/token-placeholder.png'">
-                                ${item.symbol || 'UNKNOWN'} - ${item.name || 'Unknown Token'}
-                            </h3>
+                            <h3>${item.symbol || 'UNKNOWN'} - ${item.name || 'Unknown Token'}</h3>
                             <div class="token-address">${shortenAddress(item.token_mint)}</div>
                         </div>
                     </div>
