@@ -3533,275 +3533,432 @@ body {
 }
 
 /* ================================
-   TAB GROUPING STYLES
+   HORIZONTAL NAVIGATION GROUPS
    ================================ */
 
-.tab-group {
-    margin-bottom: 2rem;
+.nav-group {
+    display: inline-block;
+    margin: 0 0.5rem;
     border: 1px solid var(--border-color);
     border-radius: 12px;
     background: var(--bg-secondary);
     overflow: hidden;
+    min-width: 200px;
+    vertical-align: top;
 }
 
 .group-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
     background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
     color: white;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .group-header i {
-    font-size: 1.2rem;
+    font-size: 1rem;
 }
 
 .group-tabs {
     display: flex;
-    gap: 0.5rem;
-    padding: 1rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
 }
 
 .group-tabs .tab-button {
-    flex: 1;
-    min-width: 140px;
+    width: 100%;
+    min-width: auto;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.group-tabs .tab-button i {
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
     margin-bottom: 0;
 }
 
-/* Responsive adjustments for tab groups */
-@media (max-width: 768px) {
-    .tab-group {
-        margin-bottom: 1.5rem;
-    }
-    
-    .group-header {
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-    }
-    
-    .group-tabs {
-        padding: 0.75rem;
-        gap: 0.25rem;
-    }
-    
-    .group-tabs .tab-button {
-        min-width: 120px;
-        font-size: 0.85rem;
-    }
+.group-tabs .tab-button span {
+    font-size: 0.8rem;
+    margin-bottom: 0;
 }
 
-@media (max-width: 480px) {
-    .group-tabs {
-        flex-direction: column;
-    }
-    
-    .group-tabs .tab-button {
-        min-width: 100%;
-    }
-}/ *   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+.group-tabs .tab-button small {
+    font-size: 0.65rem;
+    margin-left: auto;
+}
 
-/* ================================
-   NEW DROPDOWN NAVIGATION STYLES
-   ================================ */
+/* Horizontal scroll for tabs */
+.tabs-scroll {
+    display: flex;
+    gap: 0.5rem;
+    min-width: max-content;
+    padding: 0.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-color) var(--bg-secondary);
+}
 
-/* Single tabs */
-.single-tab {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
-    color: white;
-    border: 2px solid var(--accent-color);
-    font-weight: 600;
-    font-size: 0.9rem;
-    padding: 0.75rem 1rem;
-    margin: 0 0.25rem;
-    min-width: 100px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+.tabs-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.tabs-scroll::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.tabs-scroll::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 3px;
+}
+
+.tabs-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+
+/* Individual tab buttons */
+.tab-button {
     display: flex;
     flex-direction: column;
     align-items: center;
-    cursor: pointer;
-}
-
-.single-tab:hover {
-    background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
-}
-
-.single-tab.active {
-    background: linear-gradient(135deg, var(--success-color), #059669);
-    border-color: var(--success-color);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-}
-
-.single-tab i {
-    font-size: 1.1rem;
-    margin-bottom: 0.25rem;
-}
-
-.single-tab span {
-    font-size: 0.9rem;
-    font-weight: 700;
-    display: block;
-    margin-bottom: 0.1rem;
-}
-
-.single-tab small {
-    font-size: 0.7rem;
-    opacity: 0.9;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
     font-weight: 500;
-}
-
-/* Dropdown groups */
-.dropdown-group {
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    min-width: 80px;
     position: relative;
     margin: 0 0.25rem;
 }
 
-.dropdown-header {
-    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
-    color: var(--text-primary);
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-    min-width: 120px;
+.tab-button:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border-color: var(--accent-color);
 }
 
-.dropdown-header:hover {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+.tab-button.active {
+    background: var(--gradient-primary);
     color: white;
     border-color: var(--accent-color);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+    box-shadow: var(--shadow-glow);
 }
 
-.dropdown-header i:first-child {
+.tab-button i {
     font-size: 1.1rem;
+    margin-bottom: 0.25rem;
 }
 
-.dropdown-header span {
-    flex: 1;
-    font-weight: 700;
-}
-
-.dropdown-arrow {
+.tab-button span {
     font-size: 0.8rem;
-    transition: transform 0.3s ease;
+    font-weight: 600;
+    margin-bottom: 0.1rem;
 }
 
-.dropdown-group.open .dropdown-arrow {
-    transform: rotate(180deg);
-}
-
-/* Dropdown content */
-.dropdown-content {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 0 0 8px 8px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    margin-top: 0.25rem;
-}
-
-.dropdown-group.open .dropdown-content {
-    max-height: 500px;
-}
-
-.dropdown-content .tab-button {
-    width: 100%;
-    background: var(--bg-secondary);
-    border: none;
-    border-bottom: 1px solid var(--border-color);
-    padding: 0.75rem 1rem;
-    text-align: left;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    margin: 0;
-}
-
-.dropdown-content .tab-button:last-child {
-    border-bottom: none;
-    border-radius: 0 0 8px 8px;
-}
-
-.dropdown-content .tab-button:hover {
-    background: var(--accent-color);
-    color: white;
-}
-
-.dropdown-content .tab-button.active {
-    background: var(--success-color);
-    color: white;
+.tab-button small {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    font-weight: 400;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .tabs-scroll {
-        flex-direction: column;
-        gap: 0.5rem;
+        padding: 0.25rem;
+        gap: 0.25rem;
     }
     
-    .single-tab, .dropdown-group {
-        width: 100%;
-        margin: 0 0 0.5rem 0;
+    .nav-group {
+        margin: 0 0.25rem;
+        min-width: 180px;
     }
     
-    .dropdown-header {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .dropdown-content {
-        position: static;
-        max-height: none;
-        box-shadow: none;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        margin-top: 0.5rem;
-    }
-    
-    .dropdown-group.open .dropdown-content {
-        max-height: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .single-tab, .dropdown-header {
+    .group-header {
         padding: 0.5rem 0.75rem;
         font-size: 0.8rem;
     }
     
-    .single-tab i, .dropdown-header i:first-child {
-        font-size: 1rem;
+    .group-tabs {
+        padding: 0.25rem;
+        gap: 0.2rem;
     }
     
-    .single-tab span, .dropdown-header span {
-        font-size: 0.8rem;
+    .group-tabs .tab-button {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
     }
     
-    .single-tab small {
-        font-size: 0.65rem;
+    .tab-button {
+        min-width: 70px;
+        padding: 0.6rem 0.8rem;
+        font-size: 0.75rem;
     }
 }
+
+@media (max-width: 480px) {
+    .nav-group {
+        min-width: 160px;
+    }
+    
+    .group-tabs .tab-button {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .tab-button {
+        min-width: 60px;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.7rem;
+    }
+}
+
+/* ================================
+   ADMIN PANEL STYLES
+   ================================ */
+
+.admin-tab {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    border-color: #dc2626 !important;
+}
+
+.admin-tab:hover {
+    background: linear-gradient(135deg, #b91c1c, #991b1b) !important;
+}
+
+.admin-content {
+    padding: 1.5rem;
+}
+
+.admin-section {
+    margin-bottom: 2rem;
+}
+
+.admin-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.admin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.admin-card h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.admin-card h4 {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+.admin-btn {
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.admin-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.admin-btn.danger {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.admin-btn.danger:hover {
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.admin-stats .stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.admin-stats .stat-label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.admin-stats .stat-value {
+    display: block;
+    color: var(--accent-color);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.tier-settings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.tier-item {
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.tier-item h4 {
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Light theme adjustments for admin */
+.theme-light .admin-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.theme-light .admin-card h3 {
+    color: #1a1a1a;
+}
+
+.theme-light .form-group input {
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #1a1a1a;
+}
+
+.theme-light .form-group input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.theme-light .admin-stats .stat-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+.theme-light .tier-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+/* Responsive admin panel */
+@media (max-width: 768px) {
+    .admin-content {
+        padding: 1rem;
+    }
+    
+    .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .tier-settings {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .admin-btn {
+        width: 100%;
+        justify-content: center;
+        margin-right: 0;
+    }
+}
+

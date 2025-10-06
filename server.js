@@ -1773,6 +1773,84 @@ app.get('/api/pump/stats/:address', async (req, res) => {
     }
 });
 
+// === ADMIN PANEL API ENDPOINTS ===
+
+// Admin stats endpoint
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        // Mock data for now - replace with real database queries later
+        const stats = {
+            totalUsers: 1250,
+            activeSubscriptions: 342,
+            trialUsers: 156,
+            totalRevenue: '1,247.5 SOL'
+        };
+        
+        res.json(stats);
+    } catch (error) {
+        console.error('Admin stats error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// KOLScan settings endpoint
+app.post('/api/admin/kolscan-settings', async (req, res) => {
+    try {
+        const { discount, minHold } = req.body;
+        
+        // TODO: Save to database
+        console.log('KOLScan settings updated:', { discount, minHold });
+        
+        res.json({ success: true, message: 'KOLScan settings updated' });
+    } catch (error) {
+        console.error('KOLScan settings error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Subscription tier settings endpoint
+app.post('/api/admin/tier-settings', async (req, res) => {
+    try {
+        const tiers = req.body;
+        
+        // TODO: Save to database
+        console.log('Subscription tiers updated:', tiers);
+        
+        res.json({ success: true, message: 'Subscription tiers updated' });
+    } catch (error) {
+        console.error('Tier settings error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Clear cache endpoint
+app.post('/api/admin/clear-cache', async (req, res) => {
+    try {
+        // TODO: Implement cache clearing
+        console.log('Cache cleared by admin');
+        
+        res.json({ success: true, message: 'Cache cleared successfully' });
+    } catch (error) {
+        console.error('Clear cache error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Export user data endpoint
+app.get('/api/admin/export-data', async (req, res) => {
+    try {
+        // TODO: Generate real CSV export
+        const csvData = 'user_id,subscription_type,created_at,last_active\n1,premium,2024-01-01,2024-01-15\n2,basic,2024-01-02,2024-01-14';
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=users.csv');
+        res.send(csvData);
+    } catch (error) {
+        console.error('Export data error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Инициализация всех сервисов перед запуском
 async function startServer() {
     try {
@@ -1820,6 +1898,12 @@ app.listen(port, () => {
             console.log(`   - /api/pump/top - топ токенов по объему`);
             console.log(`   - /api/pump/trending - trending токены`);
             console.log(`   - /api/pump/stats/:address - статистика токена`);
+    console.log(`🔧 Admin Panel endpoints:`);
+    console.log(`   - /api/admin/stats - статистика подписок`);
+    console.log(`   - /api/admin/kolscan-settings - настройки $KOLScan скидок`);
+    console.log(`   - /api/admin/tier-settings - настройки тарифных планов`);
+    console.log(`   - /api/admin/clear-cache - очистка кэша`);
+    console.log(`   - /api/admin/export-data - экспорт данных пользователей`);
             
             // Запускаем Telegram бота параллельно (если BOT_TOKEN настроен)
             if (process.env.BOT_TOKEN) {

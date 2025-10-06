@@ -39,18 +39,27 @@
         <!-- Navigation tabs -->
         <nav class="tabs-nav">
             <div class="tabs-scroll">
-                <!-- Group 1: Coins Analysis -->
-                <div class="tab-group">
+                <!-- About -->
+                <button class="tab-button active" data-tab="about">
+                    <i class="fas fa-info-circle"></i>
+                    <span>About</span>
+                    <small>bot</small>
+                </button>
+
+                <!-- Analytics -->
+                <button class="tab-button" data-tab="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                    <small>methodology</small>
+                </button>
+
+                <!-- Trending Group -->
+                <div class="nav-group">
                     <div class="group-header">
-                        <i class="fas fa-coins"></i>
-                        <span>Coins Analysis</span>
+                        <i class="fas fa-fire"></i>
+                        <span>Trending</span>
                     </div>
                     <div class="group-tabs">
-                        <button class="tab-button active" data-tab="about">
-                            <i class="fas fa-info-circle"></i>
-                            <span>About Bot</span>
-                            <small>info</small>
-                        </button>
                         <button class="tab-button" data-tab="freshTokens">
                             <i class="fas fa-seedling"></i>
                             <span>Fresh Tokens</span>
@@ -58,7 +67,7 @@
                         </button>
                         <button class="tab-button" data-tab="topGainers">
                             <i class="fas fa-trophy"></i>
-                            <span>Most Bought Tokens</span>
+                            <span>Most Bought</span>
                             <small>1h</small>
                         </button>
                         <button class="tab-button" data-tab="trendingMeta">
@@ -69,11 +78,11 @@
                     </div>
                 </div>
 
-                <!-- Group 2: Wallet Analysis -->
-                <div class="tab-group">
+                <!-- Smart Money Group -->
+                <div class="nav-group">
                     <div class="group-header">
-                        <i class="fas fa-wallet"></i>
-                        <span>Wallet Analysis</span>
+                        <i class="fas fa-brain"></i>
+                        <span>Smart Money</span>
                     </div>
                     <div class="group-tabs">
                         <button class="tab-button" data-tab="smartMoney">
@@ -83,44 +92,44 @@
                         </button>
                         <button class="tab-button" data-tab="portfolio">
                             <i class="fas fa-chart-pie"></i>
-                            <span>Trader Portfolio Analysis</span>
-                            <small>wallet analysis</small>
-                        </button>
-                        <button class="tab-button" data-tab="walletStats">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Wallet Analytics</span>
-                            <small>detailed analysis</small>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Group 3: Market Analysis -->
-                <div class="tab-group">
-                    <div class="group-header">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Market Analysis</span>
-                    </div>
-                    <div class="group-tabs">
-                        <button class="tab-button" data-tab="analytics">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Analytics</span>
-                            <small>data</small>
-                        </button>
-                        <button class="tab-button" data-tab="coins">
-                            <i class="fas fa-coins"></i>
-                            <span>Coins Market</span>
-                            <small>market</small>
+                            <span>Trader Portfolio</span>
+                            <small>analysis</small>
                         </button>
                         <button class="tab-button" data-tab="whaleMoves">
                             <i class="fas fa-fish"></i>
                             <span>Whale Moves</span>
                             <small>2h</small>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Market Group -->
+                <div class="nav-group">
+                    <div class="group-header">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Market</span>
+                    </div>
+                    <div class="group-tabs">
+                        <button class="tab-button" data-tab="coins">
+                            <i class="fas fa-coins"></i>
+                            <span>Coins Market</span>
+                            <small>market</small>
+                        </button>
                         <button class="tab-button" data-tab="volumeSurge">
                             <i class="fas fa-chart-line"></i>
                             <span>Volume Surge</span>
                             <small>2h</small>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Signals Group -->
+                <div class="nav-group">
+                    <div class="group-header">
+                        <i class="fas fa-bell"></i>
+                        <span>Signals</span>
+                    </div>
+                    <div class="group-tabs">
                         <button class="tab-button" data-tab="clusterBuy">
                             <i class="fas fa-fire"></i>
                             <span>Cluster Buy</span>
@@ -138,8 +147,22 @@
                         </button>
                     </div>
                 </div>
-            </div>
-        </nav>
+
+        <!-- Wallet -->
+        <button class="tab-button" data-tab="walletStats">
+            <i class="fas fa-wallet"></i>
+            <span>Wallet</span>
+            <small>Analytics</small>
+        </button>
+
+        <!-- Admin Panel (hidden by default) -->
+        <button class="tab-button admin-tab" data-tab="admin" style="display: none;">
+            <i class="fas fa-cog"></i>
+            <span>Admin</span>
+            <small>panel</small>
+        </button>
+    </div>
+</nav>
 
         <!-- Содержимое вкладок -->
         <main class="tab-content-wrapper">
@@ -525,6 +548,135 @@
                    </div>
                </div>
            </div>
+        </div>
+
+        <!-- Admin Panel Tab -->
+        <div id="admin" class="tab-content">
+            <div class="tab-header">
+                <h2><i class="fas fa-cog"></i> Admin Panel</h2>
+                <p class="tab-description">System administration and subscription management</p>
+            </div>
+
+            <div class="admin-content">
+                <!-- Admin Login Form -->
+                <div id="adminLogin" class="admin-section">
+                    <div class="admin-card">
+                        <h3><i class="fas fa-lock"></i> Admin Access</h3>
+                        <form id="adminLoginForm">
+                            <div class="form-group">
+                                <label for="adminPassword">Password:</label>
+                                <input type="password" id="adminPassword" placeholder="Enter admin password" required>
+                            </div>
+                            <button type="submit" class="admin-btn">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Admin Dashboard (hidden by default) -->
+                <div id="adminDashboard" class="admin-section" style="display: none;">
+                    <!-- Subscription Management -->
+                    <div class="admin-card">
+                        <h3><i class="fas fa-credit-card"></i> Subscription Management</h3>
+                        <div class="admin-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Total Users</span>
+                                <span class="stat-value" id="totalUsers">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Active Subscriptions</span>
+                                <span class="stat-value" id="activeSubscriptions">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Trial Users</span>
+                                <span class="stat-value" id="trialUsers">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Revenue (SOL)</span>
+                                <span class="stat-value" id="totalRevenue">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KOLScan Token Settings -->
+                    <div class="admin-card">
+                        <h3><i class="fas fa-coins"></i> $KOLScan Token Settings</h3>
+                        <div class="form-group">
+                            <label for="kolscanDiscount">Discount Percentage:</label>
+                            <input type="number" id="kolscanDiscount" value="25" min="0" max="100">
+                            <small>Current: 25% discount for $KOLScan holders</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="kolscanMinHold">Minimum $KOLScan to Hold:</label>
+                            <input type="number" id="kolscanMinHold" value="1000" min="0">
+                            <small>Minimum tokens required for discount</small>
+                        </div>
+                        <button class="admin-btn" onclick="updateKolscanSettings()">
+                            <i class="fas fa-save"></i> Update Settings
+                        </button>
+                    </div>
+
+                    <!-- Subscription Tiers -->
+                    <div class="admin-card">
+                        <h3><i class="fas fa-layer-group"></i> Subscription Tiers</h3>
+                        <div class="tier-settings">
+                            <div class="tier-item">
+                                <h4>Basic Tier</h4>
+                                <div class="form-group">
+                                    <label>Price (SOL):</label>
+                                    <input type="number" id="basicPrice" value="0.5" min="0" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Access:</label>
+                                    <input type="text" id="basicAccess" value="2 tabs" placeholder="e.g., 2 tabs">
+                                </div>
+                            </div>
+                            <div class="tier-item">
+                                <h4>Pro Tier</h4>
+                                <div class="form-group">
+                                    <label>Price (SOL):</label>
+                                    <input type="number" id="proPrice" value="1.0" min="0" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Access:</label>
+                                    <input type="text" id="proAccess" value="All tabs" placeholder="e.g., All tabs">
+                                </div>
+                            </div>
+                            <div class="tier-item">
+                                <h4>Premium Tier</h4>
+                                <div class="form-group">
+                                    <label>Price (SOL):</label>
+                                    <input type="number" id="premiumPrice" value="2.0" min="0" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Access:</label>
+                                    <input type="text" id="premiumAccess" value="Priority + All" placeholder="e.g., Priority + All">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="admin-btn" onclick="updateTierSettings()">
+                            <i class="fas fa-save"></i> Update Tiers
+                        </button>
+                    </div>
+
+                    <!-- System Controls -->
+                    <div class="admin-card">
+                        <h3><i class="fas fa-cogs"></i> System Controls</h3>
+                        <div class="control-buttons">
+                            <button class="admin-btn danger" onclick="clearAllCache()">
+                                <i class="fas fa-trash"></i> Clear Cache
+                            </button>
+                            <button class="admin-btn" onclick="exportUserData()">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                            <button class="admin-btn" onclick="adminLogout()">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         </main>
 

@@ -1157,6 +1157,9 @@ async function initApp() {
     // Запуск автоматического обновления
     startAutoRefresh();
     
+    // Инициализация админ панели
+    initAdminPanel();
+    
     // Скрытие экрана загрузки
     setTimeout(hideLoading, 500);
     
@@ -2417,28 +2420,193 @@ if (document.readyState === 'loading') {
     initApp();
 }
 
-// === DROPDOWN NAVIGATION ===
-function toggleDropdown(groupName) {
-    const dropdown = document.querySelector(`[data-group="${groupName}"]`);
-    if (!dropdown) return;
+// === ADMIN PANEL FUNCTIONS ===
+const ADMIN_PASSWORD = '2110';
 
-    const isOpen = dropdown.classList.contains('open');
-    document.querySelectorAll('.dropdown-group').forEach(g => g.classList.remove('open'));
-    if (!isOpen) dropdown.classList.add('open');
+function initAdminPanel() {
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', handleAdminLogin);
+    }
+    
+    // Add triple tap on header to show admin tab
+    let tapCount = 0;
+    let tapTimer = null;
+    
+    const header = document.querySelector('.app-header');
+    if (header) {
+        header.addEventListener('click', (e) => {
+            if (e.target.closest('.header-controls')) return;
+            
+            tapCount++;
+            if (tapCount === 3) {
+                showAdminTab();
+                tapCount = 0;
+            } else {
+                clearTimeout(tapTimer);
+                tapTimer = setTimeout(() => {
+                    tapCount = 0;
+                }, 1000);
+            }
+        });
+    }
 }
 
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.dropdown-group')) {
-        document.querySelectorAll('.dropdown-group').forEach(g => g.classList.remove('open'));
+function showAdminTab() {
+    const adminTab = document.querySelector('.admin-tab');
+    if (adminTab) {
+        adminTab.style.display = 'flex';
+        adminTab.scrollIntoView({ behavior: 'smooth' });
+        console.log('Admin tab revealed');
     }
-});
+}
 
-function initDropdownNavigation() {
-    document.querySelectorAll('.dropdown-content .tab-button').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tabName = btn.dataset.tab;
-            if (tabName) switchTab(tabName);
-            document.querySelectorAll('.dropdown-group').forEach(g => g.classList.remove('open'));
+function handleAdminLogin(e) {
+    e.preventDefault();
+    
+    const password = document.getElementById('adminPassword').value;
+    
+    if (password === ADMIN_PASSWORD) {
+        document.getElementById('adminLogin').style.display = 'none';
+        document.getElementById('adminDashboard').style.display = 'block';
+        loadAdminStats();
+        console.log('Admin login successful');
+    } else {
+        alert('Invalid password!');
+        document.getElementById('adminPassword').value = '';
+    }
+}
+
+function loadAdminStats() {
+    // Load subscription statistics
+    fetch('/api/admin/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalUsers').textContent = data.totalUsers || '0';
+            document.getElementById('activeSubscriptions').textContent = data.activeSubscriptions || '0';
+            document.getElementById('trialUsers').textContent = data.trialUsers || '0';
+            document.getElementById('totalRevenue').textContent = data.totalRevenue || '0 SOL';
+        })
+        .catch(error => {
+            console.error('Error loading admin stats:', error);
+            // Set default values if API fails
+            document.getElementById('totalUsers').textContent = '0';
+            document.getElementById('activeSubscriptions').textContent = '0';
+            document.getElementById('trialUsers').textContent = '0';
+            document.getElementById('totalRevenue').textContent = '0 SOL';
         });
+}
+
+function updateKolscanSettings() {
+    const discount = document.getElementById('kolscanDiscount').value;
+    const minHold = document.getElementById('kolscanMinHold').value;
+    
+    const settings = {
+        discount: parseInt(discount),
+        minHold: parseInt(minHold)
+    };
+    
+    fetch('/api/admin/kolscan-settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('$KOLScan settings updated successfully!');
+        } else {
+            alert('Failed to update settings');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating KOLScan settings:', error);
+        alert('Error updating settings');
     });
 }
+
+function updateTierSettings() {
+    const tiers = {
+        basic: {
+            price: parseFloat(document.getElementById('basicPrice').value),
+            access: document.getElementById('basicAccess').value
+        },
+        pro: {
+            price: parseFloat(document.getElementById('proPrice').value),
+            access: document.getElementById('proAccess').value
+        },
+        premium: {
+            price: parseFloat(document.getElementById('premiumPrice').value),
+            access: document.getElementById('premiumAccess').value
+        }
+    };
+    
+    fetch('/api/admin/tier-settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tiers)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Subscription tiers updated successfully!');
+        } else {
+            alert('Failed to update tiers');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating tier settings:', error);
+        alert('Error updating tiers');
+    });
+}
+
+function clearAllCache() {
+    if (confirm('Are you sure you want to clear all cache? This will affect performance temporarily.')) {
+        fetch('/api/admin/clear-cache', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Cache cleared successfully!');
+            } else {
+                alert('Failed to clear cache');
+            }
+        })
+        .catch(error => {
+            console.error('Error clearing cache:', error);
+            alert('Error clearing cache');
+        });
+    }
+}
+
+function exportUserData() {
+    fetch('/api/admin/export-data')
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pumpdex-users-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        })
+        .catch(error => {
+            console.error('Error exporting data:', error);
+            alert('Error exporting data');
+        });
+}
+
+function adminLogout() {
+    document.getElementById('adminLogin').style.display = 'block';
+    document.getElementById('adminDashboard').style.display = 'none';
+    document.getElementById('adminPassword').value = '';
+    console.log('Admin logged out');
+}
+
