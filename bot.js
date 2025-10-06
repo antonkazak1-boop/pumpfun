@@ -921,38 +921,29 @@ async function handleSuccessfulPayment(ctx) {
     // Update user subscription in database
     console.log('🔄 Starting database update...');
     try {
-        // Use existing pool from server.js instead of creating new one
-        console.log('📊 Using existing database connection...');
-        
-        // Import the pool from server.js
-        const { Pool } = require('pg');
-        const pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
-            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-            max: 1, // Limit connections
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 10000
-        });
-        
-        console.log('🔧 Initializing subscription system...');
-        const SubscriptionSystem = require('./subscriptionSystem.js');
-        const subscriptionSystem = new SubscriptionSystem(pool);
-        
-        // Create subscription record with fallback tier
-        console.log('💾 Creating subscription record...');
-        const subscription = await subscriptionSystem.createSubscription(
-            user.id,           // userId
-            subscriptionType,  // tierName
-            'telegram_stars',  // paymentMethod
-            null,              // transactionHash
-            false              // kolscanDiscount
-        );
-        
-        console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan - DB updated successfully!`);
-        console.log('📋 Subscription record:', subscription);
-        
-        // Close the pool connection
-        await pool.end();
+        if (globalPool) {
+            console.log('📊 Using global database connection from server...');
+            
+            console.log('🔧 Initializing subscription system...');
+            const SubscriptionSystem = require('./subscriptionSystem.js');
+            const subscriptionSystem = new SubscriptionSystem(globalPool);
+            
+            // Create subscription record with fallback tier
+            console.log('💾 Creating subscription record...');
+            const subscription = await subscriptionSystem.createSubscription(
+                user.id,           // userId
+                subscriptionType,  // tierName
+                'telegram_stars',  // paymentMethod
+                null,              // transactionHash
+                false              // kolscanDiscount
+            );
+            
+            console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan - DB updated successfully!`);
+            console.log('📋 Subscription record:', subscription);
+        } else {
+            console.log('⚠️ No global pool available, using fallback...');
+            throw new Error('No global pool available');
+        }
     } catch (error) {
         console.error('❌ Error updating subscription in database:', error);
         console.error('❌ Error details:', error.message);
@@ -1096,11 +1087,20 @@ process.once('SIGTERM', () => {
     bot.stop('SIGTERM');
 });
 
+// Global pool variable
+let globalPool = null;
+
 // Запуск бота
-async function startBot() {
+async function startBot(pool = null) {
     try {
         console.log('🤖 Запуск Pump Dex Bot...');
         console.log(`🔗 Mini App URL: ${MINI_APP_URL}`);
+        
+        // Store pool globally for use in payment handlers
+        globalPool = pool;
+        if (pool) {
+            console.log('📊 Database pool connected to bot');
+        }
         
         // Получаем информацию о боте
         const botInfo = await bot.telegram.getMe();

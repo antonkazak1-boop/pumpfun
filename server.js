@@ -2219,7 +2219,7 @@ app.listen(port, () => {
                 try {
                     console.log('\n🤖 Starting Telegram Bot...');
                     const { startBot } = require('./bot.js');
-                    startBot().then(() => {
+                    startBot(pool).then(() => {
                         console.log('✅ Telegram Bot started successfully!');
                     }).catch((error) => {
                         if (error.message.includes('409') || error.message.includes('Conflict')) {
