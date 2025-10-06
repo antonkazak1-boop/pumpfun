@@ -21,12 +21,135 @@ if (!MINI_APP_URL || MINI_APP_URL === 'YOUR_MINI_APP_HTTPS_URL') {
 // Создание бота
 const bot = new Telegraf(BOT_TOKEN);
 
+// Handle payment commands from Mini App
+async function handlePaymentCommand(ctx, tierName) {
+    const user = ctx.from;
+    const userName = user.first_name || user.username || 'User';
+    
+    console.log(`💳 Payment command received: ${tierName} for user ${userName}`);
+    
+    if (tierName === 'basic') {
+        return showBasicPayment(ctx, userName);
+    } else if (tierName === 'pro') {
+        return showProPayment(ctx, userName);
+    }
+}
+
+// Show Basic payment directly
+async function showBasicPayment(ctx, userName) {
+    const userId = ctx.from.id;
+    
+    try {
+        // Create invoice for Telegram Stars
+        const invoice = await bot.telegram.createInvoiceLink({
+            title: 'Pump Dex Basic Subscription',
+            description: 'Basic subscription - 30 days access to all tabs',
+            payload: `basic_${userId}`,
+            provider_token: '', // Empty for Stars
+            currency: 'XTR', // Telegram Stars
+            prices: [{
+                label: 'Basic Subscription',
+                amount: 10000 // 100 stars in cents
+            }]
+        });
+        
+        ctx.reply(`
+⭐ *Payment with Telegram Stars*
+
+Hey ${userName}! Ready to upgrade to Basic?
+
+💎 **Basic Subscription - 100 Stars**
+• 30 days access
+• All tabs unlocked
+• 50 notifications/day
+• Priority support
+
+━━━━━━━━━━━━━━━━━━━━
+*Secure payment via Telegram*
+━━━━━━━━━━━━━━━━━━━━
+        `, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: [
+                    [Markup.button.url('💳 Pay with Stars', invoice)],
+                    [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+                ]
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error creating Stars invoice:', error);
+        ctx.reply('❌ Payment system temporarily unavailable. Please try again later.');
+    }
+}
+
+// Show Pro payment directly
+async function showProPayment(ctx, userName) {
+    const userId = ctx.from.id;
+    
+    try {
+        // Create invoice for Telegram Stars
+        const invoice = await bot.telegram.createInvoiceLink({
+            title: 'Pump Dex Pro Subscription',
+            description: 'Pro subscription - 30 days access with unlimited notifications',
+            payload: `pro_${userId}`,
+            provider_token: '', // Empty for Stars
+            currency: 'XTR', // Telegram Stars
+            prices: [{
+                label: 'Pro Subscription',
+                amount: 25000 // 250 stars in cents
+            }]
+        });
+        
+        ctx.reply(`
+⭐ *Payment with Telegram Stars*
+
+Hey ${userName}! Ready to upgrade to Pro?
+
+🚀 **Pro Subscription - 250 Stars**
+• 30 days access
+• All tabs unlocked
+• Unlimited notifications
+• Early access features
+• Advanced analytics
+• Priority support
+
+━━━━━━━━━━━━━━━━━━━━
+*Secure payment via Telegram*
+━━━━━━━━━━━━━━━━━━━━
+        `, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: [
+                    [Markup.button.url('💳 Pay with Stars', invoice)],
+                    [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+                ]
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error creating Stars invoice:', error);
+        ctx.reply('❌ Payment system temporarily unavailable. Please try again later.');
+    }
+}
+
 // Обработчик команды /start
 bot.start((ctx) => {
     const user = ctx.from;
     const userName = user.first_name || user.username || 'Пользователь';
+    const startParam = ctx.startPayload;
     
     console.log(`👋 Новый пользователь: ${userName} (ID: ${user.id})`);
+    console.log(`📝 Start parameter: ${startParam}`);
+    
+    // Handle payment commands
+    if (startParam) {
+        if (startParam === 'pay_stars_basic') {
+            return handlePaymentCommand(ctx, 'basic');
+        } else if (startParam === 'pay_stars_pro') {
+            return handlePaymentCommand(ctx, 'pro');
+        }
+    }
     
     const welcomeMessage = `
 🚀 *Welcome to Pump Dex Bot!*

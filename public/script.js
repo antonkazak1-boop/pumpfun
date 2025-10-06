@@ -120,6 +120,9 @@ function initTelegramWebApp() {
         if (user) {
             currentUserId = user.id;
             console.log('Current user ID set:', currentUserId);
+            
+            // Update user data in database
+            updateUserData(user);
         }
         
         return tg;
@@ -2501,6 +2504,35 @@ function adminLogout() {
 
 // === SUBSCRIPTION SYSTEM FUNCTIONS ===
 
+// Update user data in database
+async function updateUserData(user) {
+    try {
+        if (!user || !user.id) return;
+        
+        const response = await fetch(`${BACKEND_URL}/api/user/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId: user.id,
+                username: user.username,
+                first_name: user.first_name,
+                last_name: user.last_name
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            console.log('✅ User data updated:', data.user);
+        } else {
+            console.log('⚠️ Failed to update user data:', data.error);
+        }
+    } catch (error) {
+        console.error('Error updating user data:', error);
+    }
+}
+
 // Initialize subscription system
 async function initSubscriptionSystem() {
     try {
@@ -2927,13 +2959,13 @@ async function payWithStars(tierName) {
                 console.log(`✅ Stars payment initiated for ${tierName}`);
             } else {
                 // Fallback: try to create invoice directly
-                const invoiceLink = `https://t.me/BetAIAGENT_BOT?startapp=pay_stars_${tierName}`;
+                const invoiceLink = `https://t.me/BetAIAGENT_BOT?start=pay_stars_${tierName}`;
                 tg.openLink(invoiceLink);
                 console.log(`✅ Stars payment initiated via fallback for ${tierName}`);
             }
         } else {
             // Fallback for non-Telegram environment
-            const invoiceLink = `https://t.me/BetAIAGENT_BOT?startapp=pay_stars_${tierName}`;
+            const invoiceLink = `https://t.me/BetAIAGENT_BOT?start=pay_stars_${tierName}`;
             window.open(invoiceLink, '_blank');
             console.log(`✅ Stars payment initiated via web fallback for ${tierName}`);
         }

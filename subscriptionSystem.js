@@ -301,8 +301,8 @@ class SubscriptionSystem {
             // Auto-create user if not exists (for Telegram users)
             console.log(`🆕 Auto-creating user ${userId}`);
             const createResult = await this.pool.query(`
-                INSERT INTO users (telegram_user_id, trial_started_at, subscription_type)
-                VALUES ($1, CURRENT_TIMESTAMP, 'trial')
+                INSERT INTO users (telegram_user_id, trial_started_at, subscription_type, created_at, last_active)
+                VALUES ($1, CURRENT_TIMESTAMP, 'trial', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 RETURNING *
             `, [userId]);
             

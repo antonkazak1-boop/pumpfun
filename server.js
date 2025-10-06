@@ -1962,6 +1962,47 @@ app.get('/api/subscription/status/:userId', async (req, res) => {
     }
 });
 
+// Update user data from Telegram WebApp
+app.post('/api/user/update', async (req, res) => {
+    try {
+        const { userId, username, first_name, last_name } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'User ID is required' });
+        }
+        
+        if (subscriptionSystem && pool) {
+            // Update user data
+            const result = await pool.query(`
+                UPDATE users 
+                SET username = $1, first_name = $2, last_name = $3, last_active = CURRENT_TIMESTAMP
+                WHERE telegram_user_id = $4
+                RETURNING *
+            `, [username, first_name, last_name, userId]);
+            
+            if (result.rows.length > 0) {
+                console.log(`✅ Updated user data for ${userId}: ${first_name || username}`);
+                res.json({ success: true, user: result.rows[0] });
+            } else {
+                // User doesn't exist, create with full data
+                const createResult = await pool.query(`
+                    INSERT INTO users (telegram_user_id, username, first_name, last_name, trial_started_at, subscription_type, created_at, last_active)
+                    VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 'trial', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    RETURNING *
+                `, [userId, username, first_name, last_name]);
+                
+                console.log(`✅ Created user with full data for ${userId}: ${first_name || username}`);
+                res.json({ success: true, user: createResult.rows[0] });
+            }
+        } else {
+            res.status(500).json({ success: false, error: 'Subscription system not available' });
+        }
+    } catch (error) {
+        console.error('Update user data error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Create Telegram Stars payment
 app.post('/api/payment/telegram-stars', async (req, res) => {
     try {
