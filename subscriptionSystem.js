@@ -90,28 +90,28 @@ const SUBSCRIPTION_TABLES = {
 // Subscription tiers configuration
 const DEFAULT_TIERS = [
     {
-        tier_name: 'basic',
-        price_sol: 0.5,
-        price_stars: 500,
-        duration_days: 30,
+        tier_name: 'free',
+        price_sol: 0,
+        price_stars: 0,
+        duration_days: 5,
         max_tabs: 2,
-        features: ['Fresh Tokens', 'Most Bought']
+        features: ['About', 'Analytics', '5-day trial']
+    },
+    {
+        tier_name: 'basic',
+        price_sol: 0.1,
+        price_stars: 100,
+        duration_days: 30,
+        max_tabs: null, // unlimited
+        features: ['All tabs', '50 notifications/day', 'Priority support']
     },
     {
         tier_name: 'pro',
-        price_sol: 1.0,
-        price_stars: 1000,
+        price_sol: 0.25,
+        price_stars: 250,
         duration_days: 30,
         max_tabs: null, // unlimited
-        features: ['All tabs', 'Priority support']
-    },
-    {
-        tier_name: 'premium',
-        price_sol: 2.0,
-        price_stars: 2000,
-        duration_days: 30,
-        max_tabs: null, // unlimited
-        features: ['All tabs', 'Priority support', 'Early access', 'Advanced analytics']
+        features: ['All tabs', 'Unlimited notifications', 'Early access', 'Advanced analytics', 'Priority support']
     }
 ];
 

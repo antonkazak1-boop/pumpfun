@@ -53,6 +53,25 @@ Catch new tokens the moment smart traders enter. Never miss an early entry oppor
 • Deep market insights
 
 ╔═══════════════════════╗
+║  💰 *Subscription Plans*  ║
+╚═══════════════════════╝
+
+🆓 *FREE*
+• Access to 2 tabs
+• 5-day trial period
+
+💎 *BASIC - 0.1 SOL (~100 ⭐)*
+• Access to ALL tabs
+• 50 notifications per day
+• Priority support
+
+🚀 *PRO - 0.25 SOL (~250 ⭐)*
+• Access to ALL tabs
+• Unlimited notifications
+• Early access to new features
+• Advanced analytics
+
+╔═══════════════════════╗
 ║  🎨 *Mini App Features*  ║
 ╚═══════════════════════╝
 
@@ -145,6 +164,7 @@ bot.help((ctx) => {
 
 /start - Launch the bot and access Mini App
 /about - Learn about Pump Dex Bot
+/subscribe - View subscription plans and pricing
 /help - Show this help message
 
 ╔═══════════════════════╗
@@ -182,6 +202,70 @@ Need support? Contact @your_support_bot
         Markup.inlineKeyboard([
             [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
             [Markup.button.callback('📊 About Bot', 'about')]
+        ])
+    );
+});
+
+// Обработчик команды /subscribe
+bot.command('subscribe', (ctx) => {
+    const subscriptionMessage = `
+💎 *Pump Dex Premium Subscription*
+
+╔═══════════════════════╗
+║  💰 *Choose Your Plan*  ║
+╚═══════════════════════╝
+
+🆓 *FREE Trial*
+• Access to 2 tabs (About, Analytics)
+• 5-day trial period
+• Basic features
+
+💎 *BASIC - 0.1 SOL (~100 ⭐)*
+• Access to ALL tabs
+• 50 notifications per day
+• Priority support
+• Monthly subscription
+
+🚀 *PRO - 0.25 SOL (~250 ⭐)*
+• Access to ALL tabs
+• Unlimited notifications
+• Early access to new features
+• Advanced analytics
+• Priority customer support
+
+╔═══════════════════════╗
+║  🎯 *Payment Methods*   ║
+╚═══════════════════════╝
+
+⭐ *Telegram Stars* (Recommended)
+• Instant payment
+• No blockchain fees
+• Secure and fast
+
+☀️ *Solana (SOL)*
+• Direct blockchain payment
+• 25% discount with $KOLScan tokens
+• Minimum 1000 $KOLScan required
+
+╔═══════════════════════╗
+║  🚀 *How to Subscribe*  ║
+╚═══════════════════════╝
+
+1️⃣ Launch Mini App below
+2️⃣ Choose your preferred plan
+3️⃣ Select payment method (Stars or SOL)
+4️⃣ Complete payment
+5️⃣ Enjoy premium features!
+
+━━━━━━━━━━━━━━━━━━━━
+*Start your 5-day FREE trial now!*
+━━━━━━━━━━━━━━━━━━━━
+    `;
+    
+    ctx.replyWithMarkdown(subscriptionMessage,
+        Markup.inlineKeyboard([
+            [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+            [Markup.button.url('💎 View Pricing', `${MINI_APP_URL}#pricing`)]
         ])
     );
 });
