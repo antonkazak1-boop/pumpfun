@@ -566,7 +566,7 @@ app.get('/api/clusterbuy', async (req, res) => {
         
         // Массово получаем метаданные через Pump.fun + DexScreener + Jupiter
         const tokenMints = result.rows.map(row => row.token_mint);
-        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints, pool);
         
         // Обогащаем данные метаданными токенов
         const enrichedData = result.rows.map((item) => {
@@ -624,7 +624,7 @@ app.get('/api/volumesurge', async (req, res) => {
         
         // Массово получаем метаданные через Pump.fun + DexScreener + Jupiter
         const tokenMints = result.rows.map(row => row.token_mint);
-        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints, pool);
         
         // Обогащаем данные метаданными токенов
         const enrichedData = result.rows.map((item) => {
@@ -1019,7 +1019,7 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
         
         // Получаем метаданные токенов
         const tokenMints = tokenPnlResult.rows.map(row => row.token_mint);
-        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints, pool);
         
         // Обогащаем данные метаданными токенов
         const enrichedTokenPnl = tokenPnlResult.rows.map((item) => {
@@ -1241,7 +1241,7 @@ app.get('/api/coins/market', async (req, res) => {
         console.log(`🔍 Fetching metadata for ${tokenMints.length} tokens...`);
         
         // Массово получаем метаданные через DexScreener + Jupiter
-        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints, pool);
         
         // Обогащаем данные метаданными токенов
         let enrichedData = result.rows.map((coin) => {
@@ -1305,7 +1305,7 @@ app.get('/api/recentactivity', async (req, res) => {
         
         // Массово получаем метаданные токенов
         const tokenMints = enrichedData.map(item => item.token_mint).filter(Boolean);
-        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints, pool);
         
         // Обогащаем данные метаданными токенов
         enrichedData = enrichedData.map((item) => {
@@ -1395,7 +1395,7 @@ app.get('/api/cobuy', async (req, res) => {
         
         // Массово получаем метаданные через DexScreener + Jupiter
         const tokenMints = result.rows.map(row => row.token_mint);
-        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints, pool);
         
         // Обогащаем данные метаданными токенов
         const enrichedData = result.rows.map((item) => {
@@ -1465,7 +1465,7 @@ app.get('/api/smartmoney', async (req, res) => {
         
         // Массово получаем метаданные токенов
         const tokenMints = enrichedData.map(item => item.token_mint).filter(Boolean);
-        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints, pool);
         
         // Обогащаем данные метаданными токенов
         enrichedData = enrichedData.map((item) => {
@@ -1509,7 +1509,7 @@ app.get('/api/freshtokens', async (req, res) => {
         
         // Массово получаем метаданные через Pump.fun + DexScreener + Jupiter
         const tokenMints = result.rows.map(row => row.token_mint);
-        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints, pool);
         
         // Обогащаем данные метаданными токенов
         const enrichedData = result.rows.map((item) => {
@@ -1547,7 +1547,7 @@ app.get('/api/topgainers', async (req, res) => {
         
         // Массово получаем метаданные через DexScreener + Jupiter
         const tokenMints = result.rows.map(row => row.token_mint);
-        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints, pool);
         
         // Обогащаем данные метаданными токенов
         const enrichedData = result.rows.map((item) => {

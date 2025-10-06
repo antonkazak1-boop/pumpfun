@@ -288,19 +288,25 @@ function getTokenImage(tokenMint) {
  * @param {Array<string>} tokenMints 
  * @returns {Promise<Map>}
  */
-async function fetchMultipleTokenMetadata(tokenMints) {
+async function fetchMultipleTokenMetadata(tokenMints, pool = null) {
     const uniqueTokens = [...new Set(tokenMints)];
     const results = new Map();
     
     // Сначала проверяем кэш в базе данных
     try {
-        const { Pool } = require('pg');
-        const pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
-            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-        });
+        let dbPool = pool;
+        let shouldClosePool = false;
         
-        const cachedTokens = await getCachedTokens(uniqueTokens, pool);
+        if (!dbPool) {
+            const { Pool } = require('pg');
+            dbPool = new Pool({
+                connectionString: process.env.DATABASE_URL,
+                ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+            });
+            shouldClosePool = true;
+        }
+        
+        const cachedTokens = await getCachedTokens(uniqueTokens, dbPool);
         const uncachedTokens = uniqueTokens.filter(mint => !cachedTokens.has(mint));
         
         console.log(`✅ Found ${cachedTokens.size} cached tokens, fetching ${uncachedTokens.length} new ones`);
@@ -311,7 +317,7 @@ async function fetchMultipleTokenMetadata(tokenMints) {
         });
         
         if (uncachedTokens.length === 0) {
-            await pool.end();
+            if (shouldClosePool) await dbPool.end();
             return results;
         }
         
@@ -320,11 +326,11 @@ async function fetchMultipleTokenMetadata(tokenMints) {
         
         // Кэшируем новые метаданные
         for (const [tokenMint, metadata] of newMetadata) {
-            await cacheTokenMetadata(tokenMint, metadata, pool);
+            await cacheTokenMetadata(tokenMint, metadata, dbPool);
             results.set(tokenMint, metadata);
         }
         
-        await pool.end();
+        if (shouldClosePool) await dbPool.end();
         console.log(`✅ Total metadata: ${results.size} tokens (${cachedTokens.size} cached, ${newMetadata.size} new)`);
         return results;
         

@@ -284,7 +284,7 @@ class SubscriptionSystem {
         }
     }
 
-    // Get user by ID
+    // Get user by ID (auto-create if not exists)
     async getUserById(userId) {
         try {
             if (!this.pool) return null;
@@ -293,9 +293,23 @@ class SubscriptionSystem {
                 'SELECT * FROM users WHERE id = $1 OR telegram_user_id = $1',
                 [userId]
             );
-            return result.rows[0] || null;
+            
+            if (result.rows.length > 0) {
+                return result.rows[0];
+            }
+            
+            // Auto-create user if not exists (for Telegram users)
+            console.log(`🆕 Auto-creating user ${userId}`);
+            const createResult = await this.pool.query(`
+                INSERT INTO users (telegram_user_id, trial_started_at, subscription_type)
+                VALUES ($1, CURRENT_TIMESTAMP, 'trial')
+                RETURNING *
+            `, [userId]);
+            
+            console.log(`✅ Auto-created user ${userId}`);
+            return createResult.rows[0];
         } catch (error) {
-            console.error('Error getting user by ID:', error.message);
+            console.error('Error getting/creating user by ID:', error.message);
             return null;
         }
     }
