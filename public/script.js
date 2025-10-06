@@ -2694,56 +2694,62 @@ function showSubscriptionMenu() {
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="subscription-plans">
-            <div class="plan-card basic">
-                <div class="plan-header">
-                    <h4>💎 Basic</h4>
-                    <div class="plan-price">
-                        <span class="price">0.1 SOL</span>
-                        <span class="stars">~100 ⭐</span>
+        <div class="subscription-plans-container">
+            <div class="subscription-plans" id="subscriptionPlans">
+                <div class="plan-card basic">
+                    <div class="plan-header">
+                        <h4>💎 Basic</h4>
+                        <div class="plan-price">
+                            <span class="price">0.1 SOL</span>
+                            <span class="stars">~100 ⭐</span>
+                        </div>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> All tabs access</li>
+                        <li><i class="fas fa-check"></i> 50 notifications/day</li>
+                        <li><i class="fas fa-check"></i> Priority support</li>
+                        <li><i class="fas fa-check"></i> 30 days access</li>
+                    </ul>
+                    <div class="plan-buttons">
+                        <button class="pay-btn stars-btn" onclick="payWithStars('basic')">
+                            <i class="fas fa-star"></i> Pay with Stars
+                        </button>
+                        <button class="pay-btn sol-btn" onclick="payWithSol('basic')">
+                            <i class="fab fa-bitcoin"></i> Pay with SOL
+                        </button>
                     </div>
                 </div>
-                <ul class="plan-features">
-                    <li><i class="fas fa-check"></i> All tabs access</li>
-                    <li><i class="fas fa-check"></i> 50 notifications/day</li>
-                    <li><i class="fas fa-check"></i> Priority support</li>
-                    <li><i class="fas fa-check"></i> 30 days access</li>
-                </ul>
-                <div class="plan-buttons">
-                    <button class="pay-btn stars-btn" onclick="payWithStars('basic')">
-                        <i class="fas fa-star"></i> Pay with Stars
-                    </button>
-                    <button class="pay-btn sol-btn" onclick="payWithSol('basic')">
-                        <i class="fab fa-bitcoin"></i> Pay with SOL
-                    </button>
+                
+                <div class="plan-card pro">
+                    <div class="plan-badge">POPULAR</div>
+                    <div class="plan-header">
+                        <h4>🚀 Pro</h4>
+                        <div class="plan-price">
+                            <span class="price">0.25 SOL</span>
+                            <span class="stars">~250 ⭐</span>
+                        </div>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> All tabs access</li>
+                        <li><i class="fas fa-check"></i> Unlimited notifications</li>
+                        <li><i class="fas fa-check"></i> Early access features</li>
+                        <li><i class="fas fa-check"></i> Advanced analytics</li>
+                        <li><i class="fas fa-check"></i> Priority support</li>
+                        <li><i class="fas fa-check"></i> 30 days access</li>
+                    </ul>
+                    <div class="plan-buttons">
+                        <button class="pay-btn stars-btn" onclick="payWithStars('pro')">
+                            <i class="fas fa-star"></i> Pay with Stars
+                        </button>
+                        <button class="pay-btn sol-btn" onclick="payWithSol('pro')">
+                            <i class="fab fa-bitcoin"></i> Pay with SOL
+                        </button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="plan-card pro">
-                <div class="plan-badge">POPULAR</div>
-                <div class="plan-header">
-                    <h4>🚀 Pro</h4>
-                    <div class="plan-price">
-                        <span class="price">0.25 SOL</span>
-                        <span class="stars">~250 ⭐</span>
-                    </div>
-                </div>
-                <ul class="plan-features">
-                    <li><i class="fas fa-check"></i> All tabs access</li>
-                    <li><i class="fas fa-check"></i> Unlimited notifications</li>
-                    <li><i class="fas fa-check"></i> Early access features</li>
-                    <li><i class="fas fa-check"></i> Advanced analytics</li>
-                    <li><i class="fas fa-check"></i> Priority support</li>
-                    <li><i class="fas fa-check"></i> 30 days access</li>
-                </ul>
-                <div class="plan-buttons">
-                    <button class="pay-btn stars-btn" onclick="payWithStars('pro')">
-                        <i class="fas fa-star"></i> Pay with Stars
-                    </button>
-                    <button class="pay-btn sol-btn" onclick="payWithSol('pro')">
-                        <i class="fab fa-bitcoin"></i> Pay with SOL
-                    </button>
-                </div>
+            <div class="plan-indicators">
+                <span class="indicator active" data-slide="0"></span>
+                <span class="indicator" data-slide="1"></span>
             </div>
         </div>
         <div class="subscription-footer">
@@ -2755,10 +2761,119 @@ function showSubscriptionMenu() {
     // Add to page
     document.body.appendChild(menu);
     
+    // Initialize swipe functionality
+    initSubscriptionSwipe();
+    
     // Add click outside to close
     setTimeout(() => {
         document.addEventListener('click', closeSubscriptionMenuOnOutsideClick);
     }, 100);
+}
+
+// Initialize swipe functionality for subscription plans
+function initSubscriptionSwipe() {
+    const plansContainer = document.getElementById('subscriptionPlans');
+    const indicators = document.querySelectorAll('.plan-indicators .indicator');
+    
+    if (!plansContainer) return;
+    
+    let currentSlide = 0;
+    const totalSlides = 2;
+    
+    // Touch events
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
+    
+    plansContainer.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+        plansContainer.style.transition = 'none';
+    });
+    
+    plansContainer.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        currentX = e.touches[0].clientX;
+        const diffX = currentX - startX;
+        plansContainer.style.transform = `translateX(${diffX}px)`;
+    });
+    
+    plansContainer.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        plansContainer.style.transition = 'transform 0.3s ease';
+        
+        const diffX = currentX - startX;
+        const threshold = 50;
+        
+        if (Math.abs(diffX) > threshold) {
+            if (diffX > 0 && currentSlide > 0) {
+                // Swipe right - previous slide
+                currentSlide--;
+            } else if (diffX < 0 && currentSlide < totalSlides - 1) {
+                // Swipe left - next slide
+                currentSlide++;
+            }
+        }
+        
+        updateSlidePosition();
+    });
+    
+    // Mouse events for desktop
+    let mouseStartX = 0;
+    let mouseCurrentX = 0;
+    let isMouseDragging = false;
+    
+    plansContainer.addEventListener('mousedown', (e) => {
+        mouseStartX = e.clientX;
+        isMouseDragging = true;
+        plansContainer.style.transition = 'none';
+        e.preventDefault();
+    });
+    
+    plansContainer.addEventListener('mousemove', (e) => {
+        if (!isMouseDragging) return;
+        mouseCurrentX = e.clientX;
+        const diffX = mouseCurrentX - mouseStartX;
+        plansContainer.style.transform = `translateX(${diffX}px)`;
+    });
+    
+    plansContainer.addEventListener('mouseup', () => {
+        if (!isMouseDragging) return;
+        isMouseDragging = false;
+        plansContainer.style.transition = 'transform 0.3s ease';
+        
+        const diffX = mouseCurrentX - mouseStartX;
+        const threshold = 50;
+        
+        if (Math.abs(diffX) > threshold) {
+            if (diffX > 0 && currentSlide > 0) {
+                currentSlide--;
+            } else if (diffX < 0 && currentSlide < totalSlides - 1) {
+                currentSlide++;
+            }
+        }
+        
+        updateSlidePosition();
+    });
+    
+    // Indicator clicks
+    indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', () => {
+            currentSlide = index;
+            updateSlidePosition();
+        });
+    });
+    
+    function updateSlidePosition() {
+        const translateX = -currentSlide * 100;
+        plansContainer.style.transform = `translateX(${translateX}%)`;
+        
+        // Update indicators
+        indicators.forEach((indicator, index) => {
+            indicator.classList.toggle('active', index === currentSlide);
+        });
+    }
 }
 
 // Close subscription menu
@@ -2793,19 +2908,43 @@ async function payWithStars(tierName) {
                 return;
             }
             
-            // Create invoice link
-            const invoiceLink = `https://t.me/${tg.initDataUnsafe?.user?.username || 'your_bot'}?startapp=pay_stars_${tierName}`;
+            // Create Stars invoice via backend
+            const response = await fetch(`${BACKEND_URL}/api/payment/telegram-stars`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: currentUserId,
+                    subscriptionType: tierName,
+                    amount: tier.price_stars
+                })
+            });
             
-            // Open payment
-            tg.openLink(invoiceLink);
+            const data = await response.json();
             
-            console.log(`✅ Stars payment initiated for ${tierName}`);
+            if (data.success && data.invoiceLink) {
+                // Open payment link
+                tg.openLink(data.invoiceLink);
+                console.log(`✅ Stars payment initiated for ${tierName}`);
+            } else {
+                // Fallback: try to create invoice directly
+                const invoiceLink = `https://t.me/pumpdexbot?startapp=pay_stars_${tierName}`;
+                tg.openLink(invoiceLink);
+                console.log(`✅ Stars payment initiated via fallback for ${tierName}`);
+            }
         } else {
-            alert('Telegram Web App not available. Please use the bot to make payment.');
+            // Fallback for non-Telegram environment
+            const invoiceLink = `https://t.me/pumpdexbot?startapp=pay_stars_${tierName}`;
+            window.open(invoiceLink, '_blank');
+            console.log(`✅ Stars payment initiated via web fallback for ${tierName}`);
         }
     } catch (error) {
         console.error('Error initiating Stars payment:', error);
-        alert('Payment failed. Please try again.');
+        // Final fallback
+        const invoiceLink = `https://t.me/pumpdexbot?startapp=pay_stars_${tierName}`;
+        window.open(invoiceLink, '_blank');
+        console.log(`✅ Stars payment initiated via error fallback for ${tierName}`);
     }
 }
 

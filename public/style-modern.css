@@ -3830,12 +3830,24 @@ body {
     color: var(--text-primary);
 }
 
-.subscription-plans {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    max-width: 800px;
+.subscription-plans-container {
+    position: relative;
+    overflow: hidden;
+    max-width: 400px;
     width: 100%;
+    margin: 0 auto;
+}
+
+.subscription-plans {
+    display: flex;
+    width: 200%;
+    transition: transform 0.3s ease;
+}
+
+.plan-card {
+    flex: 0 0 50%;
+    width: 50%;
+    box-sizing: border-box;
 }
 
 .plan-card {
@@ -3987,19 +3999,42 @@ body {
     margin-right: 0.5rem;
 }
 
+/* Plan indicators */
+.plan-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.plan-indicators .indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.plan-indicators .indicator.active {
+    background: var(--accent-color);
+    transform: scale(1.2);
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .subscription-menu {
         padding: 0.5rem;
     }
     
-    .subscription-plans {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+    .subscription-plans-container {
+        max-width: 100%;
+        margin: 0;
     }
     
     .plan-card {
         padding: 1.5rem;
+        margin: 0 0.5rem;
     }
     
     .plan-header h4 {
@@ -4008,6 +4043,61 @@ body {
     
     .plan-price .price {
         font-size: 1.5rem;
+    }
+    
+    .plan-buttons {
+        gap: 0.5rem;
+    }
+    
+    .pay-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* iPhone specific fixes */
+@media (max-width: 480px) {
+    .subscription-menu {
+        padding: 0.25rem;
+    }
+    
+    .subscription-menu-header h3 {
+        font-size: 1.25rem;
+    }
+    
+    .plan-card {
+        padding: 1rem;
+        margin: 0 0.25rem;
+    }
+    
+    .plan-header h4 {
+        font-size: 1.1rem;
+    }
+    
+    .plan-price .price {
+        font-size: 1.3rem;
+    }
+    
+    .plan-features {
+        margin: 1rem 0;
+    }
+    
+    .plan-features li {
+        padding: 0.3rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .plan-buttons {
+        gap: 0.4rem;
+    }
+    
+    .pay-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .subscription-footer p {
+        font-size: 0.8rem;
     }
 }
 
