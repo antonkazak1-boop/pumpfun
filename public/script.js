@@ -2645,6 +2645,8 @@ function updateSubscriptionUI() {
         if (header && !header.querySelector('.subscription-indicator')) {
             const indicator = document.createElement('div');
             indicator.className = 'subscription-indicator';
+            indicator.style.cursor = 'pointer';
+            indicator.title = hasActiveSubscription ? 'Manage subscription' : 'Upgrade subscription';
             
             if (hasActiveSubscription) {
                 indicator.innerHTML = `
@@ -2656,14 +2658,194 @@ function updateSubscriptionUI() {
                 indicator.innerHTML = `
                     <i class="fas fa-clock"></i>
                     <span>TRIAL</span>
+                    <i class="fas fa-arrow-up" style="margin-left: 0.25rem; font-size: 0.8rem;"></i>
                 `;
                 indicator.classList.add('trial');
             }
+            
+            // Add click handler
+            indicator.addEventListener('click', () => {
+                showSubscriptionMenu();
+            });
             
             header.appendChild(indicator);
         }
     } catch (error) {
         console.error('Error updating subscription UI:', error);
+    }
+}
+
+// Show subscription menu
+function showSubscriptionMenu() {
+    // Remove existing menu if any
+    const existingMenu = document.querySelector('.subscription-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+        return;
+    }
+    
+    // Create menu
+    const menu = document.createElement('div');
+    menu.className = 'subscription-menu';
+    menu.innerHTML = `
+        <div class="subscription-menu-header">
+            <h3>💎 Choose Your Plan</h3>
+            <button class="close-menu" onclick="closeSubscriptionMenu()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="subscription-plans">
+            <div class="plan-card basic">
+                <div class="plan-header">
+                    <h4>💎 Basic</h4>
+                    <div class="plan-price">
+                        <span class="price">0.1 SOL</span>
+                        <span class="stars">~100 ⭐</span>
+                    </div>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i> All tabs access</li>
+                    <li><i class="fas fa-check"></i> 50 notifications/day</li>
+                    <li><i class="fas fa-check"></i> Priority support</li>
+                    <li><i class="fas fa-check"></i> 30 days access</li>
+                </ul>
+                <div class="plan-buttons">
+                    <button class="pay-btn stars-btn" onclick="payWithStars('basic')">
+                        <i class="fas fa-star"></i> Pay with Stars
+                    </button>
+                    <button class="pay-btn sol-btn" onclick="payWithSol('basic')">
+                        <i class="fab fa-bitcoin"></i> Pay with SOL
+                    </button>
+                </div>
+            </div>
+            
+            <div class="plan-card pro">
+                <div class="plan-badge">POPULAR</div>
+                <div class="plan-header">
+                    <h4>🚀 Pro</h4>
+                    <div class="plan-price">
+                        <span class="price">0.25 SOL</span>
+                        <span class="stars">~250 ⭐</span>
+                    </div>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i> All tabs access</li>
+                    <li><i class="fas fa-check"></i> Unlimited notifications</li>
+                    <li><i class="fas fa-check"></i> Early access features</li>
+                    <li><i class="fas fa-check"></i> Advanced analytics</li>
+                    <li><i class="fas fa-check"></i> Priority support</li>
+                    <li><i class="fas fa-check"></i> 30 days access</li>
+                </ul>
+                <div class="plan-buttons">
+                    <button class="pay-btn stars-btn" onclick="payWithStars('pro')">
+                        <i class="fas fa-star"></i> Pay with Stars
+                    </button>
+                    <button class="pay-btn sol-btn" onclick="payWithSol('pro')">
+                        <i class="fab fa-bitcoin"></i> Pay with SOL
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="subscription-footer">
+            <p><i class="fas fa-shield-alt"></i> Secure payment • 30-day money back guarantee</p>
+            <p><i class="fas fa-gift"></i> Hold $KOLScan token for 25% discount!</p>
+        </div>
+    `;
+    
+    // Add to page
+    document.body.appendChild(menu);
+    
+    // Add click outside to close
+    setTimeout(() => {
+        document.addEventListener('click', closeSubscriptionMenuOnOutsideClick);
+    }, 100);
+}
+
+// Close subscription menu
+function closeSubscriptionMenu() {
+    const menu = document.querySelector('.subscription-menu');
+    if (menu) {
+        menu.remove();
+        document.removeEventListener('click', closeSubscriptionMenuOnOutsideClick);
+    }
+}
+
+// Close menu when clicking outside
+function closeSubscriptionMenuOnOutsideClick(event) {
+    const menu = document.querySelector('.subscription-menu');
+    if (menu && !menu.contains(event.target) && !event.target.closest('.subscription-indicator')) {
+        closeSubscriptionMenu();
+    }
+}
+
+// Pay with Telegram Stars
+async function payWithStars(tierName) {
+    try {
+        console.log(`💳 Initiating Stars payment for ${tierName} tier`);
+        
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Get tier info
+            const tier = availableTiers.find(t => t.tier_name === tierName);
+            if (!tier) {
+                alert('Tier not found. Please try again.');
+                return;
+            }
+            
+            // Create invoice link
+            const invoiceLink = `https://t.me/${tg.initDataUnsafe?.user?.username || 'your_bot'}?startapp=pay_stars_${tierName}`;
+            
+            // Open payment
+            tg.openLink(invoiceLink);
+            
+            console.log(`✅ Stars payment initiated for ${tierName}`);
+        } else {
+            alert('Telegram Web App not available. Please use the bot to make payment.');
+        }
+    } catch (error) {
+        console.error('Error initiating Stars payment:', error);
+        alert('Payment failed. Please try again.');
+    }
+}
+
+// Pay with Solana
+async function payWithSol(tierName) {
+    try {
+        console.log(`💳 Initiating SOL payment for ${tierName} tier`);
+        
+        // Get tier info
+        const tier = availableTiers.find(t => t.tier_name === tierName);
+        if (!tier) {
+            alert('Tier not found. Please try again.');
+            return;
+        }
+        
+        // Create Solana Pay URL
+        const response = await fetch(`${BACKEND_URL}/api/payment/solana`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId: currentUserId,
+                subscriptionType: tierName,
+                walletAddress: '' // Will be filled by user
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.paymentUrl) {
+            // Open Solana Pay URL
+            window.open(data.paymentUrl, '_blank');
+            console.log(`✅ SOL payment initiated for ${tierName}`);
+        } else {
+            alert('Payment setup failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error initiating SOL payment:', error);
+        alert('Payment failed. Please try again.');
     }
 }
 
