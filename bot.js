@@ -930,7 +930,7 @@ async function handleSuccessfulPayment(ctx) {
         });
         
         console.log('🔧 Initializing subscription system...');
-        const { SubscriptionSystem } = require('./subscriptionSystem.js');
+        const SubscriptionSystem = require('./subscriptionSystem.js');
         const subscriptionSystem = new SubscriptionSystem(pool);
         
         // Create subscription record
