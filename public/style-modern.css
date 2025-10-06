@@ -2042,6 +2042,18 @@ body {
     object-fit: cover;
 }
 
+/* Small token avatars for activity items */
+.token-avatar-small {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    margin-right: 8px;
+    vertical-align: middle;
+    display: inline-block;
+}
+
 .token-meta {
     flex: 1;
 }
