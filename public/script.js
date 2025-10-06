@@ -481,11 +481,11 @@ function renderCoBuy(data) {
                     </div>
                 </div>
                 <div class="item-actions">
-                    <a href="${pumpUrlA}" target="_blank" class="action-button">
-                        <i class="fas fa-external-link-alt"></i> Token A
+                    <a href="${pumpUrl}" target="_blank" class="action-button">
+                        <i class="fas fa-external-link-alt"></i> Pump.fun
                     </a>
-                    <a href="${pumpUrlB}" target="_blank" class="action-button secondary">
-                        <i class="fas fa-external-link-alt"></i> Token B
+                    <a href="${dexUrl}" target="_blank" class="action-button secondary">
+                        <i class="fas fa-chart-line"></i> DexScreener
                     </a>
                 </div>
             </div>
@@ -1161,6 +1161,84 @@ async function initApp() {
     setTimeout(hideLoading, 500);
     
     console.log('Pump Dex Mini App инициализирован успешно');
+    
+    // Инициализация выпадающей навигации
+    initDropdownNavigation();
+}
+
+// Инициализация выпадающей навигации
+function initDropdownNavigation() {
+    const mainTabs = document.querySelectorAll('.main-tab');
+    const detailedTabs = document.querySelector('.detailed-tabs');
+    
+    mainTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const tabName = tab.getAttribute('data-tab');
+            
+            // Если это не About Bot, показываем выпадающий список
+            if (tabName !== 'about') {
+                e.preventDefault();
+                showDetailedTabs(tabName);
+            } else {
+                // Для About Bot сразу переключаемся
+                switchTab(tabName);
+                hideDetailedTabs();
+            }
+        });
+    });
+    
+    // Скрываем выпадающий список при клике вне его
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.tabs-nav')) {
+            hideDetailedTabs();
+        }
+    });
+}
+
+// Показать детальные вкладки
+function showDetailedTabs(activeCategory) {
+    const detailedTabs = document.querySelector('.detailed-tabs');
+    const allDetailedButtons = detailedTabs.querySelectorAll('.tab-button');
+    
+    // Скрываем все кнопки
+    allDetailedButtons.forEach(btn => btn.style.display = 'none');
+    
+    // Показываем только нужные кнопки в зависимости от категории
+    if (activeCategory === 'coBuy') {
+        // Co-buy Analysis - показываем связанные с токенами
+        const relatedTabs = ['freshTokens', 'topGainers', 'trendingMeta', 'coins'];
+        relatedTabs.forEach(tabName => {
+            const btn = detailedTabs.querySelector(`[data-tab="${tabName}"]`);
+            if (btn) btn.style.display = 'block';
+        });
+    } else if (activeCategory === 'walletStats') {
+        // Wallet Analytics - показываем связанные с кошельками
+        const relatedTabs = ['smartMoney', 'portfolio', 'analytics'];
+        relatedTabs.forEach(tabName => {
+            const btn = detailedTabs.querySelector(`[data-tab="${tabName}"]`);
+            if (btn) btn.style.display = 'block';
+        });
+    }
+    
+    // Показываем выпадающий список
+    detailedTabs.classList.add('show');
+    
+    // Добавляем обработчики кликов для детальных кнопок
+    allDetailedButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.getAttribute('data-tab');
+            switchTab(tabName);
+            hideDetailedTabs();
+        });
+    });
+}
+
+// Скрыть детальные вкладки
+function hideDetailedTabs() {
+    const detailedTabs = document.querySelector('.detailed-tabs');
+    if (detailedTabs) {
+        detailedTabs.classList.remove('show');
+    }
 }
 
 // Современные анимации и эффекты
