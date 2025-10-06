@@ -279,7 +279,10 @@ function renderClusterBuy(data) {
                             <i class="fas fa-fire"></i>
                         </div>
                         <div>
-                            <h3>${item.symbol || 'UNKNOWN'} - ${item.name || 'Unknown Token'}</h3>
+                            <h3>
+                                <img src="${item.image || '/img/token-placeholder.png'}" alt="${item.symbol || 'UNKNOWN'}" class="token-avatar-small" onerror="this.src='/img/token-placeholder.png'">
+                                ${item.symbol || 'UNKNOWN'} - ${item.name || 'Unknown Token'}
+                            </h3>
                             <div class="token-address">${shortenAddress(item.token_mint)}</div>
                         </div>
                     </div>
@@ -413,6 +416,7 @@ function renderVolumeSurge(data) {
         return `
             <div class="data-item surge-item">
                 <h3>
+                    <img src="${item.image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
                     <i class="fas fa-chart-line"></i>
                     ${index + 1}. ${tokenSymbol} - ${tokenName}
                 </h3>
@@ -468,6 +472,7 @@ function renderCoBuy(data) {
         return `
             <div class="data-item">
                 <h3>
+                    <img src="${item.image || '/img/token-placeholder.png'}" alt="${item.symbol || 'UNKNOWN'}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
                     <i class="fas fa-users"></i>
                     ${index + 1}. ${item.symbol || 'UNKNOWN'} - ${item.name || 'Unknown Token'}
                 </h3>
@@ -685,6 +690,7 @@ function renderTopGainers(data) {
         return `
             <div class="data-item">
                 <h3>
+                    <img src="${item.image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
                     <i class="fas fa-trophy"></i>
                     ${index + 1}. ${tokenSymbol} - ${tokenName}
                 </h3>
@@ -1404,7 +1410,10 @@ function renderRecentActivity(data) {
                 <div class="activity-details">
                     <div class="detail-row">
                         <span class="detail-label">Token:</span>
-                        <span class="detail-value">${tokenSymbol} - ${tokenName}</span>
+                        <span class="detail-value">
+                            <img src="${item.token_image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar-small" onerror="this.src='/img/token-placeholder.png'">
+                            ${tokenSymbol} - ${tokenName}
+                        </span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Amount:</span>
@@ -1519,7 +1528,10 @@ function updateActivityContent(data, type) {
                 <div class="activity-details">
                     <div class="detail-row">
                         <span class="detail-label">Token:</span>
-                        <span class="detail-value">${tokenSymbol} - ${tokenName}</span>
+                        <span class="detail-value">
+                            <img src="${item.token_image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar-small" onerror="this.src='/img/token-placeholder.png'">
+                            ${tokenSymbol} - ${tokenName}
+                        </span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Amount:</span>
