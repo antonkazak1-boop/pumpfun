@@ -1124,57 +1124,7 @@ async function checkApiHealth() {
     }
 }
 
-// Инициализация приложения
-async function initApp() {
-    console.log('Инициализация Pump Dex Mini App...');
-    
-    // Инициализация Telegram Web App
-    const tg = initTelegramWebApp();
-    
-    // Проверка API
-    await checkApiHealth();
-    
-    // Настройка обработчиков событий для вкладок
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', () => {
-            const tabName = button.dataset.tab;
-            if (tabName) {
-                switchTab(tabName);
-            }
-        });
-    });
-    
-    // Закрытие модального окна по клику вне его
-    document.getElementById('tokenModal').addEventListener('click', (e) => {
-        if (e.target.id === 'tokenModal') {
-            closeTokenModal();
-        }
-    });
-    
-    // Обработка изменения видимости страницы
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            startAutoRefresh();
-            loadTabData(currentTab);
-        } else {
-            stopAutoRefresh();
-        }
-    });
-    
-    // Загрузка данных для активной вкладки
-    await loadTabData(currentTab);
-    
-    // Запуск автоматического обновления
-    startAutoRefresh();
-    
-    // Инициализация админ панели
-    initAdminPanel();
-    
-    // Скрытие экрана загрузки
-    setTimeout(hideLoading, 500);
-    
-    console.log('Pump Dex Mini App инициализирован успешно');
-}
+// REMOVED: Duplicate initApp function
 
 // Современные анимации и эффекты
 function animateRefreshButton() {
@@ -1249,78 +1199,7 @@ function setupRefreshButtonHandler() {
     }
 }
 
-// Улучшенная инициализация приложения
-async function initApp() {
-    console.log('🚀 Инициализация Pump Dex Mini App...');
-    
-    // Инициализация темы
-    initTheme();
-    
-    // Инициализация Telegram Web App
-    const tg = initTelegramWebApp();
-    
-    // Проверка API
-    await checkApiHealth();
-    
-    // Настройка обработчиков событий для вкладок
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', () => {
-            const tabName = button.dataset.tab;
-            if (tabName) {
-                switchTab(tabName);
-            }
-        });
-    });
-    
-    // Настройка refresh кнопки
-    setupRefreshButtonHandler();
-    
-    // Закрытие модального окна по клику вне его
-    const modal = document.getElementById('tokenModal');
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target.id === 'tokenModal') {
-                closeTokenModal();
-            }
-        });
-    }
-    
-    // Обработка изменения видимости страницы
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            startAutoRefresh();
-            loadTabData(currentTab);
-        } else {
-            stopAutoRefresh();
-        }
-    });
-    
-    // Загрузка данных для активной вкладки
-    // Инициализация анимации трейдеров
-    initializeTradersScroll();
-    
-    // Инициализация фильтров для Coins tab
-    initCoinsFilters();
-    
-    // Инициализация Wallet Stats
-    initWalletStats();
-    
-    await loadTabData(currentTab);
-    
-    // Запуск автоматического обновления
-    startAutoRefresh();
-    
-    // Скрытие экрана загрузки с анимацией
-    setTimeout(() => {
-        hideLoading();
-        // Анимация карточек при первой загрузке
-        setTimeout(animateCards, 200);
-    }, 500);
-    
-    console.log('✅ Pump Dex Mini App инициализирован успешно');
-    console.log('🎨 Современный дизайн загружен');
-    console.log('📡 API подключение проверено');
-}
+// REMOVED: Duplicate initApp function
 
 // === АНИМАЦИЯ ТРЕЙДЕРОВ ===
 function initializeTradersScroll() {
@@ -2890,6 +2769,20 @@ async function initApp() {
     // Initialize admin panel
     initAdminPanel();
     
+    // Check API health
+    try {
+        await checkApiHealth();
+    } catch (error) {
+        console.error('❌ API health check failed:', error);
+        console.log('⚠️ App will continue in fallback mode');
+    }
+    
+    // Setup event handlers
+    setupEventHandlers();
+    
+    // Initialize components
+    initializeComponents();
+    
     // Initialize subscription system
     try {
         await initSubscriptionSystem();
@@ -2898,9 +2791,69 @@ async function initApp() {
         console.log('⚠️ Subscription system running in fallback mode');
     }
     
+    // Load initial tab data
+    try {
+        await loadTabData(currentTab);
+    } catch (error) {
+        console.error('❌ Failed to load initial tab data:', error);
+        console.log('⚠️ App will continue without initial data');
+    }
+    
     // Start auto-refresh
     startAutoRefresh();
     
-    console.log('✅ App initialized successfully');
+    // Hide loading screen
+    setTimeout(() => {
+        hideLoading();
+        console.log('✅ App initialized successfully');
+    }, 500);
+}
+
+// Setup event handlers
+function setupEventHandlers() {
+    // Tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const tabName = button.dataset.tab;
+            if (tabName) {
+                switchTab(tabName);
+            }
+        });
+    });
+    
+    // Refresh button
+    setupRefreshButtonHandler();
+    
+    // Token modal
+    const modal = document.getElementById('tokenModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'tokenModal') {
+                closeTokenModal();
+            }
+        });
+    }
+    
+    // Page visibility
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            startAutoRefresh();
+            loadTabData(currentTab);
+        } else {
+            stopAutoRefresh();
+        }
+    });
+}
+
+// Initialize components
+function initializeComponents() {
+    // Initialize traders scroll
+    initializeTradersScroll();
+    
+    // Initialize coins filters
+    initCoinsFilters();
+    
+    // Initialize wallet stats
+    initWalletStats();
 }
 
