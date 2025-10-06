@@ -87,6 +87,20 @@ const SUBSCRIPTION_TABLES = {
     `
 };
 
+// Subscription pricing constants (same as bot.js)
+const SUBSCRIPTION_PRICES = {
+    basic: {
+        sol: 0.1,
+        stars: 100,        // Stars amount (what user sees)
+        stars_cents: 10000 // Stars in cents (for Telegram API)
+    },
+    pro: {
+        sol: 0.25,
+        stars: 250,        // Stars amount (what user sees)
+        stars_cents: 25000 // Stars in cents (for Telegram API)
+    }
+};
+
 // Subscription tiers configuration
 const DEFAULT_TIERS = [
     {
@@ -99,16 +113,16 @@ const DEFAULT_TIERS = [
     },
     {
         tier_name: 'basic',
-        price_sol: 0.1,
-        price_stars: 100,
+        price_sol: SUBSCRIPTION_PRICES.basic.sol,
+        price_stars: SUBSCRIPTION_PRICES.basic.stars,
         duration_days: 30,
         max_tabs: null, // unlimited
         features: ['All tabs', '50 notifications/day', 'Priority support']
     },
     {
         tier_name: 'pro',
-        price_sol: 0.25,
-        price_stars: 250,
+        price_sol: SUBSCRIPTION_PRICES.pro.sol,
+        price_stars: SUBSCRIPTION_PRICES.pro.stars,
         duration_days: 30,
         max_tabs: null, // unlimited
         features: ['All tabs', 'Unlimited notifications', 'Early access', 'Advanced analytics', 'Priority support']

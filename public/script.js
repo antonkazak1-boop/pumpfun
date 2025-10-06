@@ -2562,7 +2562,7 @@ async function loadSubscriptionTiers() {
             availableTiers = data.tiers;
             console.log('📋 Subscription tiers loaded:', availableTiers);
         } else {
-            // Fallback to default tiers
+            // Fallback to default tiers (same as backend)
             availableTiers = [
                 {
                     tier_name: 'free',
@@ -2593,7 +2593,7 @@ async function loadSubscriptionTiers() {
         }
     } catch (error) {
         console.error('Error loading subscription tiers:', error);
-        // Fallback to default tiers
+        // Fallback to default tiers (same as backend)
         availableTiers = [
             {
                 tier_name: 'free',

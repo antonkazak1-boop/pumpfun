@@ -21,6 +21,20 @@ if (!MINI_APP_URL || MINI_APP_URL === 'YOUR_MINI_APP_HTTPS_URL') {
 // Создание бота
 const bot = new Telegraf(BOT_TOKEN);
 
+// Subscription pricing constants
+const SUBSCRIPTION_PRICES = {
+    basic: {
+        sol: 0.1,
+        stars: 100,        // Stars amount (what user sees)
+        stars_cents: 10000 // Stars in cents (for Telegram API)
+    },
+    pro: {
+        sol: 0.25,
+        stars: 250,        // Stars amount (what user sees)
+        stars_cents: 25000 // Stars in cents (for Telegram API)
+    }
+};
+
 // Handle payment commands from Mini App
 async function handlePaymentCommand(ctx, tierName) {
     const user = ctx.from;
@@ -49,7 +63,7 @@ async function showBasicPayment(ctx, userName) {
             currency: 'XTR', // Telegram Stars
             prices: [{
                 label: 'Basic Subscription',
-                amount: 10000 // 100 stars in cents
+                amount: SUBSCRIPTION_PRICES.basic.stars_cents // 10000 cents = 100 stars
             }]
         });
         
@@ -58,7 +72,7 @@ async function showBasicPayment(ctx, userName) {
 
 Hey ${userName}! Ready to upgrade to Basic?
 
-💎 **Basic Subscription - 100 Stars**
+💎 **Basic Subscription - ${SUBSCRIPTION_PRICES.basic.stars} Stars**
 • 30 days access
 • All tabs unlocked
 • 50 notifications/day
@@ -97,7 +111,7 @@ async function showProPayment(ctx, userName) {
             currency: 'XTR', // Telegram Stars
             prices: [{
                 label: 'Pro Subscription',
-                amount: 25000 // 250 stars in cents
+                amount: SUBSCRIPTION_PRICES.pro.stars_cents // 25000 cents = 250 stars
             }]
         });
         
@@ -106,7 +120,7 @@ async function showProPayment(ctx, userName) {
 
 Hey ${userName}! Ready to upgrade to Pro?
 
-🚀 **Pro Subscription - 250 Stars**
+🚀 **Pro Subscription - ${SUBSCRIPTION_PRICES.pro.stars} Stars**
 • 30 days access
 • All tabs unlocked
 • Unlimited notifications
@@ -183,12 +197,12 @@ Catch new tokens the moment smart traders enter. Never miss an early entry oppor
 • Access to 2 tabs
 • 5-day trial period
 
-💎 *BASIC - 0.1 SOL (~100 ⭐)*
+💎 *BASIC - ${SUBSCRIPTION_PRICES.basic.sol} SOL (~${SUBSCRIPTION_PRICES.basic.stars} ⭐)*
 • Access to ALL tabs
 • 50 notifications per day
 • Priority support
 
-🚀 *PRO - 0.25 SOL (~250 ⭐)*
+🚀 *PRO - ${SUBSCRIPTION_PRICES.pro.sol} SOL (~${SUBSCRIPTION_PRICES.pro.stars} ⭐)*
 • Access to ALL tabs
 • Unlimited notifications
 • Early access to new features
@@ -343,13 +357,13 @@ bot.command('subscribe', (ctx) => {
 • 5-day trial period
 • Basic features
 
-💎 *BASIC - 0.1 SOL (~100 ⭐)*
+💎 *BASIC - ${SUBSCRIPTION_PRICES.basic.sol} SOL (~${SUBSCRIPTION_PRICES.basic.stars} ⭐)*
 • Access to ALL tabs
 • 50 notifications per day
 • Priority support
 • Monthly subscription
 
-🚀 *PRO - 0.25 SOL (~250 ⭐)*
+🚀 *PRO - ${SUBSCRIPTION_PRICES.pro.sol} SOL (~${SUBSCRIPTION_PRICES.pro.stars} ⭐)*
 • Access to ALL tabs
 • Unlimited notifications
 • Early access to new features
@@ -436,8 +450,8 @@ Hey ${userName}! Ready to upgrade to Basic?
         parse_mode: 'Markdown',
         reply_markup: {
             inline_keyboard: [
-                [Markup.button.callback('⭐ Pay with Stars (100 ⭐)', 'pay_stars_basic')],
-                [Markup.button.callback('☀️ Pay with SOL (0.1 SOL)', 'pay_sol_basic')],
+                [Markup.button.callback(`⭐ Pay with Stars (${SUBSCRIPTION_PRICES.basic.stars} ⭐)`, 'pay_stars_basic')],
+                [Markup.button.callback(`☀️ Pay with SOL (${SUBSCRIPTION_PRICES.basic.sol} SOL)`, 'pay_sol_basic')],
                 [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
             ]
         }
@@ -486,8 +500,8 @@ Hey ${userName}! Ready to upgrade to Pro?
         parse_mode: 'Markdown',
         reply_markup: {
             inline_keyboard: [
-                [Markup.button.callback('⭐ Pay with Stars (250 ⭐)', 'pay_stars_pro')],
-                [Markup.button.callback('☀️ Pay with SOL (0.25 SOL)', 'pay_sol_pro')],
+                [Markup.button.callback(`⭐ Pay with Stars (${SUBSCRIPTION_PRICES.pro.stars} ⭐)`, 'pay_stars_pro')],
+                [Markup.button.callback(`☀️ Pay with SOL (${SUBSCRIPTION_PRICES.pro.sol} SOL)`, 'pay_sol_pro')],
                 [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
             ]
         }
@@ -508,7 +522,7 @@ bot.action('pay_stars_basic', async (ctx) => {
             currency: 'XTR', // Telegram Stars
             prices: [{
                 label: 'Basic Subscription',
-                amount: 10000 // 100 stars in cents
+                amount: SUBSCRIPTION_PRICES.basic.stars_cents // 10000 cents = 100 stars
             }]
         });
         
@@ -517,7 +531,7 @@ bot.action('pay_stars_basic', async (ctx) => {
 
 Click the button below to pay with Stars:
 
-💎 **Basic Subscription - 100 Stars**
+💎 **Basic Subscription - ${SUBSCRIPTION_PRICES.basic.stars} Stars**
 • 30 days access
 • All tabs unlocked
 • 50 notifications/day
@@ -554,7 +568,7 @@ bot.action('pay_stars_pro', async (ctx) => {
             currency: 'XTR', // Telegram Stars
             prices: [{
                 label: 'Pro Subscription',
-                amount: 25000 // 250 stars in cents
+                amount: SUBSCRIPTION_PRICES.pro.stars_cents // 25000 cents = 250 stars
             }]
         });
         
@@ -563,7 +577,7 @@ bot.action('pay_stars_pro', async (ctx) => {
 
 Click the button below to pay with Stars:
 
-🚀 **Pro Subscription - 250 Stars**
+🚀 **Pro Subscription - ${SUBSCRIPTION_PRICES.pro.stars} Stars**
 • 30 days access
 • All tabs unlocked
 • Unlimited notifications
@@ -592,7 +606,7 @@ bot.action('pay_sol_basic', async (ctx) => {
     ctx.editMessageText(`
 ☀️ *Payment with Solana (SOL)*
 
-**Basic Subscription - 0.1 SOL**
+**Basic Subscription - ${SUBSCRIPTION_PRICES.basic.sol} SOL**
 
 To pay with SOL:
 1. Launch Mini App below
@@ -601,7 +615,7 @@ To pay with SOL:
 
 💡 **Get 25% discount with $KOLScan tokens!**
 • Minimum 1000 $KOLScan required
-• Final price: 0.075 SOL
+• Final price: ${(SUBSCRIPTION_PRICES.basic.sol * 0.75).toFixed(3)} SOL
 
 ━━━━━━━━━━━━━━━━━━━━
 *Secure blockchain payment*
@@ -621,7 +635,7 @@ bot.action('pay_sol_pro', async (ctx) => {
     ctx.editMessageText(`
 ☀️ *Payment with Solana (SOL)*
 
-**Pro Subscription - 0.25 SOL**
+**Pro Subscription - ${SUBSCRIPTION_PRICES.pro.sol} SOL**
 
 To pay with SOL:
 1. Launch Mini App below
@@ -630,7 +644,7 @@ To pay with SOL:
 
 💡 **Get 25% discount with $KOLScan tokens!**
 • Minimum 1000 $KOLScan required
-• Final price: 0.1875 SOL
+• Final price: ${(SUBSCRIPTION_PRICES.pro.sol * 0.75).toFixed(4)} SOL
 
 ━━━━━━━━━━━━━━━━━━━━
 *Secure blockchain payment*
@@ -663,13 +677,13 @@ bot.action('back_to_plans', async (ctx) => {
 • 5-day trial period
 • Basic features
 
-💎 *BASIC - 0.1 SOL (~100 ⭐)*
+💎 *BASIC - ${SUBSCRIPTION_PRICES.basic.sol} SOL (~${SUBSCRIPTION_PRICES.basic.stars} ⭐)*
 • Access to ALL tabs
 • 50 notifications per day
 • Priority support
 • Monthly subscription
 
-🚀 *PRO - 0.25 SOL (~250 ⭐)*
+🚀 *PRO - ${SUBSCRIPTION_PRICES.pro.sol} SOL (~${SUBSCRIPTION_PRICES.pro.stars} ⭐)*
 • Access to ALL tabs
 • Unlimited notifications
 • Early access to new features
