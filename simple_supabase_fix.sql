@@ -1,9 +1,9 @@
--- Supabase Database Tables for Pump Dex Mini App Subscription System
--- Run this script in your Supabase SQL Editor
+-- Simple Supabase Fix - Run this in Supabase SQL Editor
+-- This will add subscription columns to existing users table
 
--- Users table - Add subscription columns to existing table
+-- Add subscription columns to existing users table
 ALTER TABLE users 
-ADD COLUMN IF NOT EXISTS telegram_user_id BIGINT UNIQUE,
+ADD COLUMN IF NOT EXISTS telegram_user_id BIGINT,
 ADD COLUMN IF NOT EXISTS username VARCHAR(255),
 ADD COLUMN IF NOT EXISTS first_name VARCHAR(255),
 ADD COLUMN IF NOT EXISTS last_name VARCHAR(255),
@@ -16,7 +16,7 @@ ADD COLUMN IF NOT EXISTS total_spent_sol DECIMAL(20, 8) DEFAULT 0,
 ADD COLUMN IF NOT EXISTS kolscan_balance DECIMAL(20, 8) DEFAULT 0,
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
--- Subscriptions table
+-- Create subscriptions table (without foreign keys)
 CREATE TABLE IF NOT EXISTS subscriptions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Payment transactions table
+-- Create payments table (without foreign keys)
 CREATE TABLE IF NOT EXISTS payments (
     id SERIAL PRIMARY KEY,
     user_id INTEGER,
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS payments (
     confirmed_at TIMESTAMP
 );
 
--- Subscription tiers table
+-- Create subscription_tiers table
 CREATE TABLE IF NOT EXISTS subscription_tiers (
     id SERIAL PRIMARY KEY,
     tier_name VARCHAR(50) UNIQUE NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS subscription_tiers (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- KOLScan settings table
+-- Create kolscan_settings table
 CREATE TABLE IF NOT EXISTS kolscan_settings (
     id SERIAL PRIMARY KEY,
     discount_percentage INTEGER DEFAULT 25,
@@ -97,27 +97,6 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_expires_at ON subscriptions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
-
--- Enable Row Level Security (RLS) - optional, for extra security
--- ALTER TABLE users ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
-
--- Create policies for RLS (if enabled)
--- CREATE POLICY "Users can view own data" ON users FOR SELECT USING (auth.uid()::text = telegram_user_id::text);
--- CREATE POLICY "Users can view own subscriptions" ON subscriptions FOR SELECT USING (user_id IN (SELECT id FROM users WHERE telegram_user_id = auth.uid()));
--- CREATE POLICY "Users can view own payments" ON payments FOR SELECT USING (user_id IN (SELECT id FROM users WHERE telegram_user_id = auth.uid()));
-
--- Grant necessary permissions
-GRANT USAGE ON SCHEMA public TO authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
-
-COMMENT ON TABLE users IS 'User accounts from Telegram Mini App';
-COMMENT ON TABLE subscriptions IS 'Active and historical user subscriptions';
-COMMENT ON TABLE payments IS 'Payment transaction records';
-COMMENT ON TABLE subscription_tiers IS 'Available subscription plans and pricing';
-COMMENT ON TABLE kolscan_settings IS 'KOLScan token discount configuration';
 
 -- Verify tables were created successfully
 SELECT 

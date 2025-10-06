@@ -27,7 +27,7 @@ const SUBSCRIPTION_TABLES = {
     subscriptions: `
         CREATE TABLE IF NOT EXISTS subscriptions (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
+            user_id INTEGER,
             subscription_type VARCHAR(50) NOT NULL,
             status VARCHAR(50) DEFAULT 'active',
             started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -46,8 +46,8 @@ const SUBSCRIPTION_TABLES = {
     payments: `
         CREATE TABLE IF NOT EXISTS payments (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
-            subscription_id INTEGER REFERENCES subscriptions(id),
+            user_id INTEGER,
+            subscription_id INTEGER,
             amount_sol DECIMAL(20, 8),
             amount_stars INTEGER,
             payment_method VARCHAR(50) NOT NULL,
