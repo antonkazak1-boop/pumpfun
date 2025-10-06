@@ -2416,88 +2416,29 @@ if (document.readyState === 'loading') {
 } else {
     initApp();
 }
-/ /    ¤ !S  T!   Q!   ‘ » !   W µ ! µ  T » !!!  µ   Q!   !9  W °  ‘ ° !!0  Q!&   ! W Q! T U 
- 
- f u n c t i o n   t o g g l e D r o p d o w n ( g r o u p N a m e )   { 
- 
-         c o n s t   d r o p d o w n   =   d o c u m e n t . q u e r y S e l e c t o r ( ` [ d a t a - g r o u p = " $ { g r o u p N a m e } " ] ` ) ; 
- 
-         c o n s t   i s O p e n   =   d r o p d o w n . c l a s s L i s t . c o n t a i n s ( ' o p e n ' ) ; 
- 
-         
- 
-         / /      °  T!!9   °  µ  X   ! µ    ‘!!S V Q µ    !9  W °  ‘ ° !!0  Q µ   ! W Q! T Q
- 
-         d o c u m e n t . q u e r y S e l e c t o r A l l ( ' . d r o p d o w n - g r o u p ' ) . f o r E a c h ( g r o u p   = >   { 
- 
-                 g r o u p . c l a s s L i s t . r e m o v e ( ' o p e n ' ) ; 
- 
-         } ) ; 
- 
-         
- 
-         / /    _ µ ! µ  T » !!!  °  µ  X  !  µ  T!S!0  Q !
- 
-         i f   ( ! i s O p e n )   { 
- 
-                 d r o p d o w n . c l a s s L i s t . a d d ( ' o p e n ' ) ; 
- 
-         } 
- 
- } 
- 
- 
- 
- / /      °  T!!9 !  Q µ    !9  W °  ‘ ° !!0  Q!&   ! W Q! T U    W! Q   T »  Q T µ      µ    Q!& 
- 
- d o c u m e n t . a d d E v e n t L i s t e n e r ( ' c l i c k ' ,   ( e )   = >   { 
- 
-         i f   ( ! e . t a r g e t . c l o s e s t ( ' . d r o p d o w n - g r o u p ' ) )   { 
- 
-                 d o c u m e n t . q u e r y S e l e c t o r A l l ( ' . d r o p d o w n - g r o u p ' ) . f o r E a c h ( g r o u p   = >   { 
- 
-                         g r o u p . c l a s s L i s t . r e m o v e ( ' o p e n ' ) ; 
- 
-                 } ) ; 
- 
-         } 
- 
- } ) ; 
- 
- 
- 
- / /    ˜   Q!   Q °  »  Q ·  ° !   Q!   !9  W °  ‘ ° !!0  Q!&   ! W Q! T U 
- 
- f u n c t i o n   i n i t D r o p d o w n N a v i g a t i o n ( )   { 
- 
-         / /      U ±  °   » ! µ  X   U ± ! °  ±  U! !!  Q T Q   ‘ » !   T  U W U T      !9  W °  ‘ ° !!0  Q!&   ! W Q! T ° !& 
- 
-         d o c u m e n t . q u e r y S e l e c t o r A l l ( ' . d r o p d o w n - c o n t e n t   . t a b - b u t t o n ' ) . f o r E a c h ( b u t t o n   = >   { 
- 
-                 b u t t o n . a d d E v e n t L i s t e n e r ( ' c l i c k ' ,   ( )   = >   { 
- 
-                         c o n s t   t a b N a m e   =   b u t t o n . g e t A t t r i b u t e ( ' d a t a - t a b ' ) ; 
- 
-                         s w i t c h T a b ( t a b N a m e ) ; 
- 
-                         
- 
-                         / /      °  T!!9   °  µ  X   !9  W °  ‘ ° !!0  Q !  ! W Q! U T   W U! »  µ    !9  ±  U! ° 
- 
-                         d o c u m e n t . q u e r y S e l e c t o r A l l ( ' . d r o p d o w n - g r o u p ' ) . f o r E a c h ( g r o u p   = >   { 
- 
-                                 g r o u p . c l a s s L i s t . r e m o v e ( ' o p e n ' ) ; 
- 
-                         } ) ; 
- 
-                 } ) ; 
- 
-         } ) ; 
- 
- } 
- 
-         / /   =8F80;870F8O  2K?040NI8E  A?8A:>2
- 
-         i n i t D r o p d o w n N a v i g a t i o n ( ) ; 
- 
- 
+
+// === DROPDOWN NAVIGATION ===
+function toggleDropdown(groupName) {
+    const dropdown = document.querySelector(`[data-group="${groupName}"]`);
+    if (!dropdown) return;
+
+    const isOpen = dropdown.classList.contains('open');
+    document.querySelectorAll('.dropdown-group').forEach(g => g.classList.remove('open'));
+    if (!isOpen) dropdown.classList.add('open');
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.dropdown-group')) {
+        document.querySelectorAll('.dropdown-group').forEach(g => g.classList.remove('open'));
+    }
+});
+
+function initDropdownNavigation() {
+    document.querySelectorAll('.dropdown-content .tab-button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.dataset.tab;
+            if (tabName) switchTab(tabName);
+            document.querySelectorAll('.dropdown-group').forEach(g => g.classList.remove('open'));
+        });
+    });
+}
