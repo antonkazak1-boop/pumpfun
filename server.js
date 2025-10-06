@@ -648,8 +648,8 @@ app.get('/api/clusterbuy5m', async (req, res) => {
         const query = `SELECT token_mint, COUNT(DISTINCT wallet) AS buyers, SUM(sol_spent) AS total_sol
         FROM events
         WHERE side = 'BUY' AND ts > now() - interval '5 minutes'
-        GROUP BY token_mint
-        HAVING COUNT(DISTINCT wallet) >= 3
+            GROUP BY token_mint
+            HAVING COUNT(DISTINCT wallet) >= 3
         ORDER BY total_sol DESC;`;
         const result = await pool.query(query);
         res.json({ success: true, data: result.rows });
@@ -780,7 +780,7 @@ app.get('/api/token/:mint', async (req, res) => {
         const { mint } = req.params;
         const query = `
             SELECT 
-                token_mint,
+                   token_mint,
                 side,
                 COUNT(*) as transaction_count,
                 SUM(token_amount) as total_amount,
@@ -853,7 +853,7 @@ app.get('/api/traders/stats', async (req, res) => {
                             side,
                             ts,
                             ROW_NUMBER() OVER (PARTITION BY wallet, token_mint ORDER BY ts) as trade_sequence
-                        FROM events 
+            FROM events
                         WHERE ts >= NOW() - INTERVAL '${timeInterval}'
                         ORDER BY wallet, token_mint, ts
                     )
@@ -925,8 +925,8 @@ app.get('/api/traders/stats', async (req, res) => {
         // Фильтруем по типу трейдеров
         const filteredData = filterTradersByType(enrichedData, type);
         
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             data: filteredData,
             period: period,
             time_interval: timeInterval,
@@ -959,7 +959,7 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
                     AVG(CASE WHEN side = 'SELL' THEN sol_received ELSE NULL END) as avg_sell_size,
                     MIN(ts) as first_trade,
                     MAX(ts) as last_trade
-                FROM events 
+                FROM events
                 WHERE wallet = $1 AND ts >= NOW() - INTERVAL '${timeInterval}'
             ),
             token_pnl AS (
@@ -971,7 +971,7 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
                     COUNT(CASE WHEN side = 'SELL' THEN 1 END) as sell_count,
                     MAX(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as max_buy,
                     MAX(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) as max_sell
-                FROM events 
+                FROM events
                 WHERE wallet = $1 AND ts >= NOW() - INTERVAL '${timeInterval}'
                 GROUP BY token_mint
             )
@@ -1072,14 +1072,14 @@ app.get('/api/traders/list', async (req, res) => {
         // Получаем уникальные кошельки с их профилями и PnL
         const query = `
             WITH trader_stats AS (
-                SELECT wallet, 
+                SELECT wallet,
                        COUNT(*) as total_trades, 
                        SUM(sol_spent) as total_volume,
                        COUNT(DISTINCT token_mint) as unique_tokens,
                        MAX(ts) as last_activity,
                        SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) - 
                        SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl
-                FROM events 
+                FROM events
                 WHERE ts >= NOW() - INTERVAL '30 days'
                 GROUP BY wallet 
             )
@@ -1412,7 +1412,7 @@ app.get('/api/smartmoney', async (req, res) => {
             WITH wallet_stats AS (
                 SELECT 
                     wallet,
-                    COUNT(DISTINCT token_mint) AS unique_tokens,
+                       COUNT(DISTINCT token_mint) AS unique_tokens,
                     COUNT(*) AS total_trades,
                     SUM(sol_spent) AS total_volume,
                     AVG(sol_spent) AS avg_buy_size,
@@ -1599,7 +1599,7 @@ app.get('/api/pump/trending-meta', async (req, res) => {
                     relatedTokens: relatedTokens.slice(0, 5), // Топ 5 токенов
                     pumpFunUrl: `https://pump.fun/search?q=${encodeURIComponent(meta.word)}`
                 };
-            } catch (error) {
+    } catch (error) {
                 console.log(`⚠️ Failed to fetch tokens for meta "${meta.word}": ${error.message}`);
                 return {
                     ...meta,
@@ -1609,15 +1609,15 @@ app.get('/api/pump/trending-meta', async (req, res) => {
             }
         }));
         
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             data: enrichedMetaWords,
             source: 'pumpfun_trending_meta'
         });
     } catch (error) {
         console.error('❌ Trending meta error:', error.message);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             error: error.message,
             fallback: 'Failed to fetch trending meta words from Pump.fun'
         });
@@ -1790,10 +1790,10 @@ async function startServer() {
         if (!dbConnected) {
             console.error('❌ Database connection failed, but continuing...');
         }
-        
-        app.listen(port, () => {
-            console.log(`🚀 Pump Dex Mini App сервер запущен на порту ${port}`);
-            console.log(`📱 Mini App доступен по адресу: http://localhost:${port}`);
+
+app.listen(port, () => {
+    console.log(`🚀 Pump Dex Mini App сервер запущен на порту ${port}`);
+    console.log(`📱 Mini App доступен по адресу: http://localhost:${port}`);
             console.log(`🔗 Webhook эндпоинт: http://localhost:${port}/webhook/helius`);
             console.log(`🔗 Health check: http://localhost:${port}/api/health`);
             console.log(`🔗 API endpoints:`);
