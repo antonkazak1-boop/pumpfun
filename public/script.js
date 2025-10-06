@@ -2751,18 +2751,11 @@ function showSubscriptionMenu() {
                     </div>
                 </div>
             </div>
-            <div class="plan-indicators">
-                <span class="indicator active" data-slide="0"></span>
-                <span class="indicator" data-slide="1"></span>
-            </div>
         </div>
     `;
     
     // Add to page
     document.body.appendChild(menu);
-    
-    // Initialize swipe functionality
-    initSubscriptionSwipe();
     
     // Add click outside to close
     setTimeout(() => {

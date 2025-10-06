@@ -1303,16 +1303,20 @@ app.get('/api/recentactivity', async (req, res) => {
         let enrichedData = enrichWalletData(result.rows);
         enrichedData = await enrichTransactionData(enrichedData);
         
-        // Добавляем метаданные токенов
-        enrichedData = await Promise.all(enrichedData.map(async (item) => {
-            const tokenMeta = getTokenMetadata(item.token_mint);
+        // Массово получаем метаданные токенов
+        const tokenMints = enrichedData.map(item => item.token_mint).filter(Boolean);
+        const metadataMap = await fetchMultipleTokenMetadata(tokenMints);
+        
+        // Обогащаем данные метаданными токенов
+        enrichedData = enrichedData.map((item) => {
+            const tokenMeta = metadataMap.get(item.token_mint) || getTokenMetadata(item.token_mint);
             return {
                 ...item,
                 token_symbol: tokenMeta?.symbol || item.token_mint.substring(0, 8),
                 token_name: tokenMeta?.name || 'Unknown Token',
                 token_image: tokenMeta?.image || '/img/token-placeholder.png'
             };
-        }));
+        });
         
         res.json({ success: true, data: enrichedData });
     } catch (error) {
