@@ -307,8 +307,8 @@ class SubscriptionSystem {
             
             const result = await this.pool.query(`
                 SELECT s.* FROM subscriptions s
-                JOIN users u ON s.user_id = u.id
-                WHERE (u.id = $1 OR u.telegram_user_id = $1)
+                JOIN users u ON s.user_id = u.telegram_user_id
+                WHERE u.telegram_user_id = $1
                 AND s.status = 'active'
                 AND s.expires_at > CURRENT_TIMESTAMP
                 ORDER BY s.expires_at DESC
@@ -328,9 +328,9 @@ class SubscriptionSystem {
             const result = await this.pool.query(`
                 SELECT s.*, st.tier_name, st.price_sol, st.price_stars, st.duration_days, st.features
                 FROM subscriptions s
-                JOIN users u ON s.user_id = u.id
+                JOIN users u ON s.user_id = u.telegram_user_id
                 JOIN subscription_tiers st ON s.subscription_type = st.tier_name
-                WHERE (u.id = $1 OR u.telegram_user_id = $1)
+                WHERE u.telegram_user_id = $1
                 AND s.status = 'active'
                 AND s.expires_at > CURRENT_TIMESTAMP
                 ORDER BY s.expires_at DESC
@@ -463,21 +463,21 @@ class SubscriptionSystem {
                     payment_method, transaction_hash, kolscan_discount_applied, discount_percentage
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 RETURNING *
-            `, [user.id, tierName, expiresAt, finalPrice, paymentMethod, transactionHash, kolscanDiscount, discountPercentage]);
+            `, [user.telegram_user_id, tierName, expiresAt, finalPrice, paymentMethod, transactionHash, kolscanDiscount, discountPercentage]);
             
             // Update user
             await this.pool.query(`
                 UPDATE users 
                 SET subscription_type = $1, subscription_expires_at = $2, total_spent_sol = total_spent_sol + $3
-                WHERE id = $4
-            `, [tierName, expiresAt, finalPrice, user.id]);
+                WHERE telegram_user_id = $4
+            `, [tierName, expiresAt, finalPrice, user.telegram_user_id]);
             
             // Create payment record
             await this.pool.query(`
                 INSERT INTO payments (
                     user_id, subscription_id, amount_sol, payment_method, transaction_hash, status
                 ) VALUES ($1, $2, $3, $4, $5, 'confirmed')
-            `, [user.id, subscriptionResult.rows[0].id, finalPrice, paymentMethod, transactionHash]);
+            `, [user.telegram_user_id, subscriptionResult.rows[0].id, finalPrice, paymentMethod, transactionHash]);
             
             console.log(`✅ Subscription created for user ${user.username || user.first_name}: ${tierName}`);
             return subscriptionResult.rows[0];
