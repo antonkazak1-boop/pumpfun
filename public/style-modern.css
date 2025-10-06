@@ -3532,3 +3532,75 @@ body {
         min-width: auto;
     }
 }
+
+/* ================================
+   TAB GROUPING STYLES
+   ================================ */
+
+.tab-group {
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.group-header i {
+    font-size: 1.2rem;
+}
+
+.group-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    flex-wrap: wrap;
+}
+
+.group-tabs .tab-button {
+    flex: 1;
+    min-width: 140px;
+    margin-bottom: 0;
+}
+
+/* Responsive adjustments for tab groups */
+@media (max-width: 768px) {
+    .tab-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .group-header {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .group-tabs {
+        padding: 0.75rem;
+        gap: 0.25rem;
+    }
+    
+    .group-tabs .tab-button {
+        min-width: 120px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .group-tabs {
+        flex-direction: column;
+    }
+    
+    .group-tabs .tab-button {
+        min-width: 100%;
+    }
+}

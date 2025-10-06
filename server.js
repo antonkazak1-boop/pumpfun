@@ -157,6 +157,28 @@ function getTimeInterval(period) {
     }
 }
 
+// Функция для фильтрации трейдеров по типу (серверная версия)
+function filterTradersByType(traders, traderType) {
+    if (traderType === 'all') return traders;
+    
+    return traders.filter(trader => {
+        const duration = trader.avg_duration;
+        
+        switch (traderType) {
+            case 'sonic':
+                return duration < 5; // < 5 минут
+            case 'scalper':
+                return duration >= 5 && duration <= 30; // 5-30 минут
+            case 'day':
+                return duration > 30 && duration <= 1440; // 1-24 часа (1440 минут)
+            case 'swing':
+                return duration > 1440 && duration <= 10080; // 1-7 дней (10080 минут)
+            default:
+                return true;
+        }
+    });
+}
+
 // Функция для кэширования данных
 async function cacheData(key, data, ttlMinutes = 15) {
     try {
@@ -798,7 +820,7 @@ async function testDatabaseConnection() {
 // API endpoint для получения списка всех трейдеров с их статистикой
 app.get('/api/traders/stats', async (req, res) => {
     try {
-        const { period = '30d' } = req.query;
+        const { period = '30d', type = 'all' } = req.query;
         const timeInterval = getTimeInterval(period);
         
         console.log(`📊 Getting traders stats for period: ${timeInterval}`);
@@ -900,11 +922,15 @@ app.get('/api/traders/stats', async (req, res) => {
             };
         }));
         
+        // Фильтруем по типу трейдеров
+        const filteredData = filterTradersByType(enrichedData, type);
+        
         res.json({ 
             success: true, 
-            data: enrichedData,
+            data: filteredData,
             period: period,
-            time_interval: timeInterval
+            time_interval: timeInterval,
+            trader_type: type
         });
     } catch (error) {
         console.error('Traders stats error:', error);
@@ -1043,21 +1069,55 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
 // Получение списка известных трейдеров для Portfolio вкладки
 app.get('/api/traders/list', async (req, res) => {
     try {
-        // Получаем уникальные кошельки с их профилями
+        // Получаем уникальные кошельки с их профилями и PnL
         const query = `
-            SELECT DISTINCT wallet, COUNT(*) as total_trades, 
-                   SUM(sol_spent) as total_volume,
-                   COUNT(DISTINCT token_mint) as unique_tokens,
-                   MAX(ts) as last_activity
-            FROM events 
-            WHERE ts >= NOW() - INTERVAL '30 days'
-            GROUP BY wallet 
+            WITH trader_stats AS (
+                SELECT wallet, 
+                       COUNT(*) as total_trades, 
+                       SUM(sol_spent) as total_volume,
+                       COUNT(DISTINCT token_mint) as unique_tokens,
+                       MAX(ts) as last_activity,
+                       SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) - 
+                       SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl
+                FROM events 
+                WHERE ts >= NOW() - INTERVAL '30 days'
+                GROUP BY wallet 
+            )
+            SELECT * FROM trader_stats
             ORDER BY total_volume DESC 
             LIMIT 200
         `;
         
         const result = await pool.query(query);
         console.log(`📊 Found ${result.rows.length} traders in database`);
+        
+        // Если нет данных, попробуем получить данные за больший период
+        if (result.rows.length === 0) {
+            console.log(`📊 No traders found for 30 days, trying 90 days...`);
+            const fallbackQuery = `
+                WITH trader_stats AS (
+                    SELECT wallet, 
+                           COUNT(*) as total_trades, 
+                           SUM(sol_spent) as total_volume,
+                           COUNT(DISTINCT token_mint) as unique_tokens,
+                           MAX(ts) as last_activity,
+                           SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) - 
+                           SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl
+                    FROM events 
+                    WHERE ts >= NOW() - INTERVAL '90 days'
+                    GROUP BY wallet 
+                )
+                SELECT * FROM trader_stats
+                ORDER BY total_volume DESC 
+                LIMIT 200
+            `;
+            const fallbackResult = await pool.query(fallbackQuery);
+            console.log(`📊 Found ${fallbackResult.rows.length} traders for 90 days`);
+            
+            if (fallbackResult.rows.length > 0) {
+                result.rows = fallbackResult.rows;
+            }
+        }
         
         // Обогащаем данные информацией о кошельках от walletMap
         const enrichedData = result.rows

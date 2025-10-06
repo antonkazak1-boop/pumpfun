@@ -2256,7 +2256,7 @@ function initWalletStats() {
 async function loadTradersStats(period, traderType = 'all') {
     try {
         showLoading();
-        const response = await fetch(`/api/traders/stats?period=${period}`);
+        const response = await fetch(`/api/traders/stats?period=${period}&type=${traderType}`);
         const data = await response.json();
         
         if (data.success) {
