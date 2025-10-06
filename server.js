@@ -2251,12 +2251,20 @@ app.listen(port, () => {
                     startBot().then(() => {
                         console.log('✅ Telegram Bot started successfully!');
                     }).catch((error) => {
-                        console.log('⚠️ Telegram Bot not started:', error.message);
-                        console.log('   Set BOT_TOKEN environment variable to enable bot');
+                        if (error.message.includes('409') || error.message.includes('Conflict')) {
+                            console.log('⚠️ Telegram Bot already running on another instance');
+                            console.log('   This is normal for multiple deployments');
+                        } else {
+                            console.log('⚠️ Telegram Bot not started:', error.message);
+                        }
                     });
                 } catch (error) {
-                    console.log('⚠️ Telegram Bot not started:', error.message);
-                    console.log('   Set BOT_TOKEN environment variable to enable bot');
+                    if (error.message.includes('409') || error.message.includes('Conflict')) {
+                        console.log('⚠️ Telegram Bot already running on another instance');
+                        console.log('   This is normal for multiple deployments');
+                    } else {
+                        console.log('⚠️ Telegram Bot not started:', error.message);
+                    }
                 }
             } else {
                 console.log('\n⚠️ BOT_TOKEN not set - Telegram Bot disabled');

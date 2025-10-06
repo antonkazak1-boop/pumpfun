@@ -62,7 +62,7 @@ async function showBasicPayment(ctx, userName) {
             provider_token: '', // Empty for Stars
             currency: 'XTR', // Telegram Stars
             prices: [{
-                label: 'Basic Subscription',
+                label: `Basic Subscription - ${SUBSCRIPTION_PRICES.basic.stars} Stars`,
                 amount: SUBSCRIPTION_PRICES.basic.stars_cents // 10000 cents = 100 stars
             }]
         });
@@ -110,7 +110,7 @@ async function showProPayment(ctx, userName) {
             provider_token: '', // Empty for Stars
             currency: 'XTR', // Telegram Stars
             prices: [{
-                label: 'Pro Subscription',
+                label: `Pro Subscription - ${SUBSCRIPTION_PRICES.pro.stars} Stars`,
                 amount: SUBSCRIPTION_PRICES.pro.stars_cents // 25000 cents = 250 stars
             }]
         });
@@ -521,7 +521,7 @@ bot.action('pay_stars_basic', async (ctx) => {
             provider_token: '', // Empty for Stars
             currency: 'XTR', // Telegram Stars
             prices: [{
-                label: 'Basic Subscription',
+                label: `Basic Subscription - ${SUBSCRIPTION_PRICES.basic.stars} Stars`,
                 amount: SUBSCRIPTION_PRICES.basic.stars_cents // 10000 cents = 100 stars
             }]
         });
@@ -567,7 +567,7 @@ bot.action('pay_stars_pro', async (ctx) => {
             provider_token: '', // Empty for Stars
             currency: 'XTR', // Telegram Stars
             prices: [{
-                label: 'Pro Subscription',
+                label: `Pro Subscription - ${SUBSCRIPTION_PRICES.pro.stars} Stars`,
                 amount: SUBSCRIPTION_PRICES.pro.stars_cents // 25000 cents = 250 stars
             }]
         });
@@ -1036,6 +1036,12 @@ async function startBot() {
         console.log('📱 Пользователи могут использовать команду /start для доступа к Mini App');
         
     } catch (error) {
+        if (error.message.includes('409') || error.message.includes('Conflict')) {
+            console.log('⚠️ Telegram Bot already running on another instance');
+            console.log('   This is normal for multiple deployments');
+            return; // Don't exit for conflict
+        }
+        
         console.error('❌ Ошибка при запуске бота:', error.message);
         
         if (error.code === 401) {
