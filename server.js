@@ -1938,8 +1938,8 @@ app.get('/api/subscription/status/:userId', async (req, res) => {
             const hasActiveSubscription = await subscriptionSystem.hasActiveSubscription(userId);
             const activeSubscription = await subscriptionSystem.getActiveSubscription(userId);
             
-            res.json({
-                success: true,
+        res.json({
+            success: true,
                 user: user,
                 hasActiveSubscription: hasActiveSubscription,
                 activeSubscription: activeSubscription
@@ -2025,8 +2025,8 @@ app.post('/api/payment/solana', async (req, res) => {
         );
         
         if (paymentUrl.success) {
-            res.json({
-                success: true,
+        res.json({
+            success: true,
                 payment_url: paymentUrl.url,
                 amount: pricing.finalPrice,
                 discount: pricing.discount,

@@ -2650,9 +2650,66 @@ async function loadSubscriptionTiers() {
         if (data.success && data.tiers) {
             availableTiers = data.tiers;
             console.log('📋 Subscription tiers loaded:', availableTiers);
+        } else {
+            // Fallback to default tiers
+            availableTiers = [
+                {
+                    tier_name: 'free',
+                    price_sol: 0,
+                    price_stars: 0,
+                    duration_days: 5,
+                    max_tabs: 2,
+                    features: ['About', 'Analytics', '5-day trial']
+                },
+                {
+                    tier_name: 'basic',
+                    price_sol: 0.1,
+                    price_stars: 100,
+                    duration_days: 30,
+                    max_tabs: null,
+                    features: ['All tabs', '50 notifications/day', 'Priority support']
+                },
+                {
+                    tier_name: 'pro',
+                    price_sol: 0.25,
+                    price_stars: 250,
+                    duration_days: 30,
+                    max_tabs: null,
+                    features: ['All tabs', 'Unlimited notifications', 'Early access', 'Advanced analytics', 'Priority support']
+                }
+            ];
+            console.log('📋 Using fallback subscription tiers');
         }
     } catch (error) {
         console.error('Error loading subscription tiers:', error);
+        // Fallback to default tiers
+        availableTiers = [
+            {
+                tier_name: 'free',
+                price_sol: 0,
+                price_stars: 0,
+                duration_days: 5,
+                max_tabs: 2,
+                features: ['About', 'Analytics', '5-day trial']
+            },
+            {
+                tier_name: 'basic',
+                price_sol: 0.1,
+                price_stars: 100,
+                duration_days: 30,
+                max_tabs: null,
+                features: ['All tabs', '50 notifications/day', 'Priority support']
+            },
+            {
+                tier_name: 'pro',
+                price_sol: 0.25,
+                price_stars: 250,
+                duration_days: 30,
+                max_tabs: null,
+                features: ['All tabs', 'Unlimited notifications', 'Early access', 'Advanced analytics', 'Priority support']
+            }
+        ];
+        console.log('📋 Using fallback subscription tiers due to error');
     }
 }
 
@@ -2673,9 +2730,61 @@ async function checkSubscriptionStatus() {
             
             // Show subscription UI if needed
             updateSubscriptionUI();
+        } else {
+            // Fallback: assume trial user
+            subscriptionStatus = {
+                user: { id: currentUserId },
+                hasActiveSubscription: false,
+                activeSubscription: null
+            };
+            console.log('📊 Using fallback subscription status (trial)');
         }
     } catch (error) {
         console.error('Error checking subscription status:', error);
+        // Fallback: assume trial user
+        subscriptionStatus = {
+            user: { id: currentUserId },
+            hasActiveSubscription: false,
+            activeSubscription: null
+        };
+        console.log('📊 Using fallback subscription status due to error');
+    }
+}
+
+// Update subscription UI
+function updateSubscriptionUI() {
+    try {
+        if (!subscriptionStatus) {
+            console.log('No subscription status available for UI update');
+            return;
+        }
+        
+        const { user, hasActiveSubscription, activeSubscription } = subscriptionStatus;
+        
+        // Add subscription indicator to header
+        const header = document.querySelector('.app-header');
+        if (header && !header.querySelector('.subscription-indicator')) {
+            const indicator = document.createElement('div');
+            indicator.className = 'subscription-indicator';
+            
+            if (hasActiveSubscription) {
+                indicator.innerHTML = `
+                    <i class="fas fa-crown"></i>
+                    <span>${activeSubscription?.subscription_type?.toUpperCase() || 'PREMIUM'}</span>
+                `;
+                indicator.classList.add('premium');
+            } else {
+                indicator.innerHTML = `
+                    <i class="fas fa-clock"></i>
+                    <span>TRIAL</span>
+                `;
+                indicator.classList.add('trial');
+            }
+            
+            header.appendChild(indicator);
+        }
+    } catch (error) {
+        console.error('Error updating subscription UI:', error);
     }
 }
 
@@ -2756,7 +2865,7 @@ async function subscribeWithStars(tierName) {
         }
     } catch (error) {
         console.error('Error creating Stars payment:', error);
-        alert('Payment failed: ' + error.message);
+        alert('Payment system temporarily unavailable. Please try again later.');
     }
 }
 
@@ -2782,7 +2891,12 @@ async function initApp() {
     initAdminPanel();
     
     // Initialize subscription system
-    await initSubscriptionSystem();
+    try {
+        await initSubscriptionSystem();
+    } catch (error) {
+        console.error('❌ Subscription system initialization failed:', error);
+        console.log('⚠️ Subscription system running in fallback mode');
+    }
     
     // Start auto-refresh
     startAutoRefresh();
