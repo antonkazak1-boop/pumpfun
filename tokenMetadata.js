@@ -365,6 +365,11 @@ async function getCachedTokens(tokenMints, pool) {
 // Функция для кэширования токенов в БД
 async function cacheTokenMetadata(tokenMint, metadata, pool) {
     try {
+        if (!pool) {
+            console.log('⚠️ Database pool not available, skipping token cache');
+            return;
+        }
+        
         await pool.query(
             `INSERT INTO tokens (address, symbol, name, image, market_cap, price, source, last_updated)
              VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
@@ -388,7 +393,11 @@ async function cacheTokenMetadata(tokenMint, metadata, pool) {
             ]
         );
     } catch (error) {
-        console.error('❌ Token cache error:', error);
+        if (error.code === 'ENETUNREACH' || error.code === 'ECONNREFUSED') {
+            console.log('⚠️ Database connection unavailable, token cache skipped');
+        } else {
+            console.error('❌ Token cache error:', error.message);
+        }
     }
 }
 

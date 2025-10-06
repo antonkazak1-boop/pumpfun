@@ -3983,6 +3983,50 @@ body {
     box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
 }
 
+/* Subscription info section */
+.subscription-info {
+    text-align: center;
+    margin: 1rem 0 2rem 0;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.subscription-info p {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.security-info {
+    color: var(--text-primary);
+}
+
+.discount-info {
+    color: var(--accent-color);
+}
+
+.subscription-info i {
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+/* Light theme overrides for subscription info */
+[data-theme="light"] .subscription-info {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+[data-theme="light"] .security-info {
+    color: #1e293b;
+}
+
+[data-theme="light"] .discount-info {
+    color: #7c3aed;
+}
+
+/* Legacy subscription footer (kept for compatibility) */
 .subscription-footer {
     text-align: center;
     margin-top: 2rem;

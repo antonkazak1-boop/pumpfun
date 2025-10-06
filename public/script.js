@@ -2694,6 +2694,10 @@ function showSubscriptionMenu() {
                 <i class="fas fa-times"></i>
             </button>
         </div>
+        <div class="subscription-info">
+            <p class="security-info"><i class="fas fa-shield-alt"></i> Secure payment • 30-day money back guarantee</p>
+            <p class="discount-info"><i class="fas fa-gift"></i> Hold $KOLScan token for 25% discount!</p>
+        </div>
         <div class="subscription-plans-container">
             <div class="subscription-plans" id="subscriptionPlans">
                 <div class="plan-card basic">
@@ -2751,10 +2755,6 @@ function showSubscriptionMenu() {
                 <span class="indicator active" data-slide="0"></span>
                 <span class="indicator" data-slide="1"></span>
             </div>
-        </div>
-        <div class="subscription-footer">
-            <p><i class="fas fa-shield-alt"></i> Secure payment • 30-day money back guarantee</p>
-            <p><i class="fas fa-gift"></i> Hold $KOLScan token for 25% discount!</p>
         </div>
     `;
     
