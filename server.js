@@ -657,6 +657,7 @@ app.get('/api/clusterbuy5m', async (req, res) => {
         const query = `SELECT token_mint, COUNT(DISTINCT wallet) AS buyers, SUM(sol_spent) AS total_sol
         FROM events
         WHERE side = 'BUY' AND ts > now() - interval '5 minutes'
+        AND token_mint != 'So11111111111111111111111111111111111111112'
             GROUP BY token_mint
             HAVING COUNT(DISTINCT wallet) >= 3
         ORDER BY total_sol DESC;`;
@@ -673,6 +674,7 @@ app.get('/api/volumesurge2h', async (req, res) => {
         const query = `SELECT 'Volume Surge' AS alert_type, token_mint, SUM(sol_spent) AS total_sol, COUNT(*) AS tx_count
         FROM events
         WHERE side = 'BUY' AND ts > now() - interval '2 hours'
+        AND token_mint != 'So11111111111111111111111111111111111111112'
         GROUP BY token_mint
         HAVING SUM(sol_spent) >= 300
         ORDER BY total_sol DESC;`;
@@ -689,6 +691,7 @@ app.get('/api/cobuy3h', async (req, res) => {
         const query = `SELECT 'Co-buy' AS alert_type, token_mint, array_agg(DISTINCT wallet) AS wallets, COUNT(*) AS total_tx
         FROM events
         WHERE side = 'BUY' AND ts > now() - interval '3 hours'
+        AND token_mint != 'So11111111111111111111111111111111111111112'
         GROUP BY token_mint
         HAVING COUNT(DISTINCT wallet) BETWEEN 2 AND 4 AND COUNT(*) >= 5
         ORDER BY total_tx DESC;`;
@@ -705,6 +708,7 @@ app.get('/api/consensus3h', async (req, res) => {
         const query = `SELECT 'Consensus' AS alert_type, token_mint, COUNT(DISTINCT wallet) AS wallets, SUM(sol_spent) AS total_sol
         FROM events
         WHERE side = 'BUY' AND ts > now() - interval '3 hours'
+        AND token_mint != 'So11111111111111111111111111111111111111112'
         GROUP BY token_mint
         HAVING COUNT(DISTINCT wallet) >= 5 AND SUM(sol_spent) > 75
         ORDER BY total_sol DESC;`;
@@ -721,6 +725,7 @@ app.get('/api/netflow24h', async (req, res) => {
         const query = `SELECT 'Net Flow' AS alert_type, token_mint, SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE -sol_received END) AS net_flow
         FROM events
         WHERE ts > now() - interval '1 day'
+        AND token_mint != 'So11111111111111111111111111111111111111112'
         GROUP BY token_mint
         HAVING SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE -sol_received END) > 5000
         ORDER BY net_flow DESC;`;
@@ -737,6 +742,7 @@ app.get('/api/delta29h', async (req, res) => {
         const query = `SELECT 'Delta 29h' AS alert_type, token_mint, SUM(sol_spent) AS total_sol, COUNT(*) AS tx_count
         FROM events
         WHERE side = 'BUY' AND ts > now() - interval '29 hours'
+        AND token_mint != 'So11111111111111111111111111111111111111112'
         GROUP BY token_mint
         HAVING SUM(sol_spent) >= 1000
         ORDER BY total_sol DESC;`;
@@ -753,6 +759,7 @@ app.get('/api/earlysignal1h', async (req, res) => {
         const query = `SELECT 'Early Signal' AS alert_type, token_mint, COUNT(DISTINCT wallet) AS early_buyers
         FROM events
         WHERE side = 'BUY' AND ts > now() - interval '1 hour'
+        AND token_mint != 'So11111111111111111111111111111111111111112'
         GROUP BY token_mint
         HAVING COUNT(DISTINCT wallet) BETWEEN 1 AND 2
         ORDER BY early_buyers DESC;`;
@@ -1182,6 +1189,7 @@ app.get('/api/coins/market', async (req, res) => {
             FROM events e
             WHERE e.side IN ('BUY', 'SELL')
             AND e.ts >= NOW() - INTERVAL '${timeInterval}'
+            AND e.token_mint != 'So11111111111111111111111111111111111111112'
             GROUP BY e.token_mint
             HAVING COUNT(DISTINCT e.wallet) >= 1 AND SUM(e.sol_spent) > 0.01
             ORDER BY trader_count DESC, total_volume DESC
@@ -1316,6 +1324,7 @@ app.get('/api/clusterbuy', async (req, res) => {
             SELECT token_mint, COUNT(DISTINCT wallet) as unique_buyers, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size, MAX(ts) as last_activity
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
+            AND token_mint != 'So11111111111111111111111111111111111111112'
             GROUP BY token_mint
             HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 0.01
             ORDER BY unique_buyers DESC, total_volume DESC
@@ -1347,6 +1356,7 @@ app.get('/api/cobuy', async (req, res) => {
             SELECT token_mint, COUNT(DISTINCT wallet) as simultaneous_buyers, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
+            AND token_mint != 'So11111111111111111111111111111111111111112'
             GROUP BY token_mint
             HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 0.01
             ORDER BY simultaneous_buyers DESC, total_volume DESC
@@ -1390,6 +1400,7 @@ app.get('/api/smartmoney', async (req, res) => {
                     STRING_AGG(DISTINCT token_mint, ',') AS token_list
                 FROM events
                 WHERE side = 'BUY' AND ts > now() - interval '24 hours'
+                AND token_mint != 'So11111111111111111111111111111111111111112'
                 GROUP BY wallet
                 HAVING COUNT(DISTINCT token_mint) >= 1 AND AVG(sol_spent) > 0.01
             ),
@@ -1403,6 +1414,7 @@ app.get('/api/smartmoney', async (req, res) => {
                     ROW_NUMBER() OVER (PARTITION BY wallet ORDER BY ts DESC) as rn
                 FROM events 
                 WHERE side = 'BUY' AND ts > now() - interval '24 hours'
+                AND token_mint != 'So11111111111111111111111111111111111111112'
             )
             SELECT 
                 ws.wallet,
@@ -1461,6 +1473,7 @@ app.get('/api/freshtokens', async (req, res) => {
             FROM events e
             JOIN first_appearance fa ON e.token_mint = fa.token_mint
             WHERE e.side = 'BUY' AND fa.first_seen > now() - interval '5 minutes' AND e.ts > now() - interval '5 minutes'
+            AND e.token_mint != 'So11111111111111111111111111111111111111112'
             GROUP BY e.token_mint, fa.first_seen
             HAVING SUM(e.sol_spent) > 0.01
             ORDER BY fa.first_seen DESC
@@ -1499,6 +1512,7 @@ app.get('/api/topgainers', async (req, res) => {
             SELECT token_mint, COUNT(DISTINCT wallet) as buyer_count, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size
             FROM events
             WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
+            AND token_mint != 'So11111111111111111111111111111111111111112'
             GROUP BY token_mint
             HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 0.01
             ORDER BY buyer_count DESC, total_volume DESC
