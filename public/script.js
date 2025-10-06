@@ -2924,6 +2924,41 @@ function closeSubscriptionMenuOnOutsideClick(event) {
     }
 }
 
+// Show notification
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notif => notif.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Add to body
+    document.body.appendChild(notification);
+    
+    // Show notification
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
 // Pay with Telegram Stars
 async function payWithStars(tierName) {
     try {
@@ -2955,14 +2990,20 @@ async function payWithStars(tierName) {
             const data = await response.json();
             
             if (data.success && data.invoiceLink) {
-                // Open payment link
+                // Open payment link directly in bot chat (better UX)
                 tg.openLink(data.invoiceLink);
                 console.log(`✅ Stars payment initiated for ${tierName}`);
+                
+                // Show notification
+                showNotification(`Opening payment for ${tierName} tier...`, 'success');
             } else {
-                // Fallback: try to create invoice directly
-                const invoiceLink = `https://t.me/BetAIAGENT_BOT?start=pay_stars_${tierName}`;
-                tg.openLink(invoiceLink);
-                console.log(`✅ Stars payment initiated via fallback for ${tierName}`);
+                // Fallback: direct bot message (better for mobile)
+                const botMessageLink = `https://t.me/BetAIAGENT_BOT?start=pay_stars_${tierName}`;
+                tg.openLink(botMessageLink);
+                console.log(`✅ Stars payment initiated via direct bot message for ${tierName}`);
+                
+                // Show notification
+                showNotification(`Opening bot chat for ${tierName} payment...`, 'success');
             }
         } else {
             // Fallback for non-Telegram environment

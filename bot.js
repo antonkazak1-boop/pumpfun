@@ -42,6 +42,9 @@ async function handlePaymentCommand(ctx, tierName) {
     
     console.log(`💳 Payment command received: ${tierName} for user ${userName}`);
     
+    // Show welcome message first
+    await ctx.reply(`👋 Hi ${userName}! Let's set up your ${tierName} subscription.`);
+    
     if (tierName === 'basic') {
         return showBasicPayment(ctx, userName);
     } else if (tierName === 'pro') {
