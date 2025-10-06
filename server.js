@@ -222,6 +222,10 @@ async function getCachedData(key) {
 // Функция для кэширования токенов
 async function cacheTokenMetadata(tokenMint, metadata) {
     try {
+        // Convert market_cap and price to numbers, handle null/undefined
+        const marketCap = metadata.market_cap ? parseFloat(metadata.market_cap) : null;
+        const price = metadata.price ? parseFloat(metadata.price) : null;
+        
         await pool.query(
             `INSERT INTO tokens (address, symbol, name, image, market_cap, price, source, last_updated)
              VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
@@ -239,8 +243,8 @@ async function cacheTokenMetadata(tokenMint, metadata) {
                 metadata.symbol,
                 metadata.name,
                 metadata.image,
-                metadata.market_cap,
-                metadata.price,
+                marketCap,
+                price,
                 metadata.source
             ]
         );

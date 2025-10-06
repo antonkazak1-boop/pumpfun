@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS tokens (
     symbol VARCHAR(20),
     name VARCHAR(255),
     image TEXT,
-    market_cap BIGINT,
+    market_cap DECIMAL(20, 8),
     price DECIMAL(20, 8),
     source VARCHAR(50), -- 'pumpfun', 'dexscreener', 'jupiter', 'fallback'
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
