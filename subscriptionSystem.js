@@ -27,7 +27,7 @@ const SUBSCRIPTION_TABLES = {
     subscriptions: `
         CREATE TABLE IF NOT EXISTS subscriptions (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER,
+            user_id BIGINT,
             subscription_type VARCHAR(50) NOT NULL,
             status VARCHAR(50) DEFAULT 'active',
             started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -46,7 +46,7 @@ const SUBSCRIPTION_TABLES = {
     payments: `
         CREATE TABLE IF NOT EXISTS payments (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER,
+            user_id BIGINT,
             subscription_id INTEGER,
             amount_sol DECIMAL(20, 8),
             amount_stars INTEGER,
@@ -91,13 +91,13 @@ const SUBSCRIPTION_TABLES = {
 const SUBSCRIPTION_PRICES = {
     basic: {
         sol: 0.1,
-        stars: 100,        // Stars amount (what user sees)
-        stars_cents: 10000 // Stars in cents (for Telegram API)
+        stars: 100,        // Stars amount (what user sees and API gets)
+        stars_cents: 100   // Same as stars for Telegram API
     },
     pro: {
         sol: 0.25,
-        stars: 250,        // Stars amount (what user sees)
-        stars_cents: 25000 // Stars in cents (for Telegram API)
+        stars: 250,        // Stars amount (what user sees and API gets)
+        stars_cents: 250   // Same as stars for Telegram API
     }
 };
 

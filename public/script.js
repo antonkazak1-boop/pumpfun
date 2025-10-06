@@ -626,6 +626,7 @@ function renderFreshTokens(data) {
         return `
             <div class="data-item fresh-item">
                 <h3>
+                    <img src="${item.token_image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
                     <i class="fas fa-seedling"></i>
                     ${index + 1}. ${tokenSymbol} - ${tokenName}
                 </h3>
