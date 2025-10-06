@@ -1597,9 +1597,14 @@ function renderCoins(data) {
     const coinsHTML = data.map(coin => `
         <div class="coin-card" data-contract="${coin.token_mint}">
             <div class="coin-header">
-                <div class="coin-ticker">$${coin.symbol || 'UNKNOWN'}</div>
-                <div class="coin-name">${coin.name || 'Unknown Token'}</div>
-                <div class="coin-cap">${formatMarketCap(coin.market_cap)}</div>
+                <div class="coin-avatar">
+                    <img src="${coin.image || '/img/token-placeholder.png'}" alt="${coin.symbol || 'UNKNOWN'}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
+                </div>
+                <div class="coin-info">
+                    <div class="coin-ticker">$${coin.symbol || 'UNKNOWN'}</div>
+                    <div class="coin-name">${coin.name || 'Unknown Token'}</div>
+                    <div class="coin-cap">${formatMarketCap(coin.market_cap)}</div>
+                </div>
             </div>
             <div class="coin-metrics">
                 <div class="metric">

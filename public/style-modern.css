@@ -2265,9 +2265,20 @@ body {
 
 .coin-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 1rem;
     margin-bottom: 1rem;
+}
+
+.coin-avatar {
+    flex-shrink: 0;
+}
+
+.coin-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .coin-ticker {
