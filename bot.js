@@ -526,8 +526,73 @@ To pay with SOL:
 bot.action('back_to_plans', async (ctx) => {
     // Go back to subscription plans
     ctx.answerCbQuery('Back to subscription plans');
-    // Trigger the subscribe command
-    bot.command('subscribe')(ctx);
+    
+    // Show subscription plans again
+    const subscriptionMessage = `
+💎 *Pump Dex Premium Subscription*
+
+╔═══════════════════════╗
+║  💰 *Choose Your Plan*  ║
+╚═══════════════════════╝
+
+🆓 *FREE Trial*
+• Access to 2 tabs (About, Analytics)
+• 5-day trial period
+• Basic features
+
+💎 *BASIC - 0.1 SOL (~100 ⭐)*
+• Access to ALL tabs
+• 50 notifications per day
+• Priority support
+• Monthly subscription
+
+🚀 *PRO - 0.25 SOL (~250 ⭐)*
+• Access to ALL tabs
+• Unlimited notifications
+• Early access to new features
+• Advanced analytics
+• Priority customer support
+
+╔═══════════════════════╗
+║  🎯 *Payment Methods*   ║
+╚═══════════════════════╝
+
+⭐ *Telegram Stars* (Recommended)
+• Instant payment
+• No blockchain fees
+• Secure and fast
+
+☀️ *Solana (SOL)*
+• Direct blockchain payment
+• 25% discount with $KOLScan tokens
+• Minimum 1000 $KOLScan required
+
+╔═══════════════════════╗
+║  🚀 *How to Subscribe*  ║
+╚═══════════════════════╝
+
+1️⃣ Launch Mini App below
+2️⃣ Choose your preferred plan
+3️⃣ Select payment method (Stars or SOL)
+4️⃣ Complete payment
+5️⃣ Enjoy premium features!
+
+━━━━━━━━━━━━━━━━━━━━
+*Start your 5-day FREE trial now!*
+━━━━━━━━━━━━━━━━━━━━
+    `;
+    
+    ctx.editMessageText(subscriptionMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+                [Markup.button.callback('💎 Basic - 0.1 SOL', 'subscribe_basic')],
+                [Markup.button.callback('🚀 Pro - 0.25 SOL', 'subscribe_pro')],
+                [Markup.button.url('💎 View Pricing', `${MINI_APP_URL}#pricing`)]
+            ]
+        }
+    });
 });
 
 // Обработчик команды /status
@@ -699,13 +764,101 @@ bot.on('successful_payment', async (ctx) => {
     ctx.replyWithMarkdown(confirmationMessage, 
         Markup.inlineKeyboard([
             [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
-            [Markup.button.callback('📊 Check Status', 'check_status')]
+            [Markup.button.callback('📊 Check Status', 'check_subscription_status')]
         ])
     );
     
     // TODO: Update user subscription in database
     // This would integrate with your subscription system
     console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan`);
+});
+
+// Обработчик проверки статуса подписки
+bot.action('check_subscription_status', async (ctx) => {
+    const userId = ctx.from.id;
+    const userName = ctx.from.first_name || ctx.from.username || 'User';
+    
+    const statusMessage = `
+📊 *Subscription Status*
+
+👤 **User:** ${userName}
+🆔 **ID:** ${userId}
+
+╔═══════════════════════╗
+║  📈 *Current Status*    ║
+╚═══════════════════════╝
+
+✅ **Active Subscription**
+🚀 **Plan:** PRO
+⏰ **Expires:** 30 days from now
+🔔 **Notifications:** Unlimited
+📱 **Access:** All tabs unlocked
+
+╔═══════════════════════╗
+║  🎯 *Quick Actions*     ║
+╚═══════════════════════╝
+
+🚀 Launch Mini App
+📊 View Analytics
+🔔 Manage Notifications
+
+━━━━━━━━━━━━━━━━━━━━
+*Need help? Contact support*
+━━━━━━━━━━━━━━━━━━━━
+    `;
+    
+    ctx.editMessageText(statusMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+                [Markup.button.callback('📊 View Analytics', 'view_analytics')],
+                [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+            ]
+        }
+    });
+});
+
+// Обработчик просмотра аналитики
+bot.action('view_analytics', async (ctx) => {
+    ctx.answerCbQuery('Opening analytics...');
+    
+    const analyticsMessage = `
+📊 *Analytics Dashboard*
+
+╔═══════════════════════╗
+║  📈 *Your Performance*  ║
+╚═══════════════════════╝
+
+🎯 **Trades Tracked:** 1,247
+📈 **Success Rate:** 73.2%
+💰 **Total Volume:** $45,230
+🏆 **Best Trade:** +$2,340
+📱 **Active Alerts:** 12
+
+╔═══════════════════════╗
+║  🔔 *Recent Activity*   ║
+╚═══════════════════════╝
+
+• 🟢 BOUGHT $PEPE - 2.3 SOL
+• 🔴 SOLD $DOGE - 1.8 SOL  
+• 🟢 BOUGHT $SHIB - 0.9 SOL
+• 🔴 SOLD $BONK - 3.1 SOL
+
+━━━━━━━━━━━━━━━━━━━━
+*Launch Mini App for detailed analytics*
+━━━━━━━━━━━━━━━━━━━━
+    `;
+    
+    ctx.editMessageText(analyticsMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+                [Markup.button.callback('🔙 Back to Status', 'check_subscription_status')]
+            ]
+        }
+    });
 });
 
 // Обработчик ошибок
