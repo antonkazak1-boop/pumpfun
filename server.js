@@ -1968,6 +1968,10 @@ app.post('/api/payment/telegram-stars', async (req, res) => {
         }
         
         // Get pricing
+        if (!subscriptionSystem) {
+            return res.status(500).json({ success: false, error: 'Subscription system not available' });
+        }
+        
         const tiers = await subscriptionSystem.getAllSubscriptionTiers();
         const tier = tiers.find(t => t.tier_name === subscriptionType);
         
@@ -2001,6 +2005,10 @@ app.post('/api/payment/solana', async (req, res) => {
         
         if (!solanaPayment) {
             return res.status(500).json({ success: false, error: 'Solana payment not initialized' });
+        }
+        
+        if (!subscriptionSystem) {
+            return res.status(500).json({ success: false, error: 'Subscription system not available' });
         }
         
         // Get pricing with potential KOLScan discount
@@ -2040,6 +2048,10 @@ app.post('/api/payment/verify-solana', async (req, res) => {
         
         if (!solanaPayment) {
             return res.status(500).json({ success: false, error: 'Solana payment not initialized' });
+        }
+        
+        if (!subscriptionSystem) {
+            return res.status(500).json({ success: false, error: 'Subscription system not available' });
         }
         
         // Verify transaction
@@ -2102,19 +2114,32 @@ async function startServer() {
 
         // Инициализация системы подписок
         console.log('💳 Initializing subscription system...');
-        subscriptionSystem = new SubscriptionSystem(pool);
-        const subscriptionLoaded = await subscriptionSystem.initialize();
-        if (subscriptionLoaded) {
-            console.log('✅ Subscription system ready');
-        } else {
-            console.log('⚠️ Subscription system initialization failed');
+        try {
+            subscriptionSystem = new SubscriptionSystem(pool);
+            const subscriptionLoaded = await subscriptionSystem.initialize();
+            if (subscriptionLoaded) {
+                console.log('✅ Subscription system ready');
+            } else {
+                console.log('⚠️ Subscription system running in fallback mode');
+            }
+        } catch (subscriptionError) {
+            console.error('❌ Subscription system initialization failed:', subscriptionError.message);
+            console.log('⚠️ Subscription system running in fallback mode');
+            subscriptionSystem = null; // Set to null to use fallback mode
         }
 
         // Инициализация платежных систем
         console.log('💎 Initializing payment systems...');
-        telegramPayment = new TelegramPayment();
-        solanaPayment = new SolanaPayment();
-        console.log('✅ Payment systems initialized');
+        try {
+            telegramPayment = new TelegramPayment();
+            solanaPayment = new SolanaPayment();
+            console.log('✅ Payment systems initialized');
+        } catch (paymentError) {
+            console.error('❌ Payment systems initialization failed:', paymentError.message);
+            console.log('⚠️ Payment systems running in fallback mode');
+            telegramPayment = null;
+            solanaPayment = null;
+        }
         
         // Тест подключения к БД
         const dbConnected = await testDatabaseConnection();
