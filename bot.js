@@ -859,7 +859,17 @@ bot.on('pre_checkout_query', async (ctx) => {
     await ctx.answerPreCheckoutQuery(true);
 });
 
-bot.on('successful_payment', async (ctx) => {
+// Handle all messages to catch successful payments
+bot.on('message', async (ctx) => {
+    if (ctx.message.successful_payment) {
+        console.log('🎉 MESSAGE WITH SUCCESSFUL PAYMENT DETECTED!');
+        return handleSuccessfulPayment(ctx);
+    }
+});
+
+// Handle successful payment
+async function handleSuccessfulPayment(ctx) {
+    console.log('🎉 SUCCESSFUL PAYMENT WEBHOOK TRIGGERED!');
     const payment = ctx.message.successful_payment;
     const user = ctx.from;
     
@@ -909,18 +919,22 @@ bot.on('successful_payment', async (ctx) => {
     );
     
     // Update user subscription in database
+    console.log('🔄 Starting database update...');
     try {
         // Get pool from server.js
+        console.log('📊 Creating database connection...');
         const { Pool } = require('pg');
         const pool = new Pool({
             connectionString: process.env.DATABASE_URL,
             ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
         });
         
+        console.log('🔧 Initializing subscription system...');
         const { SubscriptionSystem } = require('./subscriptionSystem.js');
         const subscriptionSystem = new SubscriptionSystem(pool);
         
         // Create subscription record
+        console.log('💾 Creating subscription record...');
         const subscription = await subscriptionSystem.createSubscription({
             telegram_user_id: user.id,
             subscription_type: subscriptionType,
@@ -929,11 +943,17 @@ bot.on('successful_payment', async (ctx) => {
             currency: payment.currency
         });
         
-        console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan - DB updated`);
+        console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan - DB updated successfully!`);
+        console.log('📋 Subscription record:', subscription);
     } catch (error) {
         console.error('❌ Error updating subscription in database:', error);
+        console.error('❌ Error details:', error.message);
+        console.error('❌ Error stack:', error.stack);
     }
-});
+}
+
+// Keep the old handler as backup
+bot.on('successful_payment', handleSuccessfulPayment);
 
 // Обработчик проверки статуса подписки
 bot.action('check_subscription_status', async (ctx) => {
