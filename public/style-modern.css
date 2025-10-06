@@ -3792,10 +3792,20 @@ body {
     backdrop-filter: blur(10px);
     z-index: 10000;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 1rem;
     animation: fadeIn 0.3s ease;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent body scroll when menu is open */
+body.menu-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
 }
 
 .subscription-menu-header {
@@ -3990,6 +4000,8 @@ body {
     background: var(--bg-secondary);
     border-radius: 12px;
     border: 1px solid var(--border-color);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .subscription-info p {

@@ -2681,8 +2681,12 @@ function showSubscriptionMenu() {
     const existingMenu = document.querySelector('.subscription-menu');
     if (existingMenu) {
         existingMenu.remove();
+        document.body.classList.remove('menu-open');
         return;
     }
+    
+    // Prevent body scroll
+    document.body.classList.add('menu-open');
     
     // Create menu
     const menu = document.createElement('div');
@@ -2874,6 +2878,7 @@ function closeSubscriptionMenu() {
     const menu = document.querySelector('.subscription-menu');
     if (menu) {
         menu.remove();
+        document.body.classList.remove('menu-open');
         document.removeEventListener('click', closeSubscriptionMenuOnOutsideClick);
     }
 }
@@ -2922,13 +2927,13 @@ async function payWithStars(tierName) {
                 console.log(`✅ Stars payment initiated for ${tierName}`);
             } else {
                 // Fallback: try to create invoice directly
-                const invoiceLink = `https://t.me/pumpdexbot?startapp=pay_stars_${tierName}`;
+                const invoiceLink = `https://t.me/BetAIAGENT_BOT?startapp=pay_stars_${tierName}`;
                 tg.openLink(invoiceLink);
                 console.log(`✅ Stars payment initiated via fallback for ${tierName}`);
             }
         } else {
             // Fallback for non-Telegram environment
-            const invoiceLink = `https://t.me/pumpdexbot?startapp=pay_stars_${tierName}`;
+            const invoiceLink = `https://t.me/BetAIAGENT_BOT?startapp=pay_stars_${tierName}`;
             window.open(invoiceLink, '_blank');
             console.log(`✅ Stars payment initiated via web fallback for ${tierName}`);
         }
