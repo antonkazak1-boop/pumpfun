@@ -265,9 +265,269 @@ bot.command('subscribe', (ctx) => {
     ctx.replyWithMarkdown(subscriptionMessage,
         Markup.inlineKeyboard([
             [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+            [Markup.button.callback('💎 Basic - 0.1 SOL', 'subscribe_basic')],
+            [Markup.button.callback('🚀 Pro - 0.25 SOL', 'subscribe_pro')],
             [Markup.button.url('💎 View Pricing', `${MINI_APP_URL}#pricing`)]
         ])
     );
+});
+
+// Обработчики кнопок подписки
+bot.action('subscribe_basic', async (ctx) => {
+    const userId = ctx.from.id;
+    const userName = ctx.from.first_name || ctx.from.username || 'User';
+    
+    const paymentMessage = `
+💎 *Basic Subscription - 0.1 SOL (~100 ⭐)*
+
+Hey ${userName}! Ready to upgrade to Basic?
+
+╔═══════════════════════╗
+║  🎯 *What You Get*      ║
+╚═══════════════════════╝
+
+✅ Access to ALL tabs
+✅ 50 notifications per day
+✅ Priority support
+✅ 30 days access
+
+╔═══════════════════════╗
+║  💳 *Payment Methods*   ║
+╚═══════════════════════╝
+
+⭐ *Telegram Stars* (Recommended)
+• Instant payment
+• No blockchain fees
+• Secure and fast
+
+☀️ *Solana (SOL)*
+• Direct blockchain payment
+• 25% discount with $KOLScan tokens
+
+━━━━━━━━━━━━━━━━━━━━
+*Choose your payment method below:*
+━━━━━━━━━━━━━━━━━━━━
+    `;
+    
+    ctx.editMessageText(paymentMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [Markup.button.callback('⭐ Pay with Stars (100 ⭐)', 'pay_stars_basic')],
+                [Markup.button.callback('☀️ Pay with SOL (0.1 SOL)', 'pay_sol_basic')],
+                [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+            ]
+        }
+    });
+});
+
+bot.action('subscribe_pro', async (ctx) => {
+    const userId = ctx.from.id;
+    const userName = ctx.from.first_name || ctx.from.username || 'User';
+    
+    const paymentMessage = `
+🚀 *Pro Subscription - 0.25 SOL (~250 ⭐)*
+
+Hey ${userName}! Ready to upgrade to Pro?
+
+╔═══════════════════════╗
+║  🎯 *What You Get*      ║
+╚═══════════════════════╝
+
+✅ Access to ALL tabs
+✅ Unlimited notifications
+✅ Early access to new features
+✅ Advanced analytics
+✅ Priority customer support
+✅ 30 days access
+
+╔═══════════════════════╗
+║  💳 *Payment Methods*   ║
+╚═══════════════════════╝
+
+⭐ *Telegram Stars* (Recommended)
+• Instant payment
+• No blockchain fees
+• Secure and fast
+
+☀️ *Solana (SOL)*
+• Direct blockchain payment
+• 25% discount with $KOLScan tokens
+
+━━━━━━━━━━━━━━━━━━━━
+*Choose your payment method below:*
+━━━━━━━━━━━━━━━━━━━━
+    `;
+    
+    ctx.editMessageText(paymentMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [Markup.button.callback('⭐ Pay with Stars (250 ⭐)', 'pay_stars_pro')],
+                [Markup.button.callback('☀️ Pay with SOL (0.25 SOL)', 'pay_sol_pro')],
+                [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+            ]
+        }
+    });
+});
+
+// Обработчики платежей
+bot.action('pay_stars_basic', async (ctx) => {
+    const userId = ctx.from.id;
+    
+    try {
+        // Create invoice for Telegram Stars
+        const invoice = await bot.telegram.createInvoiceLink({
+            title: 'Pump Dex Basic Subscription',
+            description: 'Basic subscription - 30 days access to all tabs',
+            payload: `basic_${userId}`,
+            provider_token: '', // Empty for Stars
+            currency: 'XTR', // Telegram Stars
+            prices: [{
+                label: 'Basic Subscription',
+                amount: 10000 // 100 stars in cents
+            }]
+        });
+        
+        ctx.editMessageText(`
+⭐ *Payment with Telegram Stars*
+
+Click the button below to pay with Stars:
+
+💎 **Basic Subscription - 100 Stars**
+• 30 days access
+• All tabs unlocked
+• 50 notifications/day
+
+━━━━━━━━━━━━━━━━━━━━
+*Secure payment via Telegram*
+━━━━━━━━━━━━━━━━━━━━
+        `, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: [
+                    [Markup.button.url('💳 Pay with Stars', invoice)],
+                    [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+                ]
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error creating Stars invoice:', error);
+        ctx.answerCbQuery('❌ Payment system temporarily unavailable. Please try again later.');
+    }
+});
+
+bot.action('pay_stars_pro', async (ctx) => {
+    const userId = ctx.from.id;
+    
+    try {
+        // Create invoice for Telegram Stars
+        const invoice = await bot.telegram.createInvoiceLink({
+            title: 'Pump Dex Pro Subscription',
+            description: 'Pro subscription - 30 days access with unlimited notifications',
+            payload: `pro_${userId}`,
+            provider_token: '', // Empty for Stars
+            currency: 'XTR', // Telegram Stars
+            prices: [{
+                label: 'Pro Subscription',
+                amount: 25000 // 250 stars in cents
+            }]
+        });
+        
+        ctx.editMessageText(`
+⭐ *Payment with Telegram Stars*
+
+Click the button below to pay with Stars:
+
+🚀 **Pro Subscription - 250 Stars**
+• 30 days access
+• All tabs unlocked
+• Unlimited notifications
+• Early access features
+
+━━━━━━━━━━━━━━━━━━━━
+*Secure payment via Telegram*
+━━━━━━━━━━━━━━━━━━━━
+        `, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: [
+                    [Markup.button.url('💳 Pay with Stars', invoice)],
+                    [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+                ]
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error creating Stars invoice:', error);
+        ctx.answerCbQuery('❌ Payment system temporarily unavailable. Please try again later.');
+    }
+});
+
+bot.action('pay_sol_basic', async (ctx) => {
+    ctx.editMessageText(`
+☀️ *Payment with Solana (SOL)*
+
+**Basic Subscription - 0.1 SOL**
+
+To pay with SOL:
+1. Launch Mini App below
+2. Connect your Solana wallet
+3. Complete payment
+
+💡 **Get 25% discount with $KOLScan tokens!**
+• Minimum 1000 $KOLScan required
+• Final price: 0.075 SOL
+
+━━━━━━━━━━━━━━━━━━━━
+*Secure blockchain payment*
+━━━━━━━━━━━━━━━━━━━━
+    `, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+                [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+            ]
+        }
+    });
+});
+
+bot.action('pay_sol_pro', async (ctx) => {
+    ctx.editMessageText(`
+☀️ *Payment with Solana (SOL)*
+
+**Pro Subscription - 0.25 SOL**
+
+To pay with SOL:
+1. Launch Mini App below
+2. Connect your Solana wallet
+3. Complete payment
+
+💡 **Get 25% discount with $KOLScan tokens!**
+• Minimum 1000 $KOLScan required
+• Final price: 0.1875 SOL
+
+━━━━━━━━━━━━━━━━━━━━
+*Secure blockchain payment*
+━━━━━━━━━━━━━━━━━━━━
+    `, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+                [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+            ]
+        }
+    });
+});
+
+bot.action('back_to_plans', async (ctx) => {
+    // Go back to subscription plans
+    ctx.answerCbQuery('Back to subscription plans');
+    // Trigger the subscribe command
+    bot.command('subscribe')(ctx);
 });
 
 // Обработчик команды /status
@@ -384,6 +644,68 @@ bot.on('inline_query', (ctx) => {
     ];
     
     ctx.answerInlineQuery(results);
+});
+
+// Обработчик успешных платежей
+bot.on('pre_checkout_query', async (ctx) => {
+    console.log('💰 Pre-checkout query received:', ctx.preCheckoutQuery);
+    
+    // Always approve the payment
+    await ctx.answerPreCheckoutQuery(true);
+});
+
+bot.on('successful_payment', async (ctx) => {
+    const payment = ctx.message.successful_payment;
+    const user = ctx.from;
+    
+    console.log('✅ Successful payment received:', {
+        userId: user.id,
+        username: user.username,
+        amount: payment.total_amount,
+        currency: payment.currency,
+        payload: payment.invoice_payload
+    });
+    
+    // Parse subscription type from payload
+    const payload = payment.invoice_payload;
+    let subscriptionType = 'basic';
+    
+    if (payload.includes('pro_')) {
+        subscriptionType = 'pro';
+    } else if (payload.includes('basic_')) {
+        subscriptionType = 'basic';
+    }
+    
+    // Send confirmation message
+    const confirmationMessage = `
+🎉 *Payment Successful!*
+
+✅ **Subscription Activated: ${subscriptionType.toUpperCase()}**
+
+╔═══════════════════════╗
+║  🎯 *What's Next*       ║
+╚═══════════════════════╝
+
+🚀 Launch Mini App to access all features
+📱 You now have full access to all tabs
+🔔 Notifications are now active
+⏰ Subscription expires in 30 days
+
+━━━━━━━━━━━━━━━━━━━━
+*Thank you for subscribing!*
+━━━━━━━━━━━━━━━━━━━━
+    `;
+    
+    ctx.replyWithMarkdown(confirmationMessage, 
+        Markup.inlineKeyboard([
+            [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+            [Markup.button.callback('📊 Check Status', 'check_status')]
+        ])
+    );
+    
+    // TODO: Update user subscription in database
+    // This would integrate with your subscription system
+    console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan`);
 });
 
 // Обработчик ошибок
