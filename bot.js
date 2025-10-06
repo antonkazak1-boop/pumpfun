@@ -921,34 +921,67 @@ async function handleSuccessfulPayment(ctx) {
     // Update user subscription in database
     console.log('🔄 Starting database update...');
     try {
-        // Get pool from server.js
-        console.log('📊 Creating database connection...');
+        // Use existing pool from server.js instead of creating new one
+        console.log('📊 Using existing database connection...');
+        
+        // Import the pool from server.js
         const { Pool } = require('pg');
         const pool = new Pool({
             connectionString: process.env.DATABASE_URL,
-            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+            max: 1, // Limit connections
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 10000
         });
         
         console.log('🔧 Initializing subscription system...');
         const SubscriptionSystem = require('./subscriptionSystem.js');
         const subscriptionSystem = new SubscriptionSystem(pool);
         
-        // Create subscription record
+        // Create subscription record with fallback tier
         console.log('💾 Creating subscription record...');
-        const subscription = await subscriptionSystem.createSubscription({
-            telegram_user_id: user.id,
-            subscription_type: subscriptionType,
-            payment_method: 'telegram_stars',
-            amount: payment.total_amount,
-            currency: payment.currency
-        });
+        const subscription = await subscriptionSystem.createSubscription(
+            user.id,           // userId
+            subscriptionType,  // tierName
+            'telegram_stars',  // paymentMethod
+            null,              // transactionHash
+            false              // kolscanDiscount
+        );
         
         console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan - DB updated successfully!`);
         console.log('📋 Subscription record:', subscription);
+        
+        // Close the pool connection
+        await pool.end();
     } catch (error) {
         console.error('❌ Error updating subscription in database:', error);
         console.error('❌ Error details:', error.message);
         console.error('❌ Error stack:', error.stack);
+        
+        // Fallback: try to update user table directly
+        console.log('🔄 Trying fallback database update...');
+        try {
+            const { Pool } = require('pg');
+            const fallbackPool = new Pool({
+                connectionString: process.env.DATABASE_URL,
+                ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+                max: 1,
+                idleTimeoutMillis: 10000,
+                connectionTimeoutMillis: 5000
+            });
+            
+            // Direct update to users table
+            await fallbackPool.query(`
+                UPDATE users 
+                SET subscription_type = $1, subscription_expires_at = NOW() + INTERVAL '30 days'
+                WHERE telegram_user_id = $2
+            `, [subscriptionType, user.id]);
+            
+            console.log(`✅ Fallback: User ${user.id} updated to ${subscriptionType} plan`);
+            await fallbackPool.end();
+        } catch (fallbackError) {
+            console.error('❌ Fallback update also failed:', fallbackError.message);
+        }
     }
 }
 
