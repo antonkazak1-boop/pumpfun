@@ -29,6 +29,11 @@ const {
     searchPumpTokens
 } = require('./pumpfunRealAPI');
 
+// Import subscription system
+const SubscriptionSystem = require('./subscriptionSystem');
+const TelegramPayment = require('./telegramPayment');
+const SolanaPayment = require('./solanaPayment');
+
 // Pump.fun API endpoints
 const FRONTEND_API_V3 = 'https://frontend-api-v3.pump.fun';
 
@@ -1775,18 +1780,31 @@ app.get('/api/pump/stats/:address', async (req, res) => {
 
 // === ADMIN PANEL API ENDPOINTS ===
 
+// Global subscription system instance
+let subscriptionSystem = null;
+let telegramPayment = null;
+let solanaPayment = null;
+
 // Admin stats endpoint
 app.get('/api/admin/stats', async (req, res) => {
     try {
-        // Mock data for now - replace with real database queries later
-        const stats = {
-            totalUsers: 1250,
-            activeSubscriptions: 342,
-            trialUsers: 156,
-            totalRevenue: '1,247.5 SOL'
-        };
-        
-        res.json(stats);
+        if (subscriptionSystem) {
+            const stats = await subscriptionSystem.getAdminStats();
+            res.json({
+                totalUsers: stats.total_users || 0,
+                activeSubscriptions: stats.active_subscriptions || 0,
+                trialUsers: stats.trial_users || 0,
+                totalRevenue: `${stats.total_revenue || 0} SOL`
+            });
+        } else {
+            // Fallback mock data
+            res.json({
+                totalUsers: 1250,
+                activeSubscriptions: 342,
+                trialUsers: 156,
+                totalRevenue: '1,247.5 SOL'
+            });
+        }
     } catch (error) {
         console.error('Admin stats error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1798,10 +1816,17 @@ app.post('/api/admin/kolscan-settings', async (req, res) => {
     try {
         const { discount, minHold } = req.body;
         
-        // TODO: Save to database
-        console.log('KOLScan settings updated:', { discount, minHold });
-        
-        res.json({ success: true, message: 'KOLScan settings updated' });
+        if (subscriptionSystem) {
+            const success = await subscriptionSystem.updateKolscanSettings(discount, minHold);
+            if (success) {
+                res.json({ success: true, message: 'KOLScan settings updated' });
+            } else {
+                res.status(500).json({ success: false, error: 'Failed to update settings' });
+            }
+        } else {
+            console.log('KOLScan settings updated:', { discount, minHold });
+            res.json({ success: true, message: 'KOLScan settings updated' });
+        }
     } catch (error) {
         console.error('KOLScan settings error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1839,14 +1864,226 @@ app.post('/api/admin/clear-cache', async (req, res) => {
 // Export user data endpoint
 app.get('/api/admin/export-data', async (req, res) => {
     try {
-        // TODO: Generate real CSV export
-        const csvData = 'user_id,subscription_type,created_at,last_active\n1,premium,2024-01-01,2024-01-15\n2,basic,2024-01-02,2024-01-14';
-        
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', 'attachment; filename=users.csv');
-        res.send(csvData);
+        if (subscriptionSystem) {
+            const result = await pool.query(`
+                SELECT u.id, u.username, u.first_name, u.subscription_type, u.created_at, u.last_active, u.total_spent_sol
+                FROM users u
+                WHERE u.is_active = true
+                ORDER BY u.created_at DESC
+            `);
+            
+            let csvData = 'id,username,first_name,subscription_type,created_at,last_active,total_spent_sol\n';
+            result.rows.forEach(row => {
+                csvData += `${row.id},${row.username || ''},${row.first_name || ''},${row.subscription_type || ''},${row.created_at || ''},${row.last_active || ''},${row.total_spent_sol || 0}\n`;
+            });
+            
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename=users.csv');
+            res.send(csvData);
+        } else {
+            // Fallback mock data
+            const csvData = 'user_id,subscription_type,created_at,last_active\n1,premium,2024-01-01,2024-01-15\n2,basic,2024-01-02,2024-01-14';
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename=users.csv');
+            res.send(csvData);
+        }
     } catch (error) {
         console.error('Export data error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// === SUBSCRIPTION SYSTEM API ENDPOINTS ===
+
+// Get subscription tiers
+app.get('/api/subscription/tiers', async (req, res) => {
+    try {
+        if (subscriptionSystem) {
+            const tiers = await subscriptionSystem.getAllSubscriptionTiers();
+            res.json({ success: true, tiers: tiers });
+        } else {
+            res.json({ success: true, tiers: [] });
+        }
+    } catch (error) {
+        console.error('Get subscription tiers error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Check user access to tab
+app.post('/api/subscription/check-access', async (req, res) => {
+    try {
+        const { userId, tabName } = req.body;
+        
+        if (subscriptionSystem) {
+            const hasAccess = await subscriptionSystem.checkTabAccess(userId, tabName);
+            res.json({ success: true, hasAccess: hasAccess });
+        } else {
+            // Allow access if subscription system not initialized
+            res.json({ success: true, hasAccess: true });
+        }
+    } catch (error) {
+        console.error('Check access error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get user subscription status
+app.get('/api/subscription/status/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        if (subscriptionSystem) {
+            const user = await subscriptionSystem.getUserById(userId);
+            const hasActiveSubscription = await subscriptionSystem.hasActiveSubscription(userId);
+            const activeSubscription = await subscriptionSystem.getActiveSubscription(userId);
+            
+            res.json({
+                success: true,
+                user: user,
+                hasActiveSubscription: hasActiveSubscription,
+                activeSubscription: activeSubscription
+            });
+        } else {
+            res.json({
+                success: true,
+                user: null,
+                hasActiveSubscription: false,
+                activeSubscription: null
+            });
+        }
+    } catch (error) {
+        console.error('Get subscription status error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Create Telegram Stars payment
+app.post('/api/payment/telegram-stars', async (req, res) => {
+    try {
+        const { userId, subscriptionType } = req.body;
+        
+        if (!telegramPayment) {
+            return res.status(500).json({ success: false, error: 'Telegram payment not initialized' });
+        }
+        
+        // Get pricing
+        const tiers = await subscriptionSystem.getAllSubscriptionTiers();
+        const tier = tiers.find(t => t.tier_name === subscriptionType);
+        
+        if (!tier) {
+            return res.status(400).json({ success: false, error: 'Invalid subscription type' });
+        }
+        
+        // Create invoice
+        const invoice = await telegramPayment.createStarsInvoice(
+            userId,
+            tier.price_stars,
+            `Pump Dex ${subscriptionType} subscription`,
+            subscriptionType
+        );
+        
+        if (invoice.success) {
+            res.json({ success: true, invoice_url: invoice.invoice_url });
+        } else {
+            res.status(500).json({ success: false, error: invoice.error });
+        }
+    } catch (error) {
+        console.error('Telegram Stars payment error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Create Solana payment
+app.post('/api/payment/solana', async (req, res) => {
+    try {
+        const { userId, subscriptionType, walletAddress } = req.body;
+        
+        if (!solanaPayment) {
+            return res.status(500).json({ success: false, error: 'Solana payment not initialized' });
+        }
+        
+        // Get pricing with potential KOLScan discount
+        const pricing = await solanaPayment.getSubscriptionPricing(subscriptionType, walletAddress);
+        
+        if (!pricing.success) {
+            return res.status(500).json({ success: false, error: pricing.error });
+        }
+        
+        // Create Solana Pay URL
+        const paymentUrl = await solanaPayment.createSolanaPayUrl(
+            pricing.finalPrice,
+            subscriptionType
+        );
+        
+        if (paymentUrl.success) {
+            res.json({
+                success: true,
+                payment_url: paymentUrl.url,
+                amount: pricing.finalPrice,
+                discount: pricing.discount,
+                hasKolscanDiscount: pricing.hasKolscanDiscount
+            });
+        } else {
+            res.status(500).json({ success: false, error: paymentUrl.error });
+        }
+    } catch (error) {
+        console.error('Solana payment error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Verify Solana transaction
+app.post('/api/payment/verify-solana', async (req, res) => {
+    try {
+        const { signature, expectedAmount, userId, subscriptionType } = req.body;
+        
+        if (!solanaPayment) {
+            return res.status(500).json({ success: false, error: 'Solana payment not initialized' });
+        }
+        
+        // Verify transaction
+        const verification = await solanaPayment.verifyTransaction(signature, expectedAmount);
+        
+        if (verification.success) {
+            // Create subscription
+            if (subscriptionSystem) {
+                await subscriptionSystem.createSubscription(
+                    userId,
+                    subscriptionType,
+                    'solana',
+                    signature
+                );
+            }
+            
+            res.json({ success: true, message: 'Payment verified and subscription created' });
+        } else {
+            res.status(400).json({ success: false, error: verification.error });
+        }
+    } catch (error) {
+        console.error('Verify Solana transaction error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Check KOLScan balance
+app.get('/api/kolscan/balance/:walletAddress', async (req, res) => {
+    try {
+        const { walletAddress } = req.params;
+        
+        if (solanaPayment) {
+            const balance = await solanaPayment.checkKolscanBalance(walletAddress);
+            res.json(balance);
+        } else {
+            res.json({
+                success: false,
+                balance: 0,
+                hasMinimumHold: false,
+                error: 'Solana payment not initialized'
+            });
+        }
+    } catch (error) {
+        console.error('Check KOLScan balance error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -1862,6 +2099,22 @@ async function startServer() {
         } else {
             console.log('⚠️ Token metadata service running in fallback mode');
         }
+
+        // Инициализация системы подписок
+        console.log('💳 Initializing subscription system...');
+        subscriptionSystem = new SubscriptionSystem(pool);
+        const subscriptionLoaded = await subscriptionSystem.initialize();
+        if (subscriptionLoaded) {
+            console.log('✅ Subscription system ready');
+        } else {
+            console.log('⚠️ Subscription system initialization failed');
+        }
+
+        // Инициализация платежных систем
+        console.log('💎 Initializing payment systems...');
+        telegramPayment = new TelegramPayment();
+        solanaPayment = new SolanaPayment();
+        console.log('✅ Payment systems initialized');
         
         // Тест подключения к БД
         const dbConnected = await testDatabaseConnection();
@@ -1904,6 +2157,17 @@ app.listen(port, () => {
     console.log(`   - /api/admin/tier-settings - настройки тарифных планов`);
     console.log(`   - /api/admin/clear-cache - очистка кэша`);
     console.log(`   - /api/admin/export-data - экспорт данных пользователей`);
+    console.log(`💳 Subscription System endpoints:`);
+    console.log(`   - /api/subscription/tiers - получить тарифные планы`);
+    console.log(`   - /api/subscription/check-access - проверить доступ к вкладке`);
+    console.log(`   - /api/subscription/status/:userId - статус подписки пользователя`);
+    console.log(`⭐ Telegram Stars Payment endpoints:`);
+    console.log(`   - /api/payment/telegram-stars - создать платеж через Telegram Stars`);
+    console.log(`💎 Solana Payment endpoints:`);
+    console.log(`   - /api/payment/solana - создать платеж через Solana`);
+    console.log(`   - /api/payment/verify-solana - подтвердить Solana транзакцию`);
+    console.log(`🪙 KOLScan Integration endpoints:`);
+    console.log(`   - /api/kolscan/balance/:walletAddress - проверить баланс $KOLScan`);
             
             // Запускаем Telegram бота параллельно (если BOT_TOKEN настроен)
             if (process.env.BOT_TOKEN) {

@@ -51,6 +51,9 @@ const API_TIMEOUT = 10000; // 10 seconds
 let currentTab = 'about';
 let refreshTimer = null;
 let isLoading = false;
+let subscriptionStatus = null;
+let availableTiers = [];
+let currentUserId = null;
 
 // Tab to API endpoint mapping
 const TAB_API_MAP = {
@@ -111,6 +114,13 @@ function initTelegramWebApp() {
         console.log('Telegram Web App initialized');
         console.log('User ID:', tg.initDataUnsafe?.user?.id);
         console.log('Theme params:', tg.themeParams);
+        
+        // Set current user ID for subscription system
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            currentUserId = user.id;
+            console.log('Current user ID set:', currentUserId);
+        }
         
         return tg;
     }
@@ -2608,5 +2618,175 @@ function adminLogout() {
     document.getElementById('adminDashboard').style.display = 'none';
     document.getElementById('adminPassword').value = '';
     console.log('Admin logged out');
+}
+
+// === SUBSCRIPTION SYSTEM FUNCTIONS ===
+
+// Initialize subscription system
+async function initSubscriptionSystem() {
+    try {
+        console.log('🔧 Initializing subscription system...');
+        
+        // Load subscription tiers
+        await loadSubscriptionTiers();
+        
+        // Check user subscription status
+        if (currentUserId) {
+            await checkSubscriptionStatus();
+        }
+        
+        console.log('✅ Subscription system initialized');
+    } catch (error) {
+        console.error('❌ Failed to initialize subscription system:', error);
+    }
+}
+
+// Load available subscription tiers
+async function loadSubscriptionTiers() {
+    try {
+        const response = await fetchWithTimeout(`${BACKEND_URL}/api/subscription/tiers`);
+        const data = await response.json();
+        
+        if (data.success && data.tiers) {
+            availableTiers = data.tiers;
+            console.log('📋 Subscription tiers loaded:', availableTiers);
+        }
+    } catch (error) {
+        console.error('Error loading subscription tiers:', error);
+    }
+}
+
+// Check user subscription status
+async function checkSubscriptionStatus() {
+    try {
+        if (!currentUserId) {
+            console.log('No user ID available for subscription check');
+            return;
+        }
+        
+        const response = await fetchWithTimeout(`${BACKEND_URL}/api/subscription/status/${currentUserId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            subscriptionStatus = data;
+            console.log('📊 Subscription status:', subscriptionStatus);
+            
+            // Show subscription UI if needed
+            updateSubscriptionUI();
+        }
+    } catch (error) {
+        console.error('Error checking subscription status:', error);
+    }
+}
+
+// Show subscription modal
+function showSubscriptionModal() {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('subscriptionModal');
+    if (!modal) {
+        modal = createSubscriptionModal();
+        document.body.appendChild(modal);
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// Create subscription modal
+function createSubscriptionModal() {
+    const modal = document.createElement('div');
+    modal.id = 'subscriptionModal';
+    modal.className = 'subscription-modal';
+    
+    modal.innerHTML = `
+        <div class="subscription-modal-content">
+            <div class="subscription-header">
+                <h2><i class="fas fa-crown"></i> Upgrade to Premium</h2>
+                <button class="close-modal" onclick="closeSubscriptionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="subscription-body">
+                <p class="upgrade-message">
+                    🚀 Unlock all premium features and get advanced analytics!
+                </p>
+                
+                <div class="subscription-tiers" id="subscriptionTiers">
+                    <!-- Tiers will be loaded here -->
+                </div>
+            </div>
+            
+            <div class="subscription-footer">
+                <button class="btn-secondary" onclick="closeSubscriptionModal()">
+                    Maybe Later
+                </button>
+            </div>
+        </div>
+    `;
+    
+    return modal;
+}
+
+// Subscribe with Telegram Stars
+async function subscribeWithStars(tierName) {
+    try {
+        if (!currentUserId) {
+            alert('User ID not available');
+            return;
+        }
+        
+        const response = await fetchWithTimeout(`${BACKEND_URL}/api/payment/telegram-stars`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: currentUserId,
+                subscriptionType: tierName
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.invoice_url) {
+            // Open payment URL
+            window.open(data.invoice_url, '_blank');
+        } else {
+            alert('Failed to create payment: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error creating Stars payment:', error);
+        alert('Payment failed: ' + error.message);
+    }
+}
+
+// Close subscription modal
+function closeSubscriptionModal() {
+    const modal = document.getElementById('subscriptionModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Initialize app
+async function initApp() {
+    console.log('🚀 Initializing Pump Dex Mini App...');
+    
+    // Initialize Telegram Web App
+    initTelegramWebApp();
+    
+    // Initialize theme
+    initTheme();
+    
+    // Initialize admin panel
+    initAdminPanel();
+    
+    // Initialize subscription system
+    await initSubscriptionSystem();
+    
+    // Start auto-refresh
+    startAutoRefresh();
+    
+    console.log('✅ App initialized successfully');
 }
 
