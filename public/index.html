@@ -28,8 +28,9 @@
                 Pump Dex Bot
             </h1>
             <div class="header-controls">
-                <div class="theme-toggle" onclick="toggleTheme()" title="Switch theme">
-                    <i class="fas fa-moon"></i>
+                <div class="theme-switcher" onclick="cycleTheme()" title="Switch Theme">
+                    <i class="fas fa-sun"></i>
+                    <span class="theme-label">Light</span>
                 </div>
                 <div class="admin-toggle" onclick="showAdminTab()" title="Admin Panel (Password: 2110)">
                     <i class="fas fa-cog"></i>
@@ -177,54 +178,113 @@
                     <p class="tab-description">Advanced analytics tool for tracking smart money</p>
                 </div>
                 
-                <div class="about-hero">
-                    <div class="hero-content">
-                        <div class="hero-text">
-                    <h3>Why Pump Dex Bot?</h3>
-                    <ul class="features-list">
-                        <li><i class="fas fa-brain"></i> Tracking <strong>312 known traders</strong></li>
-                        <li><i class="fas fa-chart-line"></i> Volume analysis and whale movements</li>
-                        <li><i class="fas fa-fire"></i> Cluster purchases and early entry signals</li>
-                        <li><i class="fas fa-bolt"></i> Real-time updates every 5 minutes</li>
-                        <li><i class="fas fa-shield-alt"></i> Proven strategies of the best traders</li>
-                    </ul>
-                            
-                            <div class="stats-grid">
-                                <div class="stat-card">
-                                    <div class="stat-number">300+</div>
-                                    <div class="stat-label">Known traders</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-number">20+</div>
-                                    <div class="stat-label">Signals per hour</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-number">Live</div>
-                                    <div class="stat-label">Updates</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-number">100%</div>
-                                    <div class="stat-label">Automation</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-number">SQL</div>
-                                    <div class="stat-label">Data Analysis</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-number">⚡</div>
-                                    <div class="stat-label">Real-time</div>
-                                </div>
-                            </div>
+                <!-- Hero Section -->
+                <section class="lovable-hero-section">
+                    <div class="lovable-hero-background"></div>
+                    <div class="lovable-hero-content">
+                        <div class="lovable-hero-badge">
+                            <i class="fas fa-bolt"></i>
+                            <span>Powered by Helius & Pump.fun</span>
                         </div>
                         
-                        <div class="hero-traders">
-                            <h4><i class="fas fa-users"></i> Our traders</h4>
-                            <div class="traders-scroll" id="tradersScroll">
-                                <!-- Список трейдеров будет генерироваться JS -->
-                            </div>
+                        <h1 class="lovable-hero-title">
+                            <span class="lovable-neon-text">Smart Money</span>
+                            <br>
+                            <span class="lovable-hero-subtitle">Analytics for Solana</span>
+                        </h1>
+                        
+                        <p class="lovable-hero-description">
+                            Track the best traders, discover trending tokens, and get real-time signals
+                            to make informed trading decisions in the Solana ecosystem.
+                        </p>
+
+                        <div class="lovable-hero-buttons">
+                            <button class="lovable-btn-primary" onclick="showTab('freshTokens')">
+                                <i class="fas fa-rocket"></i>
+                                Explore Dashboard
+                            </button>
+                            <button class="lovable-btn-outline" onclick="showTab('analytics')">
+                                Learn More
+                            </button>
                         </div>
                     </div>
-                </div>
+
+                    <!-- Stats Grid -->
+                    <div class="lovable-stats-grid">
+                        <div class="lovable-stat-card">
+                            <div class="lovable-stat-number">300+</div>
+                            <div class="lovable-stat-label">Known traders</div>
+                        </div>
+                        <div class="lovable-stat-card">
+                            <div class="lovable-stat-number">10418+</div>
+                            <div class="lovable-stat-label">Tokens Monitored</div>
+                        </div>
+                        <div class="lovable-stat-card">
+                            <div class="lovable-stat-number">50+</div>
+                            <div class="lovable-stat-label">Daily Signals</div>
+                        </div>
+                        <div class="lovable-stat-card">
+                            <div class="lovable-stat-number" id="winRate">87%</div>
+                            <div class="lovable-stat-label">Win Rate</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Features Section -->
+                <section class="lovable-features-section">
+                    <div class="lovable-features-header">
+                        <h2 class="lovable-features-title">
+                            Everything You Need to <span class="lovable-neon-text-blue">Trade Smarter</span>
+                        </h2>
+                        <p class="lovable-features-description">
+                            Advanced analytics and real-time data to give you an edge in the market
+                        </p>
+                    </div>
+
+                    <div class="lovable-features-grid">
+                        <div class="lovable-feature-card">
+                            <div class="lovable-feature-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3 class="lovable-feature-title">Trending Tokens</h3>
+                            <p class="lovable-feature-description">Track fresh tokens and most bought coins in real-time</p>
+                        </div>
+                        <div class="lovable-feature-card">
+                            <div class="lovable-feature-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <h3 class="lovable-feature-title">Smart Money Tracking</h3>
+                            <p class="lovable-feature-description">Follow 312+ successful traders and their strategies</p>
+                        </div>
+                        <div class="lovable-feature-card">
+                            <div class="lovable-feature-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h3 class="lovable-feature-title">Live Signals</h3>
+                            <p class="lovable-feature-description">Get instant alerts on cluster buys and co-buy patterns</p>
+                        </div>
+                        <div class="lovable-feature-card">
+                            <div class="lovable-feature-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3 class="lovable-feature-title">Advanced Analytics</h3>
+                            <p class="lovable-feature-description">Deep insights into wallet performance and market trends</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CTA Section -->
+                <section class="lovable-cta-section">
+                    <div class="lovable-cta-card">
+                        <h2 class="lovable-cta-title">Ready to Start Trading Smarter?</h2>
+                        <p class="lovable-cta-description">
+                            Join thousands of traders using Pump Dex to track smart money and discover opportunities
+                        </p>
+                        <button class="lovable-btn-primary" onclick="showTab('freshTokens')">
+                            Get Started Now
+                        </button>
+                    </div>
+                </section>
             </div>
 
             <!-- Analytics Tab -->

@@ -1,154 +1,201 @@
-// 🎨 Lovable Theme Switcher - Hybrid Integration
+// 🎨 Theme Switcher - Three Theme System (Light, Dark, Lovable)
 
-// Theme management with Lovable styles
-function initLovableTheme() {
-    console.log('🎨 Initializing Lovable theme system...');
+// Theme management system
+let currentTheme = 'light'; // light, dark, lovable
+
+// Initialize theme system
+function initThemeSystem() {
+    console.log('🎨 Initializing theme system...');
     
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('lovable-theme');
-    const prefersLovable = localStorage.getItem('prefers-lovable') === 'true';
+    // Check if user has a saved preference
+    const savedTheme = localStorage.getItem('currentTheme');
     
-    if (savedTheme === 'lovable' || prefersLovable) {
-        enableLovableTheme();
+    if (savedTheme && ['light', 'dark', 'lovable'].includes(savedTheme)) {
+        currentTheme = savedTheme;
     } else {
-        disableLovableTheme();
+        // Default to light theme for new users
+        currentTheme = 'light';
     }
     
-    // Add theme toggle button
-    addLovableThemeToggle();
+    applyTheme(currentTheme);
+    updateThemeSwitcher();
+    
+    console.log('✅ Theme system initialized with theme:', currentTheme);
 }
 
-function enableLovableTheme() {
-    console.log('✨ Enabling Lovable theme...');
+// Cycle through themes
+function cycleTheme() {
+    const themes = ['light', 'dark', 'lovable'];
+    const currentIndex = themes.indexOf(currentTheme);
+    const nextIndex = (currentIndex + 1) % themes.length;
     
-    document.body.classList.add('lovable-theme');
-    localStorage.setItem('lovable-theme', 'lovable');
+    currentTheme = themes[nextIndex];
+    applyTheme(currentTheme);
+    updateThemeSwitcher();
     
-    // Update theme toggle button
-    updateThemeToggleButton(true);
+    // Save preference
+    localStorage.setItem('currentTheme', currentTheme);
     
-    // Apply Lovable styles to existing elements
-    applyLovableStyles();
-    
-    console.log('✅ Lovable theme enabled!');
+    console.log('🎨 Switched to theme:', currentTheme);
 }
 
-function disableLovableTheme() {
-    console.log('🔄 Disabling Lovable theme...');
+// Apply theme to the page
+function applyTheme(theme) {
+    // Remove all theme classes
+    document.body.classList.remove('light-theme', 'dark-theme', 'lovable-theme');
     
-    document.body.classList.remove('lovable-theme');
-    localStorage.setItem('lovable-theme', 'original');
+    // Add current theme class
+    document.body.classList.add(theme + '-theme');
     
-    // Update theme toggle button
-    updateThemeToggleButton(false);
-    
-    console.log('✅ Original theme restored!');
-}
-
-function toggleLovableTheme() {
-    if (document.body.classList.contains('lovable-theme')) {
-        disableLovableTheme();
+    // Apply theme-specific styles
+    if (theme === 'lovable') {
+        applyLovableStyles();
     } else {
-        enableLovableTheme();
-    }
-}
-
-function addLovableThemeToggle() {
-    // Find the existing theme toggle
-    const themeToggle = document.querySelector('.theme-toggle');
-    if (!themeToggle) return;
-    
-    // Add click handler for Lovable theme
-    themeToggle.addEventListener('click', function(e) {
-        // If holding Shift, toggle Lovable theme instead
-        if (e.shiftKey) {
-            e.preventDefault();
-            toggleLovableTheme();
-            return;
-        }
-        
-        // Otherwise, toggle original theme (existing behavior)
-        // This will be handled by the existing toggleTheme function
-    });
-    
-    // Add title to show keyboard shortcut
-    themeToggle.title = 'Switch theme (Hold Shift for Lovable theme)';
-}
-
-function updateThemeToggleButton(isLovable) {
-    const themeIcon = document.querySelector('.theme-toggle i');
-    if (!themeIcon) return;
-    
-    if (isLovable) {
-        themeIcon.className = 'fas fa-magic'; // Magic wand for Lovable
-        themeIcon.title = 'Lovable theme active (Shift+Click for original)';
-    } else {
-        // Keep original theme icon logic
-        if (document.body.classList.contains('theme-light')) {
-            themeIcon.className = 'fas fa-sun';
-        } else {
-            themeIcon.className = 'fas fa-moon';
-        }
-        themeIcon.title = 'Original theme (Shift+Click for Lovable)';
+        removeLovableStyles();
     }
 }
 
+// Update theme switcher button
+function updateThemeSwitcher() {
+    const switcher = document.querySelector('.theme-switcher');
+    if (!switcher) return;
+    
+    // Update data attribute
+    switcher.setAttribute('data-theme', currentTheme);
+    
+    // Update icon and label
+    const icon = switcher.querySelector('i');
+    const label = switcher.querySelector('.theme-label');
+    
+    switch (currentTheme) {
+        case 'light':
+            icon.className = 'fas fa-sun';
+            label.textContent = 'Light';
+            break;
+        case 'dark':
+            icon.className = 'fas fa-moon';
+            label.textContent = 'Dark';
+            break;
+        case 'lovable':
+            icon.className = 'fas fa-magic';
+            label.textContent = 'Lovable';
+            break;
+    }
+    
+    // Update title
+    switcher.title = `Current: ${currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)} - Click to switch`;
+}
+
+// Apply Lovable styles to existing elements
 function applyLovableStyles() {
     console.log('🎨 Applying Lovable styles to existing elements...');
     
-    // Update header
-    const header = document.querySelector('.app-header');
+    // Update header with glow effect
+    const header = document.querySelector('.app-header h1');
     if (header) {
-        header.classList.add('lovable-glass-card');
+        header.classList.add('lovable-neon-glow-green');
     }
     
-    // Update tab buttons
+    // Update tab buttons with glass morphism
     const tabButtons = document.querySelectorAll('.tab-button');
     tabButtons.forEach(btn => {
-        btn.classList.add('lovable-nav-item');
+        btn.classList.add('lovable-glass-card');
     });
     
-    // Update data items
+    // Update data items with animations
     const dataItems = document.querySelectorAll('.data-item');
-    dataItems.forEach(item => {
-        item.classList.add('lovable-token-card');
+    dataItems.forEach((item, index) => {
+        item.classList.add('lovable-glass-card', 'lovable-animate-fade-in');
+        item.style.animationDelay = `${index * 0.05}s`;
+        
+        // Add floating animation to every 3rd item
+        if (index % 3 === 0) {
+            item.classList.add('lovable-animate-float');
+        }
     });
     
-    // Update action buttons
+    // Update action buttons with specific Lovable styles
     const actionButtons = document.querySelectorAll('.action-btn');
     actionButtons.forEach(btn => {
         if (btn.classList.contains('pump-btn')) {
+            btn.classList.add('lovable-btn-pump');
+        } else if (btn.classList.contains('dex-btn')) {
+            btn.classList.add('lovable-btn-dex');
+        } else {
+            btn.classList.add('lovable-btn-outline');
+        }
+    });
+    
+    // Update all other buttons
+    const allButtons = document.querySelectorAll('button:not(.action-btn):not(.tab-button):not(.theme-toggle):not(.theme-switcher):not(.admin-toggle):not(.refresh-button)');
+    allButtons.forEach(btn => {
+        if (btn.textContent.includes('Subscribe') || btn.textContent.includes('Pay') || btn.textContent.includes('Get Started')) {
             btn.classList.add('lovable-btn-primary');
         } else {
             btn.classList.add('lovable-btn-outline');
         }
     });
     
-    // Update stat cards
+    // Update stat cards with glow effects
     const statCards = document.querySelectorAll('.stat-card');
-    statCards.forEach(card => {
-        card.classList.add('lovable-glass-card');
+    statCards.forEach((card, index) => {
+        card.classList.add('lovable-glass-card', 'lovable-animate-fade-in');
+        card.style.animationDelay = `${index * 0.1}s`;
     });
     
     // Update analytics cards
     const analyticsCards = document.querySelectorAll('.analytics-card');
-    analyticsCards.forEach(card => {
-        card.classList.add('lovable-glass-card-hover');
+    analyticsCards.forEach((card, index) => {
+        card.classList.add('lovable-glass-card', 'lovable-animate-slide-in');
+        card.style.animationDelay = `${index * 0.1}s`;
     });
     
-    console.log('✅ Lovable styles applied!');
+    // Update loading placeholders
+    const loadingElements = document.querySelectorAll('.loading-placeholder');
+    loadingElements.forEach(element => {
+        element.classList.add('lovable-animate-shimmer');
+    });
+    
+    // Update token names with neon glow
+    const tokenNames = document.querySelectorAll('.token-name');
+    tokenNames.forEach(name => {
+        name.classList.add('lovable-neon-glow-green');
+    });
+    
+    // Add animated counter to win rate
+    const winRateElement = document.getElementById('winRate');
+    if (winRateElement) {
+        animateCounter(winRateElement, 87, 2000);
+    }
+    
+    // Add staggered animations to stat cards
+    const statCards2 = document.querySelectorAll('.lovable-stat-card');
+    statCards2.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('lovable-animate-fade-in');
+    });
+    
+    // Add staggered animations to feature cards
+    const featureCards = document.querySelectorAll('.lovable-feature-card');
+    featureCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('lovable-animate-fade-in');
+    });
+    
+    console.log('✅ Enhanced Lovable styles applied!');
 }
 
+// Remove Lovable styles
 function removeLovableStyles() {
-    console.log('🧹 Removing Lovable styles...');
+    console.log('🎨 Removing Lovable styles...');
     
-    // Remove Lovable classes from all elements
+    // Remove all Lovable classes
     const elements = document.querySelectorAll('[class*="lovable-"]');
-    elements.forEach(el => {
-        const classes = Array.from(el.classList);
+    elements.forEach(element => {
+        const classes = Array.from(element.classList);
         classes.forEach(cls => {
             if (cls.startsWith('lovable-')) {
-                el.classList.remove(cls);
+                element.classList.remove(cls);
             }
         });
     });
@@ -156,59 +203,36 @@ function removeLovableStyles() {
     console.log('✅ Lovable styles removed!');
 }
 
-// Function to reapply styles when new content is loaded
-function reapplyLovableStyles() {
-    if (document.body.classList.contains('lovable-theme')) {
-        applyLovableStyles();
-    }
-}
-
-// Auto-apply styles when DOM content changes
-function observeContentChanges() {
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                // Check if new data items were added
-                const newDataItems = Array.from(mutation.addedNodes).filter(node => 
-                    node.nodeType === Node.ELEMENT_NODE && 
-                    (node.classList?.contains('data-item') || node.querySelector?.('.data-item'))
-                );
-                
-                if (newDataItems.length > 0 && document.body.classList.contains('lovable-theme')) {
-                    setTimeout(() => {
-                        reapplyLovableStyles();
-                    }, 100);
-                }
-            }
-        });
-    });
+// Animated counter function
+function animateCounter(element, endValue, duration) {
+    const startValue = 0;
+    const startTime = performance.now();
     
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-}
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📱 DOM loaded, initializing Lovable theme system...');
-    
-    initLovableTheme();
-    observeContentChanges();
-    
-    // Reapply styles after a delay to ensure all content is loaded
-    setTimeout(() => {
-        if (document.body.classList.contains('lovable-theme')) {
-            applyLovableStyles();
+    function updateCounter(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function for smooth animation
+        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+        const currentValue = Math.floor(startValue + (endValue - startValue) * easeOutQuart);
+        
+        element.textContent = currentValue + '%';
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateCounter);
+        } else {
+            element.textContent = endValue + '%';
         }
-    }, 2000);
+    }
+    
+    requestAnimationFrame(updateCounter);
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initThemeSystem();
 });
 
-// Export functions for use in main script
-window.lovableTheme = {
-    enable: enableLovableTheme,
-    disable: disableLovableTheme,
-    toggle: toggleLovableTheme,
-    applyStyles: applyLovableStyles,
-    reapplyStyles: reapplyLovableStyles
-};
+// Export for global access
+window.cycleTheme = cycleTheme;
+window.initThemeSystem = initThemeSystem;
