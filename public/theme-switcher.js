@@ -1,33 +1,31 @@
 // 🎨 Theme Switcher - Three Theme System (Light, Dark, Lovable)
 
-// Theme management system
-let currentTheme = 'light'; // light, dark, lovable
+// Theme management system - ONLY Lovable theme active
+let currentTheme = 'lovable'; // Only lovable theme now
 
 // Initialize theme system
 function initThemeSystem() {
     console.log('🎨 Initializing theme system...');
     
-    // Check if user has a saved preference
-    const savedTheme = localStorage.getItem('currentTheme');
-    
-    if (savedTheme && ['light', 'dark', 'lovable'].includes(savedTheme)) {
-        currentTheme = savedTheme;
-    } else {
-        // Default to light theme for new users
-        currentTheme = 'light';
-    }
+    // Force Lovable theme (old themes hidden)
+    currentTheme = 'lovable';
     
     applyTheme(currentTheme);
     updateThemeSwitcher();
     
-    console.log('✅ Theme system initialized with theme:', currentTheme);
+    // Hide theme switcher since we only have one theme
+    const themeSwitcher = document.querySelector('.theme-switcher');
+    if (themeSwitcher) {
+        themeSwitcher.style.display = 'none';
+    }
+    
+    console.log('✅ Theme system initialized with Lovable theme (only theme)');
 }
 
-// Cycle through themes
+// Cycle through themes (disabled - only Lovable now)
 function cycleTheme() {
-    const themes = ['light', 'dark', 'lovable'];
-    const currentIndex = themes.indexOf(currentTheme);
-    const nextIndex = (currentIndex + 1) % themes.length;
+    // Only Lovable theme, no cycling
+    return;
     
     currentTheme = themes[nextIndex];
     applyTheme(currentTheme);
