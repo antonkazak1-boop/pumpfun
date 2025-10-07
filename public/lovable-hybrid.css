@@ -457,6 +457,81 @@
   color: hsla(var(--lovable-destructive)) !important;
 }
 
+/* Analytics tags styling - applies to all spans in flex containers */
+.lovable-theme .flex.flex-wrap.gap-2 span,
+.lovable-theme .glass-card-hover .flex.flex-wrap.gap-2 span,
+.lovable-theme .space-y-6 .flex.flex-wrap.gap-2 span {
+  background: linear-gradient(135deg, hsla(var(--lovable-primary) / 0.1) 0%, hsla(var(--lovable-primary) / 0.05) 100%);
+  border: 1px solid hsla(var(--lovable-primary) / 0.3);
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: hsla(var(--lovable-primary));
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px hsla(var(--lovable-primary) / 0.1);
+}
+
+.lovable-theme .flex.flex-wrap.gap-2 span:hover,
+.lovable-theme .glass-card-hover .flex.flex-wrap.gap-2 span:hover,
+.lovable-theme .space-y-6 .flex.flex-wrap.gap-2 span:hover {
+  background: linear-gradient(135deg, hsla(var(--lovable-primary) / 0.2) 0%, hsla(var(--lovable-primary) / 0.1) 100%);
+  border-color: hsla(var(--lovable-primary) / 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsla(var(--lovable-primary) / 0.2);
+}
+
+/* Light theme overrides for analytics tags */
+body.light-theme .flex.flex-wrap.gap-2 span,
+body.light-theme .glass-card-hover .flex.flex-wrap.gap-2 span,
+body.light-theme .space-y-6 .flex.flex-wrap.gap-2 span {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 255, 136, 0.1);
+}
+
+body.light-theme .flex.flex-wrap.gap-2 span:hover,
+body.light-theme .glass-card-hover .flex.flex-wrap.gap-2 span:hover,
+body.light-theme .space-y-6 .flex.flex-wrap.gap-2 span:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 255, 136, 0.1) 100%);
+  border-color: rgba(0, 255, 136, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Dark theme overrides for analytics tags */
+body.dark-theme .flex.flex-wrap.gap-2 span,
+body.dark-theme .glass-card-hover .flex.flex-wrap.gap-2 span,
+body.dark-theme .space-y-6 .flex.flex-wrap.gap-2 span {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 255, 136, 0.1);
+}
+
+body.dark-theme .flex.flex-wrap.gap-2 span:hover,
+body.dark-theme .glass-card-hover .flex.flex-wrap.gap-2 span:hover,
+body.dark-theme .space-y-6 .flex.flex-wrap.gap-2 span:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 255, 136, 0.1) 100%);
+  border-color: rgba(0, 255, 136, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2);
+  transform: translateY(-1px);
+}
+
 .lovable-theme .text-info {
   color: hsla(var(--lovable-accent)) !important;
 }
