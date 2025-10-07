@@ -265,9 +265,9 @@
 
 /* Action buttons specific styling */
 .lovable-btn-pump {
-  background: linear-gradient(135deg, hsla(var(--lovable-neon-green)) 0%, hsla(var(--lovable-neon-blue)) 100%);
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
   background-size: 200% 200%;
-  color: hsla(var(--lovable-background));
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   padding: 8px 12px;
@@ -278,12 +278,13 @@
   position: relative;
   overflow: hidden;
   animation: lovable-gradient-shift 3s ease infinite;
-  box-shadow: 0 2px 8px hsla(var(--lovable-primary) / 0.3);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
 }
 
 .lovable-btn-pump:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px hsla(var(--lovable-primary) / 0.4);
+  box-shadow: 0 6px 15px rgba(255, 107, 53, 0.4);
+  background: linear-gradient(135deg, #ff7a4a 0%, #ffa726 100%);
 }
 
 .lovable-btn-dex {
@@ -445,7 +446,11 @@
 }
 
 .lovable-theme .text-warning {
-  color: hsla(var(--lovable-warning)) !important;
+  color: #f59e0b !important;
+}
+
+.border-warning\/30 {
+  border-color: rgba(245, 158, 11, 0.3);
 }
 
 .lovable-theme .text-danger, .lovable-theme .text-destructive {

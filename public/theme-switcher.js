@@ -182,6 +182,11 @@ function applyLovableStyles() {
         card.classList.add('lovable-animate-fade-in');
     });
     
+    // Initialize live counters for stats
+    setTimeout(() => {
+        initLiveCounters();
+    }, 1000); // Start after 1 second to let page load
+    
     console.log('✅ Enhanced Lovable styles applied!');
 }
 
@@ -226,6 +231,85 @@ function animateCounter(element, endValue, duration) {
     }
     
     requestAnimationFrame(updateCounter);
+}
+
+// Live animated counters for stats
+function initLiveCounters() {
+    // Find all stat number elements
+    const statNumbers = document.querySelectorAll('.text-3xl.font-bold.neon-glow-green');
+    
+    statNumbers.forEach((element, index) => {
+        const text = element.textContent;
+        
+        // Extract base number and suffix
+        let baseNumber, suffix = '';
+        if (text.includes('+')) {
+            baseNumber = parseInt(text.replace('+', ''));
+            suffix = '+';
+        } else if (text.includes('%')) {
+            baseNumber = parseInt(text.replace('%', ''));
+            suffix = '%';
+        } else {
+            baseNumber = parseInt(text);
+        }
+        
+        // Start live animation
+        startLiveCounter(element, baseNumber, suffix, index);
+    });
+}
+
+function startLiveCounter(element, baseNumber, suffix, index) {
+    let currentValue = baseNumber;
+    let direction = 1; // 1 for up, -1 for down
+    let changeAmount = 1;
+    
+    // Different behavior for different stats
+    switch(index) {
+        case 0: // Tracked Traders (300+)
+            changeAmount = 1;
+            direction = Math.random() > 0.5 ? 1 : -1;
+            break;
+        case 1: // Tokens Monitored (10418+)
+            changeAmount = Math.floor(Math.random() * 5) + 1;
+            direction = 1; // Always increasing
+            break;
+        case 2: // Daily Signals (50+)
+            changeAmount = 1;
+            direction = Math.random() > 0.3 ? 1 : -1;
+            break;
+        case 3: // Win Rate (77%)
+            changeAmount = 1;
+            direction = Math.random() > 0.5 ? 1 : -1;
+            break;
+    }
+    
+    function updateCounter() {
+        // Update value
+        currentValue += direction * changeAmount;
+        
+        // Set bounds
+        if (index === 1) { // Tokens always increase
+            currentValue = Math.max(baseNumber, currentValue);
+        } else if (index === 3) { // Win rate between 70-85%
+            currentValue = Math.max(70, Math.min(85, currentValue));
+        } else {
+            currentValue = Math.max(baseNumber - 10, Math.min(baseNumber + 10, currentValue));
+        }
+        
+        // Update display
+        element.textContent = currentValue + suffix;
+        
+        // Change direction occasionally
+        if (Math.random() < 0.1) {
+            direction *= -1;
+        }
+        
+        // Schedule next update (every 500ms)
+        setTimeout(updateCounter, 500);
+    }
+    
+    // Start the animation
+    updateCounter();
 }
 
 // Initialize when DOM is loaded
