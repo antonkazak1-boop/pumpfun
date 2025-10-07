@@ -182,10 +182,10 @@ function applyLovableStyles() {
         card.classList.add('lovable-animate-fade-in');
     });
     
-    // Initialize live counters for stats
-    setTimeout(() => {
-        initLiveCounters();
-    }, 1000); // Start after 1 second to let page load
+    // Initialize live counters for stats (commented out - too buggy)
+    // setTimeout(() => {
+    //     initLiveCounters();
+    // }, 1000);
     
     console.log('✅ Enhanced Lovable styles applied!');
 }
@@ -233,13 +233,29 @@ function animateCounter(element, endValue, duration) {
     requestAnimationFrame(updateCounter);
 }
 
-// Live animated counters for stats
+// Live animated counters for stats (disabled for now - too buggy)
+let counterIntervals = [];
+
 function initLiveCounters() {
-    // Find all stat number elements
-    const statNumbers = document.querySelectorAll('.text-3xl.font-bold.neon-glow-green');
+    // Stop any existing counter intervals
+    stopLiveCounters();
+    
+    // Only run counters on About page
+    const aboutTab = document.getElementById('about');
+    if (!aboutTab || !aboutTab.classList.contains('active')) {
+        return;
+    }
+    
+    // Find stat number elements only in About tab
+    const statNumbers = aboutTab.querySelectorAll('.lovable-stat-number');
+    
+    if (statNumbers.length === 0) {
+        console.log('No stat numbers found for animation');
+        return;
+    }
     
     statNumbers.forEach((element, index) => {
-        const text = element.textContent;
+        const text = element.textContent.trim();
         
         // Extract base number and suffix
         let baseNumber, suffix = '';
@@ -250,66 +266,55 @@ function initLiveCounters() {
             baseNumber = parseInt(text.replace('%', ''));
             suffix = '%';
         } else {
-            baseNumber = parseInt(text);
+            const parsed = parseInt(text);
+            if (!isNaN(parsed)) {
+                baseNumber = parsed;
+            } else {
+                return; // Skip if not a number
+            }
         }
         
-        // Start live animation
+        // Skip if baseNumber is invalid
+        if (isNaN(baseNumber)) return;
+        
+        // Start live animation with slower, smoother updates
         startLiveCounter(element, baseNumber, suffix, index);
     });
 }
 
+function stopLiveCounters() {
+    // Clear all counter intervals
+    counterIntervals.forEach(interval => clearInterval(interval));
+    counterIntervals = [];
+}
+
 function startLiveCounter(element, baseNumber, suffix, index) {
     let currentValue = baseNumber;
-    let direction = 1; // 1 for up, -1 for down
+    let targetValue = baseNumber;
+    let direction = 1;
     let changeAmount = 1;
     
-    // Different behavior for different stats
-    switch(index) {
-        case 0: // Tracked Traders (300+)
-            changeAmount = 1;
-            direction = Math.random() > 0.5 ? 1 : -1;
-            break;
-        case 1: // Tokens Monitored (10418+)
-            changeAmount = Math.floor(Math.random() * 5) + 1;
-            direction = 1; // Always increasing
-            break;
-        case 2: // Daily Signals (50+)
-            changeAmount = 1;
-            direction = Math.random() > 0.3 ? 1 : -1;
-            break;
-        case 3: // Win Rate (77%)
-            changeAmount = 1;
-            direction = Math.random() > 0.5 ? 1 : -1;
-            break;
-    }
-    
-    function updateCounter() {
-        // Update value
-        currentValue += direction * changeAmount;
-        
-        // Set bounds
-        if (index === 1) { // Tokens always increase
-            currentValue = Math.max(baseNumber, currentValue);
-        } else if (index === 3) { // Win rate between 70-85%
-            currentValue = Math.max(70, Math.min(85, currentValue));
-        } else {
-            currentValue = Math.max(baseNumber - 10, Math.min(baseNumber + 10, currentValue));
+    // Different behavior for different stats  
+    const updateInterval = setInterval(() => {
+        // Smoothly move towards target
+        if (currentValue < targetValue) {
+            currentValue = Math.min(currentValue + 1, targetValue);
+        } else if (currentValue > targetValue) {
+            currentValue = Math.max(currentValue - 1, targetValue);
         }
         
         // Update display
         element.textContent = currentValue + suffix;
         
-        // Change direction occasionally
-        if (Math.random() < 0.1) {
-            direction *= -1;
+        // Set new target occasionally (every 2-5 seconds)
+        if (currentValue === targetValue && Math.random() < 0.3) {
+            const range = Math.floor(baseNumber * 0.05); // 5% variation
+            targetValue = baseNumber + Math.floor(Math.random() * range * 2) - range;
+            targetValue = Math.max(baseNumber - range, Math.min(baseNumber + range, targetValue));
         }
-        
-        // Schedule next update (every 500ms)
-        setTimeout(updateCounter, 500);
-    }
+    }, 1000); // Update every second for smooth animation
     
-    // Start the animation
-    updateCounter();
+    counterIntervals.push(updateInterval);
 }
 
 // Initialize when DOM is loaded

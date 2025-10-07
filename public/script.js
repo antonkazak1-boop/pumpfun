@@ -58,6 +58,7 @@ let currentUserId = null;
 // Tab to API endpoint mapping
 const TAB_API_MAP = {
     'about': null, // Special tab without API
+    'dashboard': null, // Dashboard tab without API
     'analytics': null, // Analytics tab without API
     'portfolio': 'traders/list', // Portfolio tab API endpoint  
     'clusterBuy': 'clusterbuy',
@@ -76,6 +77,7 @@ const TAB_API_MAP = {
 // Rendering functions mapping
 const TAB_RENDER_MAP = {
     'about': null, // Special tab without rendering
+    'dashboard': null, // Dashboard tab without rendering
     'analytics': null, // Analytics tab without rendering
     'portfolio': renderPortfolio, // Portfolio tab rendering function
     'clusterBuy': renderClusterBuy,
@@ -872,7 +874,7 @@ async function loadTabData(tabName) {
     const dataContainerId = `${tabName}Data`;
     
     // Special handling for non-API tabs
-    if (tabName === 'about' || tabName === 'analytics') {
+    if (tabName === 'about' || tabName === 'dashboard' || tabName === 'analytics') {
         hideLoading();
         return;
     }
