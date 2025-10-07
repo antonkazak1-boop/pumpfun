@@ -330,9 +330,16 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* Основной контейнер */
-/* Container removed - causes borders on mobile */
-/* All content now full-width */
+/* Основной контейнер - max-width for desktop, no padding */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    width: 100%;
+}
 
 /* Заголовок */
 .app-header {
