@@ -2724,15 +2724,26 @@ function applyAccessRestrictions() {
             button.removeAttribute('disabled');
             button.style.pointerEvents = 'auto';
             
-            // Lock icon is handled by CSS, no need to remove
+            // Remove lock icon if exists
+            const existingLockIcon = button.querySelector('.lock-icon');
+            if (existingLockIcon) {
+                existingLockIcon.remove();
+            }
         } else {
             // Tab is locked
             button.classList.add('locked-tab');
             button.setAttribute('disabled', 'true');
             button.style.pointerEvents = 'auto'; // Allow clicks for upgrade prompt
             
-            // Lock icon is added via CSS ::before pseudo-element
-            // No need to add it in JavaScript
+            // Add RED lock icon
+            if (!button.querySelector('.lock-icon')) {
+                const spanElement = button.querySelector('span');
+                if (spanElement) {
+                    const lockIcon = document.createElement('i');
+                    lockIcon.className = 'fas fa-lock lock-icon';
+                    spanElement.appendChild(lockIcon);
+                }
+            }
             
             // Add click handler for upgrade prompt
             button.onclick = (e) => {

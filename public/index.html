@@ -44,26 +44,31 @@
         <!-- Navigation tabs -->
         <nav class="tabs-nav">
             <div class="tabs-scroll">
-                <!-- About -->
-                <button class="tab-button active" data-tab="about">
-                    <i class="fas fa-info-circle"></i>
-                    <span>About</span>
-                    <small>bot</small>
-                </button>
+                <!-- Main Navigation Group -->
+                <div class="main-nav-group">
+                    <div class="top-nav-buttons">
+                        <!-- About -->
+                        <button class="tab-button active" data-tab="about">
+                            <i class="fas fa-info-circle"></i>
+                            <span>About</span>
+                            <small>bot</small>
+                        </button>
 
-                <!-- Dashboard -->
-                <button class="tab-button" data-tab="dashboard">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
-                    <small>overview</small>
-                </button>
-
-                <!-- Analytics -->
-                <button class="tab-button" data-tab="analytics">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Analytics</span>
-                    <small>methodology</small>
-                </button>
+                        <!-- Analytics -->
+                        <button class="tab-button" data-tab="analytics">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analytics</span>
+                            <small>methodology</small>
+                        </button>
+                    </div>
+                    
+                    <!-- Dashboard (wide button below) -->
+                    <button class="tab-button dashboard-wide" data-tab="dashboard">
+                        <i class="fas fa-th-large"></i>
+                        <span>Dashboard</span>
+                        <small>overview</small>
+                    </button>
+                </div>
 
                 <!-- Trending Group -->
                 <div class="nav-group">
@@ -106,11 +111,11 @@
                             <i class="fas fa-chart-pie"></i>
                             <span>Trader Portfolio</span>
                             <small>analysis</small>
-                </button>
-                <button class="tab-button" data-tab="whaleMoves">
-                            <i class="fas fa-fish"></i>
-                    <span>Whale Moves</span>
-                            <small>2h</small>
+                        </button>
+                        <button class="tab-button" data-tab="walletStats">
+                            <i class="fas fa-search"></i>
+                            <span>Wallet Stats</span>
+                            <small>lookup</small>
                         </button>
                     </div>
                 </div>
@@ -126,10 +131,15 @@
                             <i class="fas fa-coins"></i>
                             <span>Coins Market</span>
                             <small>market</small>
-                </button>
-                <button class="tab-button" data-tab="volumeSurge">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Volume Surge</span>
+                        </button>
+                        <button class="tab-button" data-tab="volumeSurge">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Volume Surge</span>
+                            <small>2h</small>
+                        </button>
+                        <button class="tab-button" data-tab="whaleMoves">
+                            <i class="fas fa-fish"></i>
+                            <span>Whale Moves</span>
                             <small>2h</small>
                         </button>
                     </div>
@@ -159,13 +169,6 @@
                 </button>
                     </div>
                 </div>
-
-        <!-- Wallet -->
-        <button class="tab-button" data-tab="walletStats">
-            <i class="fas fa-wallet"></i>
-            <span>Wallet</span>
-            <small>Analytics</small>
-                </button>
 
         <!-- Admin Panel (hidden by default) -->
         <button class="tab-button admin-tab" data-tab="admin" style="display: none;">

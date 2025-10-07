@@ -534,12 +534,17 @@ body {
 /* Основной контент */
 .tab-content-wrapper {
     flex: 1;
-    margin-bottom: 24px;
+    margin-bottom: 0;
+    padding: 0;
+    margin: 0;
 }
 
 .tab-content {
     display: none;
     animation: fadeInUp 0.4s ease-out;
+    padding: 0;
+    margin: 0;
+    width: 100%;
 }
 
 .tab-content.active {
@@ -3829,9 +3834,49 @@ body {
     }
 }
 
-/* Hide the second lock icon - we only need the emoji */
-.tab-button.locked-tab .lock-icon {
+/* Show ONLY the red lock icon, hide emoji (I had it backwards!) */
+.tab-button.locked-tab::before {
     display: none !important;
+}
+
+.tab-button.locked-tab .lock-icon {
+    display: inline-block !important;
+    color: #ff3333 !important;
+    margin-left: 4px;
+    font-size: 12px;
+    animation: lock-pulse-red 2s ease-in-out infinite !important;
+    filter: drop-shadow(0 0 4px rgba(255, 51, 51, 0.8)) !important;
+}
+
+@keyframes lock-pulse-red {
+    0%, 100% { 
+        opacity: 0.8; 
+        transform: scale(1);
+        filter: drop-shadow(0 0 4px rgba(255, 51, 51, 0.6));
+    }
+    50% { 
+        opacity: 1; 
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 10px rgba(255, 51, 51, 1));
+    }
+}
+
+/* Main navigation group layout */
+.main-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-right: 12px;
+}
+
+.top-nav-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.tab-button.dashboard-wide {
+    width: 100%;
+    min-width: 200px;
 }
 
 /* Light theme locked tabs */
