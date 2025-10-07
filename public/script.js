@@ -937,7 +937,10 @@ function switchTab(tabName) {
     }
     
     currentTab = tabName;
-    loadTabData(tabName);
+    loadTabData(tabName).then(() => {
+        // Анимация карточек после загрузки данных
+        setTimeout(animateCards, 100);
+    });
 }
 
 // ===== PORTFOLIO FUNCTIONS =====
@@ -1166,35 +1169,6 @@ function refreshCurrentTab() {
 }
 
 // Обновление функции переключения вкладок
-function switchTab(tabName) {
-    if (currentTab === tabName || isLoading) return;
-    
-    // Обновление активной вкладки в навигации
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active');
-    });
-    
-    const activeTabButton = document.querySelector(`[data-tab="${tabName}"]`);
-    if (activeTabButton) {
-        activeTabButton.classList.add('active');
-    }
-    
-    // Обновление содержимого вкладок с анимацией
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    
-    const activeTabContent = document.getElementById(tabName);
-    if (activeTabContent) {
-        activeTabContent.classList.add('active');
-    }
-    
-    currentTab = tabName;
-    loadTabData(tabName).then(() => {
-        // Анимация карточек после загрузки данных
-        setTimeout(animateCards, 100);
-    });
-}
 
 // Обработчик для refresh кнопки
 function setupRefreshButtonHandler() {
