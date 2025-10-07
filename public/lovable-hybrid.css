@@ -995,6 +995,15 @@ body.lovable-theme {
   padding-right: 1rem;
 }
 
+/* Remove container padding for About tab */
+#about .container,
+#about section {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+}
+
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
