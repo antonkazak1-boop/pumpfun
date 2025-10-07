@@ -173,118 +173,155 @@
         <main class="tab-content-wrapper">
             <!-- About Tab -->
             <div id="about" class="tab-content active">
-                <div class="tab-header">
-                    <h2><i class="fas fa-info-circle"></i> About Pump Dex Bot</h2>
-                    <p class="tab-description">Advanced analytics tool for tracking smart money</p>
+                <div class="min-h-screen bg-background">
+                    <!-- Hero Section -->
+                    <section class="relative overflow-hidden py-20 px-4">
+                        <div class="absolute inset-0 bg-gradient-radial from-primary/20 via-transparent to-transparent opacity-50"></div>
+                        <div class="container mx-auto max-w-6xl relative z-10">
+                            <div class="text-center space-y-6 animate-fade-in">
+                                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary animate-pulse-glow">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap w-4 h-4">
+                                        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Powered by Helius & Pump.fun</span>
+                                </div>
+                                
+                                <h1 class="text-5xl md:text-7xl font-bold tracking-tight">
+                                    <span class="neon-glow-green">Smart Money</span>
+                                    <br>
+                                    <span class="text-foreground">Analytics for Solana</span>
+                                </h1>
+                                
+                                <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+                                    Track the best traders, discover trending tokens, and get real-time signals
+                                    to make informed trading decisions in the Solana ecosystem.
+                                </p>
+
+                                <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
+                                    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-primary/90 h-11 rounded-md px-8 bg-gradient-primary text-background font-bold hover:opacity-90 transition-opacity" onclick="showTab('freshTokens')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket w-5 h-5 mr-2">
+                                            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                                            <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                                            <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                                            <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+                                        </svg>
+                                        Explore Dashboard
+                                    </button>
+                                    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border bg-background hover:text-accent-foreground h-11 rounded-md px-8 border-primary/30 hover:bg-primary/10" onclick="showTab('analytics')">
+                                        Learn More
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Stats Grid -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16">
+                                <div class="glass-card rounded-xl p-6 text-center animate-fade-in animate-glow-pulse" style="animation-delay: 0s;">
+                                    <div class="text-3xl font-bold neon-glow-green mb-2 transition-all duration-500">
+                                        <span class="inline-block">300</span>+
+                                    </div>
+                                    <div class="text-sm text-muted-foreground">Tracked Traders</div>
+                                </div>
+                                <div class="glass-card rounded-xl p-6 text-center animate-fade-in animate-glow-pulse" style="animation-delay: 0.1s;">
+                                    <div class="text-3xl font-bold neon-glow-green mb-2 transition-all duration-500">
+                                        <span class="inline-block">10418</span>+
+                                    </div>
+                                    <div class="text-sm text-muted-foreground">Tokens Monitored</div>
+                                </div>
+                                <div class="glass-card rounded-xl p-6 text-center animate-fade-in animate-glow-pulse" style="animation-delay: 0.2s;">
+                                    <div class="text-3xl font-bold neon-glow-green mb-2 transition-all duration-500">
+                                        <span class="inline-block">50</span>+
+                                    </div>
+                                    <div class="text-sm text-muted-foreground">Daily Signals</div>
+                                </div>
+                                <div class="glass-card rounded-xl p-6 text-center animate-fade-in animate-glow-pulse" style="animation-delay: 0.3s;">
+                                    <div class="text-3xl font-bold neon-glow-green mb-2 transition-all duration-500">
+                                        <span class="inline-block">77</span>%
+                                    </div>
+                                    <div class="text-sm text-muted-foreground">Win Rate</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Features Section -->
+                    <section class="py-20 px-4">
+                        <div class="container mx-auto max-w-6xl">
+                            <div class="text-center mb-12">
+                                <h2 class="text-3xl md:text-4xl font-bold mb-4">
+                                    Everything You Need to <span class="neon-glow-blue">Trade Smarter</span>
+                                </h2>
+                                <p class="text-muted-foreground max-w-2xl mx-auto">
+                                    Advanced analytics and real-time data to give you an edge in the market
+                                </p>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div class="glass-card-hover rounded-xl p-6 animate-fade-in" style="animation-delay: 0s;">
+                                    <div class="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up w-6 h-6 text-background">
+                                            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                                            <polyline points="16 7 22 7 22 13"></polyline>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-xl font-bold mb-2">Trending Tokens</h3>
+                                    <p class="text-muted-foreground">Track fresh tokens and most bought coins in real-time</p>
+                                </div>
+                                <div class="glass-card-hover rounded-xl p-6 animate-fade-in" style="animation-delay: 0.1s;">
+                                    <div class="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-brain w-6 h-6 text-background">
+                                            <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"></path>
+                                            <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"></path>
+                                            <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"></path>
+                                            <path d="M17.599 6.5a3 3 0 0 0 .399-1.375"></path>
+                                            <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"></path>
+                                            <path d="M3.477 10.896a4 4 0 0 1 .585-.396"></path>
+                                            <path d="M19.938 10.5a4 4 0 0 1 .585.396"></path>
+                                            <path d="M6 18a4 4 0 0 1-1.967-.516"></path>
+                                            <path d="M19.967 17.484A4 4 0 0 1 18 18"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-xl font-bold mb-2">Smart Money Tracking</h3>
+                                    <p class="text-muted-foreground">Follow 312+ successful traders and their strategies</p>
+                                </div>
+                                <div class="glass-card-hover rounded-xl p-6 animate-fade-in" style="animation-delay: 0.2s;">
+                                    <div class="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity w-6 h-6 text-background">
+                                            <path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-xl font-bold mb-2">Live Signals</h3>
+                                    <p class="text-muted-foreground">Get instant alerts on cluster buys and co-buy patterns</p>
+                                </div>
+                                <div class="glass-card-hover rounded-xl p-6 animate-fade-in" style="animation-delay: 0.3s;">
+                                    <div class="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-6 h-6 text-background">
+                                            <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-xl font-bold mb-2">Advanced Analytics</h3>
+                                    <p class="text-muted-foreground">Deep insights into wallet performance and market trends</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- CTA Section -->
+                    <section class="py-20 px-4">
+                        <div class="container mx-auto max-w-4xl">
+                            <div class="glass-card rounded-2xl p-8 md:p-12 text-center space-y-6 relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-primary opacity-10"></div>
+                                <div class="relative z-10">
+                                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Start Trading Smarter?</h2>
+                                    <p class="text-muted-foreground mb-8">
+                                        Join thousands of traders using Pump Dex to track smart money and discover opportunities
+                                    </p>
+                                    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-primary/90 h-11 rounded-md px-8 bg-gradient-primary text-background font-bold hover:opacity-90 transition-opacity" onclick="showTab('freshTokens')">
+                                        Get Started Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
-                
-                <!-- Hero Section -->
-                <section class="lovable-hero-section">
-                    <div class="lovable-hero-background"></div>
-                    <div class="lovable-hero-content">
-                        <div class="lovable-hero-badge">
-                            <i class="fas fa-bolt"></i>
-                            <span>Powered by Helius & Pump.fun</span>
-                        </div>
-                        
-                        <h1 class="lovable-hero-title">
-                            <span class="lovable-neon-text">Smart Money</span>
-                            <br>
-                            <span class="lovable-hero-subtitle">Analytics for Solana</span>
-                        </h1>
-                        
-                        <p class="lovable-hero-description">
-                            Track the best traders, discover trending tokens, and get real-time signals
-                            to make informed trading decisions in the Solana ecosystem.
-                        </p>
-
-                        <div class="lovable-hero-buttons">
-                            <button class="lovable-btn-primary" onclick="showTab('freshTokens')">
-                                <i class="fas fa-rocket"></i>
-                                Explore Dashboard
-                            </button>
-                            <button class="lovable-btn-outline" onclick="showTab('analytics')">
-                                Learn More
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Stats Grid -->
-                    <div class="lovable-stats-grid">
-                        <div class="lovable-stat-card">
-                            <div class="lovable-stat-number">300+</div>
-                            <div class="lovable-stat-label">Known traders</div>
-                        </div>
-                        <div class="lovable-stat-card">
-                            <div class="lovable-stat-number">10418+</div>
-                            <div class="lovable-stat-label">Tokens Monitored</div>
-                        </div>
-                        <div class="lovable-stat-card">
-                            <div class="lovable-stat-number">50+</div>
-                            <div class="lovable-stat-label">Daily Signals</div>
-                        </div>
-                        <div class="lovable-stat-card">
-                            <div class="lovable-stat-number" id="winRate">87%</div>
-                            <div class="lovable-stat-label">Win Rate</div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Features Section -->
-                <section class="lovable-features-section">
-                    <div class="lovable-features-header">
-                        <h2 class="lovable-features-title">
-                            Everything You Need to <span class="lovable-neon-text-blue">Trade Smarter</span>
-                        </h2>
-                        <p class="lovable-features-description">
-                            Advanced analytics and real-time data to give you an edge in the market
-                        </p>
-                    </div>
-
-                    <div class="lovable-features-grid">
-                        <div class="lovable-feature-card">
-                            <div class="lovable-feature-icon">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <h3 class="lovable-feature-title">Trending Tokens</h3>
-                            <p class="lovable-feature-description">Track fresh tokens and most bought coins in real-time</p>
-                        </div>
-                        <div class="lovable-feature-card">
-                            <div class="lovable-feature-icon">
-                                <i class="fas fa-brain"></i>
-                            </div>
-                            <h3 class="lovable-feature-title">Smart Money Tracking</h3>
-                            <p class="lovable-feature-description">Follow 312+ successful traders and their strategies</p>
-                        </div>
-                        <div class="lovable-feature-card">
-                            <div class="lovable-feature-icon">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <h3 class="lovable-feature-title">Live Signals</h3>
-                            <p class="lovable-feature-description">Get instant alerts on cluster buys and co-buy patterns</p>
-                        </div>
-                        <div class="lovable-feature-card">
-                            <div class="lovable-feature-icon">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <h3 class="lovable-feature-title">Advanced Analytics</h3>
-                            <p class="lovable-feature-description">Deep insights into wallet performance and market trends</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- CTA Section -->
-                <section class="lovable-cta-section">
-                    <div class="lovable-cta-card">
-                        <h2 class="lovable-cta-title">Ready to Start Trading Smarter?</h2>
-                        <p class="lovable-cta-description">
-                            Join thousands of traders using Pump Dex to track smart money and discover opportunities
-                        </p>
-                        <button class="lovable-btn-primary" onclick="showTab('freshTokens')">
-                            Get Started Now
-                        </button>
-                    </div>
-                </section>
             </div>
 
             <!-- Analytics Tab -->
