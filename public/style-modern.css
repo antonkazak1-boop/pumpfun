@@ -3807,29 +3807,31 @@ body {
 .tab-button.locked-tab::before {
     content: '🔒';
     position: absolute;
-    top: 4px;
-    right: 4px;
-    font-size: 16px;
-    opacity: 0.9;
+    top: 2px;
+    right: 2px;
+    font-size: 18px;
+    opacity: 1;
     pointer-events: none;
     animation: lock-pulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.8));
 }
 
 @keyframes lock-pulse {
     0%, 100% { 
-        opacity: 0.6; 
+        opacity: 0.8; 
         transform: scale(1);
+        filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.6));
     }
     50% { 
         opacity: 1; 
-        transform: scale(1.1);
+        transform: scale(1.15);
+        filter: drop-shadow(0 0 8px rgba(239, 68, 68, 1));
     }
 }
 
+/* Hide the second lock icon - we only need the emoji */
 .tab-button.locked-tab .lock-icon {
-    color: #ef4444 !important;
-    margin-left: 4px;
-    font-size: 11px;
+    display: none !important;
 }
 
 /* Light theme locked tabs */

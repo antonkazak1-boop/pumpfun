@@ -519,12 +519,23 @@ class SubscriptionSystem {
                 WHERE telegram_user_id = $4
             `, [tierName, expiresAt, finalPrice, user.telegram_user_id]);
             
-            // Create payment record
+            // Create payment record with correct amounts based on payment method
+            const paymentAmountSol = paymentMethod === 'solana' ? finalPrice : 0;
+            const paymentAmountStars = paymentMethod === 'telegram_stars' ? (starsAmount || 0) : 0;
+            
             await this.pool.query(`
                 INSERT INTO payments (
-                    user_id, subscription_id, amount_sol, amount_stars, payment_method, transaction_hash, status
-                ) VALUES ($1, $2, $3, $4, $5, $6, 'confirmed')
-            `, [user.telegram_user_id, subscriptionResult.rows[0].id, finalPrice, starsAmount, paymentMethod, transactionHash]);
+                    user_id, subscription_id, amount_sol, amount_stars, 
+                    payment_method, transaction_hash, status, confirmed_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, 'confirmed', NOW())
+            `, [
+                user.telegram_user_id, 
+                subscriptionResult.rows[0].id, 
+                paymentAmountSol, 
+                paymentAmountStars, 
+                paymentMethod, 
+                transactionHash
+            ]);
             
             console.log(`✅ Subscription created for user ${user.username || user.first_name}: ${tierName}`);
             return subscriptionResult.rows[0];
