@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Pump Dex Bot Mini App</title>
     <link rel="stylesheet" href="style-modern.css">
-    <link rel="stylesheet" href="modern-enhancements.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -20,9 +19,9 @@
     </div>
 
     <div class="container">
-        <header class="app-header glass-card">
-            <h1 class="gradient-text">
-                <div class="logo neon-glow">
+        <header class="app-header">
+            <h1>
+                <div class="logo">
                     <i class="fas fa-robot"></i>
                 </div>
                 Pump Dex Bot
@@ -44,7 +43,7 @@
         <nav class="tabs-nav">
             <div class="tabs-scroll">
                 <!-- About -->
-                <button class="tab-button modern-btn active" data-tab="about">
+                <button class="tab-button active" data-tab="about">
                     <i class="fas fa-info-circle"></i>
                     <span>About</span>
                     <small>bot</small>
@@ -376,7 +375,7 @@
                 <p class="tab-description">Tokens with 3+ unique buyers</p>
                 </div>
                 <div id="clusterBuyData" class="data-list">
-                    <div class="loading-placeholder shimmer">Loading data...</div>
+                    <div class="loading-placeholder">Loading data...</div>
                 </div>
             </div>
 
@@ -708,7 +707,6 @@
 
     <!-- Скрипты -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="modern-updates.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
