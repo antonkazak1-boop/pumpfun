@@ -4,6 +4,46 @@
 
 ---
 
+## [1.1.0] - 2025-10-07 (Evening Update)
+
+### 💎 Solana Payment System
+#### Added
+- ✅ Полная интеграция Solana Pay
+- ✅ QR код модальное окно для оплаты
+- ✅ KOLScan токен холдер скидка (25%)
+- ✅ Верификация транзакций on-chain
+- ✅ Автоматическая активация подписки
+- ✅ API endpoints: `/api/payment/solana`, `/api/payment/verify-solana`, `/api/kolscan/balance/:wallet`
+- ✅ Документация: `SOLANA_PAYMENT_GUIDE.md`
+- ✅ Поддержка deep links для Phantom/Solflare
+- ✅ Copy/paste payment URL
+- ✅ Красивая анимация модального окна
+
+#### Payment Flow
+1. Пользователь нажимает "Pay with SOL"
+2. (Опционально) вводит wallet для KOLScan скидки
+3. Видит QR код и payment URL
+4. Оплачивает через wallet
+5. Вводит transaction signature
+6. Система верифицирует on-chain
+7. Подписка активируется автоматически
+
+#### Environment Variables Required
+```env
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+MERCHANT_WALLET=YOUR_WALLET_HERE
+KOLSCAN_TOKEN_ADDRESS=YOUR_TOKEN_HERE
+```
+
+#### Technical Details
+- Solana Web3.js integration
+- Transaction verification with tolerance (0.001 SOL)
+- Merchant wallet recipient check
+- Blockchain confirmation validation
+- Database subscription auto-creation
+
+---
+
 ## [1.0.0] - 2025-10-07
 
 ### 🎨 Design System
