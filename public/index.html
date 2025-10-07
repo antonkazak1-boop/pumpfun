@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Pump Dex Bot Mini App</title>
     <link rel="stylesheet" href="style-modern.css">
+    <link rel="stylesheet" href="lovable-hybrid.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -74,7 +75,7 @@
                             <small>1h</small>
                         </button>
                         <button class="tab-button" data-tab="trendingMeta">
-                            <i class="fas fa-fire"></i>
+                    <i class="fas fa-fire"></i>
                             <span>Trending Meta</span>
                             <small>hot</small>
                         </button>
@@ -97,10 +98,10 @@
                             <i class="fas fa-chart-pie"></i>
                             <span>Trader Portfolio</span>
                             <small>analysis</small>
-                        </button>
-                        <button class="tab-button" data-tab="whaleMoves">
+                </button>
+                <button class="tab-button" data-tab="whaleMoves">
                             <i class="fas fa-fish"></i>
-                            <span>Whale Moves</span>
+                    <span>Whale Moves</span>
                             <small>2h</small>
                         </button>
                     </div>
@@ -117,10 +118,10 @@
                             <i class="fas fa-coins"></i>
                             <span>Coins Market</span>
                             <small>market</small>
-                        </button>
-                        <button class="tab-button" data-tab="volumeSurge">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Volume Surge</span>
+                </button>
+                <button class="tab-button" data-tab="volumeSurge">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Volume Surge</span>
                             <small>2h</small>
                         </button>
                     </div>
@@ -137,17 +138,17 @@
                             <i class="fas fa-fire"></i>
                             <span>Cluster Buy</span>
                             <small>10m</small>
-                        </button>
-                        <button class="tab-button" data-tab="coBuy">
-                            <i class="fas fa-users"></i>
-                            <span>Co-buy</span>
+                </button>
+                <button class="tab-button" data-tab="coBuy">
+                    <i class="fas fa-users"></i>
+                    <span>Co-buy</span>
                             <small>20m</small>
-                        </button>
+                </button>
                         <button class="tab-button" data-tab="recentActivity">
                             <i class="fas fa-history"></i>
                             <span>Recent Activity</span>
                             <small>live</small>
-                        </button>
+                </button>
                     </div>
                 </div>
 
@@ -156,16 +157,16 @@
             <i class="fas fa-wallet"></i>
             <span>Wallet</span>
             <small>Analytics</small>
-        </button>
+                </button>
 
         <!-- Admin Panel (hidden by default) -->
         <button class="tab-button admin-tab" data-tab="admin" style="display: none;">
             <i class="fas fa-cog"></i>
             <span>Admin</span>
             <small>panel</small>
-        </button>
-    </div>
-</nav>
+                </button>
+            </div>
+        </nav>
 
         <!-- Содержимое вкладок -->
         <main class="tab-content-wrapper">
@@ -679,8 +680,8 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
         </main>
 
         <!-- Подвал с информацией -->
@@ -707,6 +708,7 @@
 
     <!-- Скрипты -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="theme-switcher.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

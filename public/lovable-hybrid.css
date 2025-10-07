@@ -1,0 +1,359 @@
+/* 🎨 Lovable Hybrid Styles - DeFi Theme Integration */
+
+/* Import Tailwind CSS */
+@import url('https://cdn.tailwindcss.com');
+
+/* ===== LOVABLE COLOR SYSTEM ===== */
+:root {
+  /* DeFi Dark Theme - Base Colors (from Lovable) */
+  --lovable-background: 240 10% 5%;
+  --lovable-foreground: 0 0% 98%;
+
+  /* Card with glassmorphism */
+  --lovable-card: 240 10% 8%;
+  --lovable-card-foreground: 0 0% 98%;
+
+  /* Primary - Neon Green */
+  --lovable-primary: 158 100% 50%;
+  --lovable-primary-foreground: 240 10% 5%;
+
+  /* Secondary - Deep Purple */
+  --lovable-secondary: 260 60% 35%;
+  --lovable-secondary-foreground: 0 0% 98%;
+
+  /* Accent - Neon Blue */
+  --lovable-accent: 215 100% 50%;
+  --lovable-accent-foreground: 240 10% 5%;
+
+  /* Custom DeFi Colors */
+  --lovable-neon-green: 158 100% 50%;
+  --lovable-neon-blue: 215 100% 50%;
+  --lovable-neon-purple: 270 100% 60%;
+  --lovable-glass-bg: 240 10% 12%;
+  --lovable-glass-border: 240 10% 25%;
+
+  /* Success, Warning, Destructive */
+  --lovable-success: 158 100% 50%;
+  --lovable-warning: 38 92% 50%;
+  --lovable-destructive: 0 84% 60%;
+
+  /* Muted colors */
+  --lovable-muted: 240 10% 15%;
+  --lovable-muted-foreground: 240 5% 65%;
+
+  /* Border */
+  --lovable-border: 240 10% 20%;
+  --lovable-input: 240 10% 20%;
+  --lovable-ring: 158 100% 50%;
+}
+
+/* ===== LOVABLE GLASS EFFECTS ===== */
+.lovable-glass-card {
+  background: hsla(var(--lovable-card) / 0.5);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsla(var(--lovable-glass-border));
+  border-radius: 12px;
+}
+
+.lovable-glass-card-hover {
+  background: hsla(var(--lovable-card) / 0.5);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsla(var(--lovable-glass-border));
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lovable-glass-card-hover:hover {
+  background: hsla(var(--lovable-card) / 0.7);
+  border-color: hsla(var(--lovable-primary) / 0.3);
+  box-shadow: 0 0 20px hsla(var(--lovable-primary) / 0.15);
+  transform: translateY(-2px);
+}
+
+/* ===== LOVABLE NEON GLOW EFFECTS ===== */
+.lovable-neon-glow-green {
+  text-shadow: 0 0 10px hsla(var(--lovable-neon-green) / 0.5),
+               0 0 20px hsla(var(--lovable-neon-green) / 0.3),
+               0 0 30px hsla(var(--lovable-neon-green) / 0.2);
+}
+
+.lovable-neon-glow-blue {
+  text-shadow: 0 0 10px hsla(var(--lovable-neon-blue) / 0.5),
+               0 0 20px hsla(var(--lovable-neon-blue) / 0.3),
+               0 0 30px hsla(var(--lovable-neon-blue) / 0.2);
+}
+
+/* ===== LOVABLE GRADIENTS ===== */
+.lovable-gradient-primary {
+  background: linear-gradient(135deg, hsla(var(--lovable-neon-green)) 0%, hsla(var(--lovable-neon-blue)) 100%);
+}
+
+.lovable-gradient-secondary {
+  background: linear-gradient(135deg, hsla(var(--lovable-neon-blue)) 0%, hsla(var(--lovable-neon-purple)) 100%);
+}
+
+.lovable-gradient-card {
+  background: linear-gradient(135deg, hsla(var(--lovable-card)) 0%, hsla(var(--lovable-glass-bg)) 100%);
+}
+
+/* ===== LOVABLE ANIMATIONS ===== */
+@keyframes lovable-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes lovable-pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px hsla(var(--lovable-neon-green) / 0.3); }
+  50% { box-shadow: 0 0 40px hsla(var(--lovable-neon-green) / 0.6); }
+}
+
+@keyframes lovable-fade-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lovable-slide-in {
+  0% { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.lovable-animate-float {
+  animation: lovable-float 3s ease-in-out infinite;
+}
+
+.lovable-animate-pulse-glow {
+  animation: lovable-pulse-glow 2s ease-in-out infinite;
+}
+
+.lovable-animate-fade-in {
+  animation: lovable-fade-in 0.5s ease-out;
+}
+
+.lovable-animate-slide-in {
+  animation: lovable-slide-in 0.3s ease-out;
+}
+
+/* ===== LOVABLE BUTTON STYLES ===== */
+.lovable-btn-primary {
+  background: linear-gradient(135deg, hsla(var(--lovable-neon-green)) 0%, hsla(var(--lovable-neon-blue)) 100%);
+  color: hsla(var(--lovable-background));
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.lovable-btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px hsla(var(--lovable-primary) / 0.4);
+}
+
+.lovable-btn-outline {
+  background: transparent;
+  color: hsla(var(--lovable-foreground));
+  border: 1px solid hsla(var(--lovable-primary) / 0.3);
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lovable-btn-outline:hover {
+  background: hsla(var(--lovable-primary) / 0.1);
+  border-color: hsla(var(--lovable-primary) / 0.5);
+}
+
+/* ===== LOVABLE CARD STYLES ===== */
+.lovable-token-card {
+  background: hsla(var(--lovable-card) / 0.5);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsla(var(--lovable-glass-border));
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.lovable-token-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    hsla(var(--lovable-primary) / 0.6) 50%, 
+    transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lovable-token-card:hover {
+  transform: translateY(-2px);
+  border-color: hsla(var(--lovable-primary) / 0.3);
+  box-shadow: 0 8px 25px hsla(var(--lovable-background) / 0.2);
+}
+
+.lovable-token-card:hover::before {
+  opacity: 1;
+}
+
+/* ===== LOVABLE NAVIGATION STYLES ===== */
+.lovable-nav {
+  background: hsla(var(--lovable-card) / 0.5);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid hsla(var(--lovable-glass-border));
+}
+
+.lovable-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  color: hsla(var(--lovable-muted-foreground));
+}
+
+.lovable-nav-item:hover {
+  color: hsla(var(--lovable-foreground));
+  background: hsla(var(--lovable-muted) / 0.5);
+}
+
+.lovable-nav-item.active {
+  background: hsla(var(--lovable-primary) / 0.1);
+  color: hsla(var(--lovable-primary));
+  border: 1px solid hsla(var(--lovable-primary) / 0.3);
+  box-shadow: 0 0 15px hsla(var(--lovable-primary) / 0.2);
+}
+
+/* ===== LOVABLE TEXT STYLES ===== */
+.lovable-text-primary {
+  color: hsla(var(--lovable-primary));
+}
+
+.lovable-text-secondary {
+  color: hsla(var(--lovable-muted-foreground));
+}
+
+.lovable-text-success {
+  color: hsla(var(--lovable-success));
+}
+
+.lovable-text-warning {
+  color: hsla(var(--lovable-warning));
+}
+
+.lovable-text-destructive {
+  color: hsla(var(--lovable-destructive));
+}
+
+/* ===== LOVABLE BACKGROUND STYLES ===== */
+.lovable-bg-primary {
+  background: hsla(var(--lovable-background));
+}
+
+.lovable-bg-card {
+  background: hsla(var(--lovable-card));
+}
+
+.lovable-bg-muted {
+  background: hsla(var(--lovable-muted));
+}
+
+/* ===== LOVABLE BORDER STYLES ===== */
+.lovable-border {
+  border-color: hsla(var(--lovable-border));
+}
+
+.lovable-border-primary {
+  border-color: hsla(var(--lovable-primary));
+}
+
+/* ===== LOVABLE SCROLLBAR ===== */
+.lovable-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.lovable-scrollbar::-webkit-scrollbar-track {
+  background: hsla(var(--lovable-background));
+}
+
+.lovable-scrollbar::-webkit-scrollbar-thumb {
+  background: hsla(var(--lovable-muted));
+  border-radius: 4px;
+}
+
+.lovable-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsla(var(--lovable-primary));
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .lovable-glass-card,
+  .lovable-token-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .lovable-btn-primary,
+  .lovable-btn-outline {
+    padding: 10px 20px;
+    border-radius: 6px;
+  }
+}
+
+/* ===== INTEGRATION WITH EXISTING STYLES ===== */
+/* Override existing styles with Lovable theme */
+body.lovable-theme {
+  background: hsla(var(--lovable-background));
+  color: hsla(var(--lovable-foreground));
+}
+
+.lovable-theme .app-header {
+  background: hsla(var(--lovable-card) / 0.5);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid hsla(var(--lovable-glass-border));
+}
+
+.lovable-theme .tab-button {
+  color: hsla(var(--lovable-muted-foreground));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lovable-theme .tab-button:hover {
+  color: hsla(var(--lovable-foreground));
+  background: hsla(var(--lovable-muted) / 0.5);
+}
+
+.lovable-theme .tab-button.active {
+  background: hsla(var(--lovable-primary) / 0.1);
+  color: hsla(var(--lovable-primary));
+  border: 1px solid hsla(var(--lovable-primary) / 0.3);
+  box-shadow: 0 0 15px hsla(var(--lovable-primary) / 0.2);
+}
+
+.lovable-theme .data-item {
+  background: hsla(var(--lovable-card) / 0.5);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsla(var(--lovable-glass-border));
+  border-radius: 16px;
+}
+
+.lovable-theme .data-item:hover {
+  border-color: hsla(var(--lovable-primary) / 0.3);
+  box-shadow: 0 8px 25px hsla(var(--lovable-background) / 0.2);
+  transform: translateY(-2px);
+}

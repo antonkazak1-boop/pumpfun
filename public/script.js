@@ -565,7 +565,7 @@ function renderSmartMoney(data) {
                     <div class="stat-item">
                         <div class="stat-label">Avg Buy Size</div>
                         <div class="stat-value neutral">${formatSOL(item.avg_buy_size || 0)}</div>
-                    </div>
+                </div>
                     <div class="stat-item">
                         <div class="stat-label">Last Activity</div>
                         <div class="stat-value">${timeAgo}</div>
@@ -3178,7 +3178,7 @@ async function initApp() {
     
     // Check API health
     try {
-        await checkApiHealth();
+    await checkApiHealth();
     } catch (error) {
         console.error('❌ API health check failed:', error);
         console.log('⚠️ App will continue in fallback mode');
