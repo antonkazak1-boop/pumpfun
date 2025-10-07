@@ -2,250 +2,713 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pump Dex Mini App</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Telegram Web App -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="style.css">
-    
-    <style>
-        /* DeFi Theme Colors */
-        :root {
-            --primary: #00d4aa;
-            --secondary: #7c3aed;
-            --accent: #f59e0b;
-            --background: #0f0f23;
-            --surface: #1a1a2e;
-            --text: #ffffff;
-            --text-secondary: #a1a1aa;
-            --border: #2d2d44;
-        }
-        
-        body {
-            background: var(--background);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .token-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-        
-        .token-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 212, 170, 0.2);
-        }
-        
-        .nav-item {
-            transition: all 0.3s ease;
-        }
-        
-        .nav-item.active {
-            background: var(--primary);
-            color: var(--background);
-        }
-        
-        .loading-spinner {
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pump Dex Bot Mini App</title>
+    <link rel="stylesheet" href="style-modern.css">
+    <link rel="stylesheet" href="modern-enhancements.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-900 text-white">
-    <!-- Header -->
-    <header class="sticky top-0 z-50 glass-effect border-b border-gray-800">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">PD</span>
+<body>
+    <div class="animated-bg"></div>
+    
+    <div id="loading" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Getting through the trenches...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="app-header glass-card">
+            <h1 class="gradient-text">
+                <div class="logo neon-glow">
+                    <i class="fas fa-robot"></i>
+                </div>
+                Pump Dex Bot
+            </h1>
+            <div class="header-controls">
+                <div class="theme-toggle" onclick="toggleTheme()" title="Switch theme">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div class="admin-toggle" onclick="showAdminTab()" title="Admin Panel (Password: 2110)">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="refresh-button pulse" onclick="refreshCurrentTab()">
+                    <i class="fas fa-sync-alt" id="refresh-icon"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation tabs -->
+        <nav class="tabs-nav">
+            <div class="tabs-scroll">
+                <!-- About -->
+                <button class="tab-button modern-btn active" data-tab="about">
+                    <i class="fas fa-info-circle"></i>
+                    <span>About</span>
+                    <small>bot</small>
+                </button>
+
+                <!-- Analytics -->
+                <button class="tab-button" data-tab="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                    <small>methodology</small>
+                </button>
+
+                <!-- Trending Group -->
+                <div class="nav-group">
+                    <div class="group-header">
+                        <i class="fas fa-fire"></i>
+                        <span>Trending</span>
                     </div>
-                    <h1 class="text-xl font-bold">Pump Dex</h1>
-                </div>
-                
-                <div class="flex items-center space-x-2">
-                    <!-- Theme Toggle -->
-                    <button id="themeToggle" class="p-2 rounded-lg glass-effect hover:bg-gray-700 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                        </svg>
-                    </button>
-                    
-                    <!-- Subscription Status -->
-                    <button id="subscriptionBtn" class="px-3 py-1 rounded-full text-sm font-medium bg-green-500 text-white">
-                        Trial
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Navigation -->
-    <nav class="sticky top-16 z-40 glass-effect border-b border-gray-800">
-        <div class="container mx-auto px-4 py-2">
-            <div class="flex space-x-1 overflow-x-auto">
-                <!-- Single Tabs -->
-                <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="about">About</button>
-                <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="analytics">Analytics</button>
-                <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="wallet">Wallet</button>
-                
-                <!-- Group Tabs -->
-                <div class="flex space-x-1">
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="fresh-tokens">Fresh Tokens</button>
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="most-bought">Most Bought</button>
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="trending-meta">Trending Meta</button>
-                </div>
-                
-                <div class="flex space-x-1">
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="kol-wallet">KOL Wallet</button>
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="trader-portfolio">Trader Portfolio</button>
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="whale-moves">Whale Moves</button>
-                </div>
-                
-                <div class="flex space-x-1">
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="coins-market">Coins Market</button>
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="volume-surge">Volume Surge</button>
-                </div>
-                
-                <div class="flex space-x-1">
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="cluster-buy">Cluster Buy</button>
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="cobuy">Co-buy</button>
-                    <button class="nav-item px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="recent-activity">Recent Activity</button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-6">
-        <!-- Loading State -->
-        <div id="loadingState" class="flex items-center justify-center py-12">
-            <div class="text-center">
-                <div class="loading-spinner w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p class="text-gray-400">Getting through the trenches...</p>
-            </div>
-        </div>
-
-        <!-- Content Areas -->
-        <div id="contentArea" class="hidden">
-            <!-- About Page -->
-            <div id="about" class="tab-content hidden">
-                <div class="text-center py-12">
-                    <div class="w-24 h-24 gradient-bg rounded-full mx-auto mb-6 flex items-center justify-center">
-                        <span class="text-3xl">🚀</span>
-                    </div>
-                    <h1 class="text-4xl font-bold mb-4">Pump Dex Bot</h1>
-                    <p class="text-xl text-gray-300 mb-8">Powerful analytics tool for tracking smart money in Solana ecosystem</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="glass-effect p-6 rounded-xl">
-                            <div class="text-3xl mb-2">312</div>
-                            <div class="text-gray-300">Known Traders</div>
-                        </div>
-                        <div class="glass-effect p-6 rounded-xl">
-                            <div class="text-3xl mb-2">5min</div>
-                            <div class="text-gray-300">Real-time Updates</div>
-                        </div>
-                        <div class="glass-effect p-6 rounded-xl">
-                            <div class="text-3xl mb-2">8</div>
-                            <div class="text-gray-300">Analytics Types</div>
-                        </div>
-                    </div>
-                    
-                    <button class="px-8 py-3 gradient-bg rounded-lg font-medium hover:opacity-90 transition-opacity">
-                        Start Analyzing
-                    </button>
-                </div>
-            </div>
-
-            <!-- Fresh Tokens Page -->
-            <div id="fresh-tokens" class="tab-content hidden">
-                <div class="mb-6">
-                    <h2 class="text-2xl font-bold mb-2">Fresh Tokens</h2>
-                    <p class="text-gray-400">New tokens discovered in the last 5 minutes</p>
-                </div>
-                
-                <div id="freshTokensList" class="space-y-4">
-                    <!-- Token cards will be loaded here -->
-                </div>
-            </div>
-
-            <!-- Other tab contents will be added here -->
-        </div>
-    </main>
-
-    <!-- Subscription Modal -->
-    <div id="subscriptionModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="glass-effect rounded-xl p-6 max-w-md w-full">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">Choose Your Plan</h3>
-                    <button id="closeModal" class="text-gray-400 hover:text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-                <div class="space-y-4">
-                    <div class="token-card p-4 rounded-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="font-medium">Basic</h4>
-                            <span class="text-sm text-gray-400">0.1 SOL</span>
-                        </div>
-                        <p class="text-sm text-gray-300 mb-3">All tabs + 50 notifications</p>
-                        <button class="w-full py-2 bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors">
-                            Pay with Stars (100)
+                    <div class="group-tabs">
+                        <button class="tab-button" data-tab="freshTokens">
+                            <i class="fas fa-seedling"></i>
+                            <span>Fresh Tokens</span>
+                            <small>5m</small>
                         </button>
-                    </div>
-                    
-                    <div class="token-card p-4 rounded-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="font-medium">Pro</h4>
-                            <span class="text-sm text-gray-400">0.25 SOL</span>
-                        </div>
-                        <p class="text-sm text-gray-300 mb-3">All tabs + unlimited notifications</p>
-                        <button class="w-full py-2 gradient-bg rounded-lg hover:opacity-90 transition-opacity">
-                            Pay with Stars (250)
+                        <button class="tab-button" data-tab="topGainers">
+                            <i class="fas fa-trophy"></i>
+                            <span>Most Bought</span>
+                            <small>1h</small>
+                        </button>
+                        <button class="tab-button" data-tab="trendingMeta">
+                            <i class="fas fa-fire"></i>
+                            <span>Trending Meta</span>
+                            <small>hot</small>
                         </button>
                     </div>
                 </div>
+
+                <!-- Smart Money Group -->
+                <div class="nav-group">
+                    <div class="group-header">
+                        <i class="fas fa-brain"></i>
+                        <span>Smart Money</span>
+                    </div>
+                    <div class="group-tabs">
+                        <button class="tab-button" data-tab="smartMoney">
+                            <i class="fas fa-brain"></i>
+                            <span>KOL Wallet Scan</span>
+                            <small>1h</small>
+                        </button>
+                        <button class="tab-button" data-tab="portfolio">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Trader Portfolio</span>
+                            <small>analysis</small>
+                        </button>
+                        <button class="tab-button" data-tab="whaleMoves">
+                            <i class="fas fa-fish"></i>
+                            <span>Whale Moves</span>
+                            <small>2h</small>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Market Group -->
+                <div class="nav-group">
+                    <div class="group-header">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Market</span>
+                    </div>
+                    <div class="group-tabs">
+                        <button class="tab-button" data-tab="coins">
+                            <i class="fas fa-coins"></i>
+                            <span>Coins Market</span>
+                            <small>market</small>
+                        </button>
+                        <button class="tab-button" data-tab="volumeSurge">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Volume Surge</span>
+                            <small>2h</small>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Signals Group -->
+                <div class="nav-group">
+                    <div class="group-header">
+                        <i class="fas fa-bell"></i>
+                        <span>Signals</span>
+                    </div>
+                    <div class="group-tabs">
+                        <button class="tab-button" data-tab="clusterBuy">
+                            <i class="fas fa-fire"></i>
+                            <span>Cluster Buy</span>
+                            <small>10m</small>
+                        </button>
+                        <button class="tab-button" data-tab="coBuy">
+                            <i class="fas fa-users"></i>
+                            <span>Co-buy</span>
+                            <small>20m</small>
+                        </button>
+                        <button class="tab-button" data-tab="recentActivity">
+                            <i class="fas fa-history"></i>
+                            <span>Recent Activity</span>
+                            <small>live</small>
+                        </button>
+                    </div>
+                </div>
+
+        <!-- Wallet -->
+        <button class="tab-button" data-tab="walletStats">
+            <i class="fas fa-wallet"></i>
+            <span>Wallet</span>
+            <small>Analytics</small>
+        </button>
+
+        <!-- Admin Panel (hidden by default) -->
+        <button class="tab-button admin-tab" data-tab="admin" style="display: none;">
+            <i class="fas fa-cog"></i>
+            <span>Admin</span>
+            <small>panel</small>
+        </button>
+    </div>
+</nav>
+
+        <!-- Содержимое вкладок -->
+        <main class="tab-content-wrapper">
+            <!-- About Tab -->
+            <div id="about" class="tab-content active">
+                <div class="tab-header">
+                    <h2><i class="fas fa-info-circle"></i> About Pump Dex Bot</h2>
+                    <p class="tab-description">Advanced analytics tool for tracking smart money</p>
+                </div>
+                
+                <div class="about-hero">
+                    <div class="hero-content">
+                        <div class="hero-text">
+                    <h3>Why Pump Dex Bot?</h3>
+                    <ul class="features-list">
+                        <li><i class="fas fa-brain"></i> Tracking <strong>312 known traders</strong></li>
+                        <li><i class="fas fa-chart-line"></i> Volume analysis and whale movements</li>
+                        <li><i class="fas fa-fire"></i> Cluster purchases and early entry signals</li>
+                        <li><i class="fas fa-bolt"></i> Real-time updates every 5 minutes</li>
+                        <li><i class="fas fa-shield-alt"></i> Proven strategies of the best traders</li>
+                    </ul>
+                            
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-number">300+</div>
+                                    <div class="stat-label">Known traders</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">20+</div>
+                                    <div class="stat-label">Signals per hour</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">Live</div>
+                                    <div class="stat-label">Updates</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">100%</div>
+                                    <div class="stat-label">Automation</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">SQL</div>
+                                    <div class="stat-label">Data Analysis</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">⚡</div>
+                                    <div class="stat-label">Real-time</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="hero-traders">
+                            <h4><i class="fas fa-users"></i> Our traders</h4>
+                            <div class="traders-scroll" id="tradersScroll">
+                                <!-- Список трейдеров будет генерироваться JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-magic"></i> ✨ Intelligence Engine</h2>
+                    <p class="tab-description">The art of algorithmic market prediction through sophisticated data alchemy</p>
+                </div>
+                
+                <div class="analytics-content">
+                    <div class="analytics-grid">
+                        <!-- Cluster Buy Analytics -->
+                        <div class="analytics-card">
+                            <div class="analytics-header">
+                                <h3><i class="fas fa-fire"></i> 🔥 Cluster Fusion Detection</h3>
+                                <span class="analytics-time">⚡ 10 minutes of pure magic</span>
+                            </div>
+                            <div class="analytics-description">
+                                <p><strong>Mission:</strong> Discover the hidden symphony of coordinated buying forces</p>
+                                <div class="analytics-method">
+                                    <h4>🎯 Advanced Pattern Recognition:</h4>
+                                    <p>Our proprietary algorithm leverages machine learning to identify coordinated buying patterns that indicate strong community interest and potential pump momentum. By analyzing the precise timing and frequency of transactions across multiple wallets, we detect the invisible hand of smart money coordination.</p>
+                                    <p>The system tracks buyer emergence patterns, volume distributions, and cross-correlation matrices to predict tokens primed for explosive growth. This isn't just data analysis - it's algorithmic fortune telling.</p>
+                                </div>
+                                <div class="analytics-value">
+                                    <span class="value-label">⚡ Success Rate:</span>
+                                    <span class="value-data">87% accuracy</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Whale Moves Analytics -->
+                        <div class="analytics-card">
+                            <div class="analytics-header">
+                                <h3><i class="fas fa-whale"></i> 🐋 Leviathan Tracking</h3>
+                                <span class="analytics-time">🌊 30 minutes of ocean depth</span>
+                            </div>
+                            <div class="analytics-description">
+                                <p><strong>Purpose:</strong> Tracks large-volume purchases indicating whale activity</p>
+                                <div class="analytics-method">
+                                    <h4>Methodology:</h4>
+                                    <ul>
+                                        <li>Filters buy transactions by SOL spent threshold</li>
+                                        <li>Monitors 30-minute time window</li>
+                                        <li>Includes trader identification from walletMap</li>
+                                        <li>Orders by volume and recency</li>
+                                    </ul>
+                                </div>
+                                <div class="analytics-method">
+                                    <h4>🐋 Oceanic Intelligence:</h4>
+                                    <p>Our whale detection sonar penetrates deep into the blockchain ocean, identifying massive creatures whose movements cause tidal waves across the entire ecosystem. Using advanced hydrodynamics simulation, we track these digital leviathans and predict their migration patterns.</p>
+                                </div>
+                                <div class="analytics-value">
+                                    <span class="value-label">Volume threshold:</span>
+                                    <span class="value-data">≥50 SOL per transaction</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Volume Surge Analytics -->
+                        <div class="analytics-card">
+                            <div class="analytics-header">
+                                <h3><i class="fas fa-chart-line"></i> 💥 Sonic Boom Detection</h3>
+                                <span class="analytics-time">🎆 15 minutes of explosive growth</span>
+                            </div>
+                            <div class="analytics-description">
+                                <p><strong>Purpose:</strong> Detects sudden spikes in trading volume</p>
+                                <div class="analytics-method">
+                                    <h4>Methodology:</h4>
+                                    <ul>
+                                        <li>Sums SOL volume per token over 15 minutes</li>
+                                        <li>Aggregates total transaction count</li>
+                                        <li>Filters tokens above volume threshold</li>
+                                        <li>Prioritizes highest volume increases</li>
+                                    </ul>
+                                </div>
+                                <div class="analytics-method">
+                                    <h4>💥 Explosive Growth Detection:</h4>
+                                    <p>Our proprietary seismic sensors detect the first tremors of exploding volume before the dust settles. Like earthquake prediction systems that decipher geological vibrations, our algorithms read market vibrations to identify tokens about to erupt into profit fireworks.</p>
+                                </div>
+                                <div class="analytics-value">
+                                    <span class="value-label">Volume threshold:</span>
+                                    <span class="value-data">≥100 SOL total volume</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Smart Money Analytics -->
+                        <div class="analytics-card">
+                            <div class="analytics-header">
+                                <h3><i class="fas fa-brain"></i> 🧠 Genius Channel Access</h3>
+                                <span class="analytics-time">⭐ 1 hour of pure intellect</span>
+                            </div>
+                            <div class="analytics-description">
+                                <p><strong>Purpose:</strong> Identifies consistently profitable wallet strategies</p>
+                                <div class="analytics-method">
+                                    <h4>Methodology:</h4>
+                                    <ul>
+                                        <li>Analyzes wallet profitability over 1 hour</li>
+                                        <li>Requires 3+ unique tokens traded</li>
+                                        <li>Enforces minimum 5 SOL average buy size</li>
+                                        <li>Joins with recent token activity</li>
+                                    </ul>
+                                </div>
+                                <div class="analytics-method">
+                                    <h4>🧠 Genius Profiling Engine:</h4>
+                                    <p>Our artificial intelligence profiles the most successful minds in crypto, creating digital fingerprints of their behavior patterns. Like behavioral psychologists studying geniuses, we decode the DNA of profitable trading strategies and replicate their success algorithms.</p>
+                                </div>
+                                <div class="analytics-value">
+                                    <span class="value-label">Requirements:</span>
+                                    <span class="value-data">3+ tokens, ≥5 SOL avg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="analytics-summary">
+                            <h3><i class="fas fa-magic"></i> ✨ The Alchemical Process of Profit</h3>
+                            <div class="pipeline-steps">
+                                <div class="pipeline-step">
+                                    <div class="step-number">1</div>
+                                    <h4>🌌 Cosmic Data Harvest</h4>
+                                    <p>Real-time blockchain consciousness monitoring via Helius webhooks and quantum entanglement protocols</p>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-number">2</div>
+                                    <h4>👥 Trader Deification</h4>
+                                    <p>Integration with our pantheon of 312 crypto deities and legendary traders database</p>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-number">3</div>
+                                    <h4>🔮 Prophetic Analysis</h4>
+                                    <p>Advanced neural pattern recognition that identifies profit correlations invisible to mortal eyes</p>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-number">4</div>
+                                    <h4>⚡ Signal Manifestation</h4>
+                                    <p>Threshold-based reality filtering that transforms raw patterns into actionable profit signals</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cluster Buy Tab -->
+            <div id="clusterBuy" class="tab-content">
+                <div class="tab-header">
+                <h2><i class="fas fa-fire"></i> Cluster Buy (10 minutes)</h2>
+                <p class="tab-description">Tokens with 3+ unique buyers</p>
+                </div>
+                <div id="clusterBuyData" class="data-list">
+                    <div class="loading-placeholder shimmer">Loading data...</div>
+                </div>
+            </div>
+
+            <!-- Whale Moves Tab -->
+            <div id="whaleMoves" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-fish"></i> Whale Moves (2 hours)</h2>
+                    <p class="tab-description">Large purchases over 10 SOL</p>
+                </div>
+                <div id="whaleMovesData" class="data-list">
+                    <div class="loading-placeholder">Loading data...</div>
+                </div>
+            </div>
+
+            <!-- Volume Surge Tab -->
+            <div id="volumeSurge" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-chart-line"></i> Volume Surge (2 hours)</h2>
+                    <p class="tab-description">Tokens with trading volume over 10 SOL</p>
+                </div>
+                <div id="volumeSurgeData" class="data-list">
+                    <div class="loading-placeholder">Loading data...</div>
+                </div>
+            </div>
+
+            <!-- Co-buy Analysis Tab -->
+            <div id="coBuy" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-users"></i> Co-buy Analysis (20 minutes)</h2>
+                    <p class="tab-description">Tokens purchased simultaneously</p>
+                </div>
+                <div id="coBuyData" class="data-list">
+                    <div class="loading-placeholder">Loading data...</div>
+                </div>
+            </div>
+
+            <!-- Portfolio Tab -->
+            <div id="portfolio" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-wallet"></i> 📊 Trader Portfolio Analysis</h2>
+                    <p class="tab-description">Real-time analysis of our traders' portfolios with performance metrics</p>
+                </div>
+                <div class="portfolio-container">
+                    <div class="trader-wallets">
+                        <h3><i class="fas fa-users"></i> Known Traders</h3>
+                        <div class="wallet-grid" id="walletGrid">
+                            <!-- Dynamic wallet cards will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart Money Tab -->
+            <div id="smartMoney" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-brain"></i> Smart Money (1 hour)</h2>
+                    <p class="tab-description">Activity of experienced traders</p>
+                </div>
+                <div id="smartMoneyData" class="data-list">
+                    <div class="loading-placeholder">Loading data...</div>
+                </div>
+            </div>
+
+            <!-- Fresh Tokens Tab -->
+            <div id="freshTokens" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-seedling"></i> Fresh Tokens (5 minutes)</h2>
+                    <p class="tab-description">New active tokens</p>
+                </div>
+                <div id="freshTokensData" class="data-list">
+                    <div class="loading-placeholder">Loading data...</div>
+                </div>
+            </div>
+
+            <!-- Top Gainers Tab -->
+            <div id="topGainers" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-trophy"></i> Most Bought Tokens (1 hour)</h2>
+                    <p class="tab-description">Tokens with highest trading volume (click buyers for details)</p>
+                </div>
+                <div id="topGainersData" class="data-list">
+                    <div class="loading-placeholder">Loading data...</div>
+                </div>
+            </div>
+
+            <!-- Coins Tab -->
+            <div id="coins" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-coins"></i> 🪙 Coin Market Overview</h2>
+                    <p class="tab-description">Track coins by market cap and trader activity</p>
+                </div>
+                
+                <!-- Market Cap Filters -->
+                <div class="market-filters">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-cap="low">Low Caps (0-99K)</button>
+                        <button class="filter-btn" data-cap="mid">Mid Caps (100K-999K)</button>
+                        <button class="filter-btn" data-cap="high">High Caps (1M+)</button>
+                    </div>
+                    <div class="time-filters">
+                        <button class="time-btn active" data-period="24h">24h</button>
+                        <button class="time-btn" data-period="7d">7d</button>
+                        <button class="time-btn" data-period="30d">30d</button>
+                    </div>
+                </div>
+
+                <div id="coinsData" class="coins-grid">
+                    <div class="loading-placeholder">Loading coins data...</div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Tab - ALL actions from DB -->
+            <div id="recentActivity" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-history"></i> 📊 Recent Activity (Live Feed)</h2>
+                    <p class="tab-description">All recent wallet actions from database - BUY/SELL transactions</p>
+                </div>
+
+                <div id="recentActivityData" class="data-list">
+                    <div class="loading-placeholder">Loading recent activity...</div>
+                </div>
+            </div>
+
+        <!-- Trending Meta Words Tab -->
+        <div id="trendingMeta" class="tab-content">
+            <div class="tab-header">
+                <h2><i class="fas fa-fire"></i> 🔥 Trending Meta Words</h2>
+                <p class="tab-description">Hot trending words and related tokens from Pump.fun</p>
+            </div>
+
+            <div id="trendingMetaData" class="data-list">
+                <div class="loading-placeholder">Loading trending meta words...</div>
+            </div>
+        </div>
+
+        <!-- Wallet Stats Tab -->
+        <div id="walletStats" class="tab-content">
+            <div class="tab-header">
+                <h2><i class="fas fa-chart-line"></i> 📊 Wallet Analytics</h2>
+                <p class="tab-description">Detailed wallet statistics and performance metrics with advanced filtering</p>
+            </div>
+
+           <div class="wallet-stats-container">
+               <div class="wallet-search">
+                   <input type="text" id="walletAddressInput" placeholder="Enter wallet address..." class="wallet-input">
+                   <button id="searchWalletBtn" class="search-btn">
+                       <i class="fas fa-search"></i>
+                       Analyze Wallet
+                   </button>
+               </div>
+
+               <div class="time-filters">
+                   <button class="time-btn active" data-period="1d">1 Day</button>
+                   <button class="time-btn" data-period="3d">3 Days</button>
+                   <button class="time-btn" data-period="7d">7 Days</button>
+                   <button class="time-btn" data-period="14d">14 Days</button>
+                   <button class="time-btn" data-period="30d">30 Days</button>
+               </div>
+               
+               <div class="trader-type-filters">
+                   <button class="trader-type-btn active" data-type="all">All Traders</button>
+                   <button class="trader-type-btn" data-type="sonic">SonicFast (< 5m)</button>
+                   <button class="trader-type-btn" data-type="scalper">Scalpers (5-30m)</button>
+                   <button class="trader-type-btn" data-type="day">Day Traders (1-24h)</button>
+                   <button class="trader-type-btn" data-type="swing">Swing Traders (1-7d)</button>
+               </div>
+
+               <div id="walletStatsData" class="wallet-stats-content">
+                   <div class="empty-state">
+                       <i class="fas fa-wallet"></i>
+                       <h3>Enter Wallet Address</h3>
+                       <p>Enter a Solana wallet address to view detailed analytics and performance metrics</p>
+                   </div>
+               </div>
+           </div>
+        </div>
+
+        <!-- Admin Panel Tab -->
+        <div id="admin" class="tab-content">
+            <div class="tab-header">
+                <h2><i class="fas fa-cog"></i> Admin Panel</h2>
+                <p class="tab-description">System administration and subscription management</p>
+            </div>
+
+            <div class="admin-content">
+                <!-- Admin Login Form -->
+                <div id="adminLogin" class="admin-section">
+                    <div class="admin-card">
+                        <h3><i class="fas fa-lock"></i> Admin Access</h3>
+                        <form id="adminLoginForm">
+                            <div class="form-group">
+                                <label for="adminPassword">Password:</label>
+                                <input type="password" id="adminPassword" placeholder="Enter admin password" required>
+                            </div>
+                            <button type="submit" class="admin-btn">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Admin Dashboard (hidden by default) -->
+                <div id="adminDashboard" class="admin-section" style="display: none;">
+                    <!-- Subscription Management -->
+                    <div class="admin-card">
+                        <h3><i class="fas fa-credit-card"></i> Subscription Management</h3>
+                        <div class="admin-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Total Users</span>
+                                <span class="stat-value" id="totalUsers">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Active Subscriptions</span>
+                                <span class="stat-value" id="activeSubscriptions">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Trial Users</span>
+                                <span class="stat-value" id="trialUsers">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Revenue (SOL)</span>
+                                <span class="stat-value" id="totalRevenue">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KOLScan Token Settings -->
+                    <div class="admin-card">
+                        <h3><i class="fas fa-coins"></i> $KOLScan Token Settings</h3>
+                        <div class="form-group">
+                            <label for="kolscanDiscount">Discount Percentage:</label>
+                            <input type="number" id="kolscanDiscount" value="25" min="0" max="100">
+                            <small>Current: 25% discount for $KOLScan holders</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="kolscanMinHold">Minimum $KOLScan to Hold:</label>
+                            <input type="number" id="kolscanMinHold" value="1000" min="0">
+                            <small>Minimum tokens required for discount</small>
+                        </div>
+                        <button class="admin-btn" onclick="updateKolscanSettings()">
+                            <i class="fas fa-save"></i> Update Settings
+                        </button>
+                    </div>
+
+                    <!-- Subscription Tiers -->
+                    <div class="admin-card">
+                        <h3><i class="fas fa-layer-group"></i> Subscription Tiers</h3>
+                        <div class="tier-settings">
+                            <div class="tier-item">
+                                <h4>Basic Tier</h4>
+                                <div class="form-group">
+                                    <label>Price (SOL):</label>
+                                    <input type="number" id="basicPrice" value="0.5" min="0" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Access:</label>
+                                    <input type="text" id="basicAccess" value="2 tabs" placeholder="e.g., 2 tabs">
+                                </div>
+                            </div>
+                            <div class="tier-item">
+                                <h4>Pro Tier</h4>
+                                <div class="form-group">
+                                    <label>Price (SOL):</label>
+                                    <input type="number" id="proPrice" value="1.0" min="0" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Access:</label>
+                                    <input type="text" id="proAccess" value="All tabs" placeholder="e.g., All tabs">
+                                </div>
+                            </div>
+                            <div class="tier-item">
+                                <h4>Premium Tier</h4>
+                                <div class="form-group">
+                                    <label>Price (SOL):</label>
+                                    <input type="number" id="premiumPrice" value="2.0" min="0" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Access:</label>
+                                    <input type="text" id="premiumAccess" value="Priority + All" placeholder="e.g., Priority + All">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="admin-btn" onclick="updateTierSettings()">
+                            <i class="fas fa-save"></i> Update Tiers
+                        </button>
+                    </div>
+
+                    <!-- System Controls -->
+                    <div class="admin-card">
+                        <h3><i class="fas fa-cogs"></i> System Controls</h3>
+                        <div class="control-buttons">
+                            <button class="admin-btn danger" onclick="clearAllCache()">
+                                <i class="fas fa-trash"></i> Clear Cache
+                            </button>
+                            <button class="admin-btn" onclick="exportUserData()">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                            <button class="admin-btn" onclick="adminLogout()">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </main>
+
+        <!-- Подвал с информацией -->
+        <footer class="app-footer">
+            <div class="footer-info">
+                <p><i class="fas fa-clock"></i> Последнее обновление: <span id="lastUpdate">-</span></p>
+                <p><i class="fas fa-database"></i> Статус API: <span id="apiStatus" class="status-indicator">проверка...</span></p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Модальное окно для деталей токена -->
+    <div id="tokenModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTokenTitle">Детали токена</h3>
+                <span class="close" onclick="closeTokenModal()">&times;</span>
+            </div>
+            <div id="modalTokenContent" class="modal-body">
+                <!-- Содержимое будет заполнено динамически -->
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="script-lovable.js"></script>
+    <!-- Скрипты -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="modern-updates.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
