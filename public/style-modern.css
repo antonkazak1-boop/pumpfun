@@ -255,6 +255,12 @@ body {
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    width: 100%;
 }
 
 /* Анимированный фон */
@@ -325,14 +331,8 @@ body {
 }
 
 /* Основной контейнер */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: 0 20px;
-}
+/* Container removed - causes borders on mobile */
+/* All content now full-width */
 
 /* Заголовок */
 .app-header {
