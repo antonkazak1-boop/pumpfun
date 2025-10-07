@@ -350,6 +350,25 @@ class SubscriptionSystem {
         }
     }
 
+    // Check if user has ever had a paid subscription
+    async hasHadPaidSubscription(userId) {
+        try {
+            if (!this.pool) return false;
+            
+            const result = await this.pool.query(`
+                SELECT COUNT(*) as count FROM payments
+                WHERE user_id = $1
+                AND status IN ('confirmed', 'completed')
+                AND (amount_sol > 0 OR amount_stars > 0)
+            `, [userId]);
+            
+            return result.rows[0]?.count > 0;
+        } catch (error) {
+            console.error('Error checking paid subscription history:', error.message);
+            return false;
+        }
+    }
+
     // Get active subscription
     async getActiveSubscription(userId) {
         try {

@@ -3787,6 +3787,61 @@ body {
    SUBSCRIPTION SYSTEM STYLES
    ================================ */
 
+/* Locked tab styles - HIGH PRIORITY */
+.tab-button.locked-tab {
+    opacity: 0.4 !important;
+    cursor: pointer !important;
+    position: relative;
+    filter: grayscale(0.9) !important;
+    background: rgba(128, 128, 128, 0.15) !important;
+    border: 1px dashed rgba(239, 68, 68, 0.3) !important;
+}
+
+.tab-button.locked-tab:hover {
+    opacity: 0.65 !important;
+    transform: scale(1.05) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    background: rgba(128, 128, 128, 0.25) !important;
+}
+
+.tab-button.locked-tab::before {
+    content: '🔒';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 16px;
+    opacity: 0.9;
+    pointer-events: none;
+    animation: lock-pulse 2s ease-in-out infinite;
+}
+
+@keyframes lock-pulse {
+    0%, 100% { 
+        opacity: 0.6; 
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 1; 
+        transform: scale(1.1);
+    }
+}
+
+.tab-button.locked-tab .lock-icon {
+    color: #ef4444 !important;
+    margin-left: 4px;
+    font-size: 11px;
+}
+
+/* Light theme locked tabs */
+.theme-light .tab-button.locked-tab {
+    background: rgba(0, 0, 0, 0.08) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.theme-light .tab-button.locked-tab:hover {
+    background: rgba(0, 0, 0, 0.12) !important;
+}
+
 .subscription-indicator {
     display: flex;
     align-items: center;
@@ -4010,7 +4065,8 @@ body.menu-open {
 .plan-price .price {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--accent-color);
+    color: #00ff88 !important;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
 }
 
 .plan-price .stars {
