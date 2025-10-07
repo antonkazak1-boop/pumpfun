@@ -640,23 +640,70 @@ body.dark-theme .space-y-6 .flex.flex-wrap.gap-2 span:hover {
 /* ===== THEME SWITCHER BUTTON ===== */
 /* Locked tab styles */
 .locked-tab {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed !important;
-  pointer-events: none;
+  position: relative;
+  filter: grayscale(0.8);
+  transition: all 0.3s ease;
+}
+
+.locked-tab:hover {
+  opacity: 0.6;
+  transform: scale(1.02);
+}
+
+.locked-tab::after {
+  content: '🔒';
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 12px;
+  opacity: 0.6;
 }
 
 .locked-tab .lock-icon {
-  color: hsla(var(--lovable-muted-foreground));
+  color: #ef4444;
   margin-left: 4px;
   font-size: 10px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 body.light-theme .locked-tab {
-  opacity: 0.5;
+  opacity: 0.4;
+  filter: grayscale(0.8);
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+body.light-theme .locked-tab:hover {
+  opacity: 0.6;
+  background: rgba(0, 0, 0, 0.08) !important;
 }
 
 body.dark-theme .locked-tab {
-  opacity: 0.5;
+  opacity: 0.4;
+  filter: grayscale(0.8);
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+body.dark-theme .locked-tab:hover {
+  opacity: 0.6;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.lovable-theme .locked-tab {
+  opacity: 0.4;
+  filter: grayscale(0.8);
+  background: hsla(var(--lovable-muted) / 0.1) !important;
+}
+
+.lovable-theme .locked-tab:hover {
+  opacity: 0.6;
+  background: hsla(var(--lovable-muted) / 0.15) !important;
 }
 
 .theme-switcher {

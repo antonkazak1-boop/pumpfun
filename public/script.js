@@ -2722,10 +2722,18 @@ function applyAccessRestrictions() {
             // Tab is allowed
             button.classList.remove('locked-tab');
             button.removeAttribute('disabled');
+            button.style.pointerEvents = 'auto';
+            
+            // Remove lock icon if exists
+            const existingLockIcon = button.querySelector('.lock-icon');
+            if (existingLockIcon) {
+                existingLockIcon.remove();
+            }
         } else {
             // Tab is locked
             button.classList.add('locked-tab');
             button.setAttribute('disabled', 'true');
+            button.style.pointerEvents = 'auto'; // Allow clicks for upgrade prompt
             
             // Add lock icon
             if (!button.querySelector('.lock-icon')) {
@@ -2733,8 +2741,17 @@ function applyAccessRestrictions() {
                 lockIcon.className = 'fas fa-lock lock-icon';
                 lockIcon.style.marginLeft = '4px';
                 lockIcon.style.fontSize = '10px';
+                lockIcon.style.color = '#ef4444';
                 button.querySelector('span').appendChild(lockIcon);
             }
+            
+            // Add click handler for upgrade prompt
+            button.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const tabLabel = button.querySelector('span').textContent.replace('🔒', '').trim();
+                showUpgradePrompt(`"${tabLabel}" tab`);
+            };
         }
     });
 }
