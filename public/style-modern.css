@@ -3847,12 +3847,15 @@ body {
     opacity: 1 !important;
 }
 
-/* Main navigation group layout */
-.main-nav-group {
+/* Info group navigation layout */
+.nav-group.info-group {
+    min-width: 240px;
+}
+
+.info-nav-layout {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-right: 12px;
 }
 
 .top-nav-buttons {
@@ -3860,9 +3863,14 @@ body {
     gap: 8px;
 }
 
+.top-nav-buttons .tab-button {
+    flex: 1;
+    min-width: 0;
+}
+
 .tab-button.dashboard-wide {
     width: 100%;
-    min-width: 200px;
+    min-width: 100%;
 }
 
 /* Light theme locked tabs */
