@@ -638,6 +638,27 @@ body.dark-theme .space-y-6 .flex.flex-wrap.gap-2 span:hover {
 }
 
 /* ===== THEME SWITCHER BUTTON ===== */
+/* Locked tab styles */
+.locked-tab {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.locked-tab .lock-icon {
+  color: hsla(var(--lovable-muted-foreground));
+  margin-left: 4px;
+  font-size: 10px;
+}
+
+body.light-theme .locked-tab {
+  opacity: 0.5;
+}
+
+body.dark-theme .locked-tab {
+  opacity: 0.5;
+}
+
 .theme-switcher {
   display: flex;
   align-items: center;

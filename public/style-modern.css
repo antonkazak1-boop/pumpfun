@@ -3808,6 +3808,11 @@ body {
     color: white;
 }
 
+.subscription-indicator.free {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    color: #374151;
+}
+
 .subscription-indicator:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

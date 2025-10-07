@@ -1917,18 +1917,38 @@ app.get('/api/subscription/status/:userId', async (req, res) => {
             const hasActiveSubscription = await subscriptionSystem.hasActiveSubscription(userId);
             const activeSubscription = await subscriptionSystem.getActiveSubscription(userId);
             
+            // Calculate trial status
+            let isTrial = false;
+            let trialDaysRemaining = 0;
+            
+            if (user && user.created_at) {
+                const createdAt = new Date(user.created_at);
+                const now = new Date();
+                const daysSinceCreation = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+                
+                // If no active subscription and within 5 days of creation
+                if (!hasActiveSubscription && daysSinceCreation < 5) {
+                    isTrial = true;
+                    trialDaysRemaining = 5 - daysSinceCreation;
+                }
+            }
+            
         res.json({
             success: true,
                 user: user,
                 hasActiveSubscription: hasActiveSubscription,
-                activeSubscription: activeSubscription
+                activeSubscription: activeSubscription,
+                isTrial: isTrial,
+                trialDaysRemaining: trialDaysRemaining
             });
         } else {
             res.json({
                 success: true,
                 user: null,
                 hasActiveSubscription: false,
-                activeSubscription: null
+                activeSubscription: null,
+                isTrial: true,
+                trialDaysRemaining: 5
             });
         }
     } catch (error) {

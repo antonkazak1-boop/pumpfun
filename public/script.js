@@ -918,6 +918,21 @@ async function loadTabData(tabName) {
 function switchTab(tabName) {
     if (currentTab === tabName || isLoading) return;
     
+    // Check access before switching
+    if (!hasAccessToTab(tabName)) {
+        const userTier = getUserTier();
+        const tabLabel = document.querySelector(`[data-tab="${tabName}"] span`)?.textContent || tabName;
+        
+        if (userTier === 'free') {
+            showUpgradePrompt(`"${tabLabel}" tab`);
+        } else if (userTier === 'trial') {
+            const daysLeft = subscriptionStatus?.trialDaysRemaining || 0;
+            alert(`⏰ Your trial period has ended. Please subscribe to continue using premium features.`);
+            showSubscriptionMenu();
+        }
+        return;
+    }
+    
     // Обновление активной вкладки в навигации
     document.querySelectorAll('.tab-button').forEach(button => {
         button.classList.remove('active');
@@ -2630,14 +2645,24 @@ async function checkSubscriptionStatus() {
             subscriptionStatus = data;
             console.log('📊 Subscription status:', subscriptionStatus);
             
+            // Check trial expiration
+            if (subscriptionStatus.isTrial && subscriptionStatus.trialDaysRemaining !== undefined) {
+                console.log(`⏰ Trial days remaining: ${subscriptionStatus.trialDaysRemaining}`);
+            }
+            
             // Show subscription UI if needed
             updateSubscriptionUI();
+            
+            // Apply access restrictions
+            applyAccessRestrictions();
         } else {
             // Fallback: assume trial user
             subscriptionStatus = {
                 user: { id: currentUserId },
                 hasActiveSubscription: false,
-                activeSubscription: null
+                activeSubscription: null,
+                isTrial: true,
+                trialDaysRemaining: 5
             };
             console.log('📊 Using fallback subscription status (trial)');
         }
@@ -2647,9 +2672,107 @@ async function checkSubscriptionStatus() {
         subscriptionStatus = {
             user: { id: currentUserId },
             hasActiveSubscription: false,
-            activeSubscription: null
+            activeSubscription: null,
+            isTrial: true,
+            trialDaysRemaining: 5
         };
         console.log('📊 Using fallback subscription status due to error');
+    }
+}
+
+// Access control configuration
+const ACCESS_RULES = {
+    free: {
+        allowedTabs: ['about', 'dashboard', 'analytics', 'freshTokens', 'coins'],
+        maxTokensPerTab: 10,
+        refreshInterval: 60000 // 1 minute
+    },
+    trial: {
+        allowedTabs: ['about', 'dashboard', 'analytics', 'freshTokens', 'coins', 'smartMoney', 'clusterBuy', 'volumeSurge', 'coBuy', 'whaleMoves', 'topGainers', 'recentActivity', 'trendingMeta', 'portfolio', 'walletStats'],
+        maxTokensPerTab: 50,
+        refreshInterval: 30000, // 30 seconds
+        daysAllowed: 5
+    },
+    basic: {
+        allowedTabs: ['about', 'dashboard', 'analytics', 'freshTokens', 'coins', 'smartMoney', 'clusterBuy', 'volumeSurge', 'coBuy', 'whaleMoves', 'topGainers', 'recentActivity'],
+        maxTokensPerTab: 100,
+        refreshInterval: 30000
+    },
+    pro: {
+        allowedTabs: 'all',
+        maxTokensPerTab: 'unlimited',
+        refreshInterval: 15000 // 15 seconds
+    }
+};
+
+// Apply access restrictions based on subscription
+function applyAccessRestrictions() {
+    if (!subscriptionStatus) return;
+    
+    const userTier = getUserTier();
+    const rules = ACCESS_RULES[userTier] || ACCESS_RULES.free;
+    
+    console.log(`🔐 Applying access restrictions for tier: ${userTier}`);
+    
+    // Lock/unlock tabs based on subscription
+    document.querySelectorAll('.tab-button').forEach(button => {
+        const tabName = button.dataset.tab;
+        
+        if (rules.allowedTabs === 'all' || rules.allowedTabs.includes(tabName)) {
+            // Tab is allowed
+            button.classList.remove('locked-tab');
+            button.removeAttribute('disabled');
+        } else {
+            // Tab is locked
+            button.classList.add('locked-tab');
+            button.setAttribute('disabled', 'true');
+            
+            // Add lock icon
+            if (!button.querySelector('.lock-icon')) {
+                const lockIcon = document.createElement('i');
+                lockIcon.className = 'fas fa-lock lock-icon';
+                lockIcon.style.marginLeft = '4px';
+                lockIcon.style.fontSize = '10px';
+                button.querySelector('span').appendChild(lockIcon);
+            }
+        }
+    });
+}
+
+// Get user tier
+function getUserTier() {
+    if (!subscriptionStatus) return 'free';
+    
+    // Check if trial is expired
+    if (subscriptionStatus.isTrial) {
+        if (subscriptionStatus.trialDaysRemaining !== undefined && subscriptionStatus.trialDaysRemaining <= 0) {
+            return 'free'; // Trial expired
+        }
+        return 'trial';
+    }
+    
+    if (subscriptionStatus.hasActiveSubscription && subscriptionStatus.activeSubscription) {
+        return subscriptionStatus.activeSubscription.tier_name || 'free';
+    }
+    
+    return 'free';
+}
+
+// Check if user has access to a specific tab
+function hasAccessToTab(tabName) {
+    const userTier = getUserTier();
+    const rules = ACCESS_RULES[userTier] || ACCESS_RULES.free;
+    
+    if (rules.allowedTabs === 'all') return true;
+    return rules.allowedTabs.includes(tabName);
+}
+
+// Show upgrade prompt when user tries to access locked content
+function showUpgradePrompt(feature = 'this feature') {
+    const message = `🔒 ${feature} is available for Premium subscribers.\n\nUpgrade now to unlock all features!`;
+    
+    if (confirm(message)) {
+        showSubscriptionMenu();
     }
 }
 
@@ -2678,12 +2801,22 @@ function updateSubscriptionUI() {
                 `;
                 indicator.classList.add('premium');
             } else {
-                indicator.innerHTML = `
-                    <i class="fas fa-clock"></i>
-                    <span>TRIAL</span>
-                    <i class="fas fa-arrow-up" style="margin-left: 0.25rem; font-size: 0.8rem;"></i>
-                `;
-                indicator.classList.add('trial');
+                const trialDays = subscriptionStatus.trialDaysRemaining || 0;
+                if (subscriptionStatus.isTrial && trialDays > 0) {
+                    indicator.innerHTML = `
+                        <i class="fas fa-clock"></i>
+                        <span>TRIAL (${trialDays}d)</span>
+                        <i class="fas fa-arrow-up" style="margin-left: 0.25rem; font-size: 0.8rem;"></i>
+                    `;
+                    indicator.classList.add('trial');
+                } else {
+                    indicator.innerHTML = `
+                        <i class="fas fa-lock"></i>
+                        <span>FREE</span>
+                        <i class="fas fa-arrow-up" style="margin-left: 0.25rem; font-size: 0.8rem;"></i>
+                    `;
+                    indicator.classList.add('free');
+                }
             }
             
             // Add click handler
