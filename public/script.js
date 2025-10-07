@@ -3168,9 +3168,15 @@ async function payWithSol(tierName) {
         // Get tier info
         const tier = availableTiers.find(t => t.tier_name === tierName);
         if (!tier) {
-            alert('Tier not found. Please try again.');
+            showNotification('❌ Tier not found. Please try again.', 'error');
             return;
         }
+        
+        // Ask user for wallet address (optional - for KOLScan discount)
+        const walletAddress = prompt('Enter your Solana wallet address (optional, for $KOLScan discount):');
+        
+        // Show loading
+        showNotification('⏳ Setting up Solana payment...', 'info');
         
         // Create Solana Pay URL
         const response = await fetch(`${BACKEND_URL}/api/payment/solana`, {
@@ -3181,22 +3187,195 @@ async function payWithSol(tierName) {
             body: JSON.stringify({
                 userId: currentUserId,
                 subscriptionType: tierName,
-                walletAddress: '' // Will be filled by user
+                walletAddress: walletAddress || ''
             })
         });
         
         const data = await response.json();
         
-        if (data.success && data.paymentUrl) {
-            // Open Solana Pay URL
-            window.open(data.paymentUrl, '_blank');
+        if (data.success && data.payment_url) {
+            // Show Solana Pay modal with QR code
+            showSolanaPaymentModal({
+                paymentUrl: data.payment_url,
+                amount: data.amount,
+                discount: data.discount,
+                hasKolscanDiscount: data.hasKolscanDiscount,
+                tierName: tierName
+            });
+            
             console.log(`✅ SOL payment initiated for ${tierName}`);
         } else {
-            alert('Payment setup failed. Please try again.');
+            showNotification('❌ Payment setup failed. Please try again.', 'error');
         }
     } catch (error) {
         console.error('Error initiating SOL payment:', error);
-        alert('Payment failed. Please try again.');
+        showNotification('❌ Payment failed. Please try again.', 'error');
+    }
+}
+
+// Show Solana Payment Modal with QR Code
+function showSolanaPaymentModal(paymentData) {
+    const { paymentUrl, amount, discount, hasKolscanDiscount, tierName } = paymentData;
+    
+    // Remove existing modal
+    const existingModal = document.querySelector('.solana-payment-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'solana-payment-modal';
+    modal.innerHTML = `
+        <div class="solana-payment-content glass-card">
+            <div class="payment-header">
+                <h3>💎 Pay with Solana</h3>
+                <button class="close-payment-modal" onclick="closeSolanaPaymentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="payment-info">
+                <div class="payment-tier">
+                    <span class="tier-name">${tierName.toUpperCase()} Plan</span>
+                    <span class="tier-duration">30 days</span>
+                </div>
+                
+                <div class="payment-amount">
+                    <div class="amount-display">
+                        <span class="amount-value">${amount}</span>
+                        <span class="amount-currency">SOL</span>
+                    </div>
+                    ${hasKolscanDiscount ? `
+                        <div class="discount-badge">
+                            <i class="fas fa-gift"></i> ${discount}% KOLScan Discount Applied!
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="qr-code-container">
+                    <div id="solana-qr-code"></div>
+                    <p class="qr-instruction">Scan with Phantom, Solflare, or any Solana wallet</p>
+                </div>
+                
+                <div class="payment-url">
+                    <input type="text" value="${paymentUrl}" readonly id="solana-pay-url">
+                    <button onclick="copySolanaPayUrl()" class="copy-btn">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                
+                <div class="payment-actions">
+                    <button onclick="openInWallet('${paymentUrl}')" class="btn-primary">
+                        <i class="fas fa-wallet"></i> Open in Wallet
+                    </button>
+                    <button onclick="checkSolanaTransaction('${tierName}')" class="btn-secondary">
+                        <i class="fas fa-check-circle"></i> I've Paid - Verify
+                    </button>
+                </div>
+                
+                <div class="payment-status" id="payment-status"></div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Generate QR Code using a simple library (we'll add this script tag)
+    generateSolanaQR(paymentUrl);
+    
+    // Add animation
+    setTimeout(() => modal.classList.add('active'), 10);
+}
+
+// Generate QR Code for Solana Pay
+function generateSolanaQR(url) {
+    const qrContainer = document.getElementById('solana-qr-code');
+    if (!qrContainer) return;
+    
+    // Using a simple canvas-based QR generation
+    // For production, consider using qrcode.js or similar library
+    qrContainer.innerHTML = `
+        <div class="qr-placeholder">
+            <i class="fab fa-bitcoin fa-3x"></i>
+            <p>Scan QR in mobile wallet</p>
+            <small>Or copy payment URL below</small>
+        </div>
+    `;
+    
+    // TODO: Implement actual QR code generation with library
+    // For now, we show a placeholder and rely on URL copying
+}
+
+// Copy Solana Pay URL
+function copySolanaPayUrl() {
+    const input = document.getElementById('solana-pay-url');
+    if (input) {
+        input.select();
+        document.execCommand('copy');
+        showNotification('✅ Payment URL copied! Paste in your wallet.', 'success');
+    }
+}
+
+// Open payment URL in wallet
+function openInWallet(url) {
+    window.location.href = url;
+    showNotification('⏳ Waiting for payment confirmation...', 'info');
+}
+
+// Check Solana transaction
+async function checkSolanaTransaction(tierName) {
+    try {
+        const signature = prompt('Enter your transaction signature:');
+        if (!signature) return;
+        
+        showNotification('⏳ Verifying transaction...', 'info');
+        
+        const tier = availableTiers.find(t => t.tier_name === tierName);
+        if (!tier) {
+            showNotification('❌ Tier not found.', 'error');
+            return;
+        }
+        
+        // Verify transaction
+        const response = await fetch(`${BACKEND_URL}/api/payment/verify-solana`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                signature: signature,
+                expectedAmount: tier.price_sol || 0.1,
+                userId: currentUserId,
+                subscriptionType: tierName
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('✅ Payment verified! Subscription activated!', 'success');
+            closeSolanaPaymentModal();
+            
+            // Reload subscription status
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            showNotification(`❌ Verification failed: ${data.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error checking transaction:', error);
+        showNotification('❌ Verification failed. Please try again.', 'error');
+    }
+}
+
+// Close Solana Payment Modal
+function closeSolanaPaymentModal() {
+    const modal = document.querySelector('.solana-payment-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
     }
 }
 

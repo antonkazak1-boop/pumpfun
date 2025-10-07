@@ -4268,6 +4268,304 @@ body.menu-open {
     transition: all 0.3s ease;
 }
 
+/* === SOLANA PAYMENT MODAL === */
+.solana-payment-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(15px);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.solana-payment-modal.active {
+    opacity: 1;
+}
+
+.solana-payment-content {
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+    border-radius: 20px;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.solana-payment-modal.active .solana-payment-content {
+    transform: scale(1);
+}
+
+.payment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.payment-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #00ff88, #00d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.close-payment-modal {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0.5rem;
+    border-radius: 50%;
+}
+
+.close-payment-modal:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+.payment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.payment-tier {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+}
+
+.tier-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.tier-duration {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.payment-amount {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1));
+    border-radius: 16px;
+    border: 2px solid rgba(0, 255, 136, 0.3);
+}
+
+.amount-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.amount-value {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #00ff88;
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.amount-currency {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #00d4ff;
+}
+
+.discount-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(124, 58, 237, 0.2);
+    border: 1px solid rgba(124, 58, 237, 0.5);
+    border-radius: 20px;
+    color: #c084fc;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.qr-code-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 16px;
+}
+
+#solana-qr-code {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.qr-placeholder {
+    text-align: center;
+    color: #1f2937;
+}
+
+.qr-placeholder i {
+    color: #9333ea;
+    margin-bottom: 0.5rem;
+}
+
+.qr-placeholder p {
+    margin: 0.5rem 0;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.qr-placeholder small {
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
+.qr-instruction {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.payment-url {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+}
+
+.payment-url input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-family: monospace;
+    outline: none;
+}
+
+.payment-url .copy-btn {
+    padding: 0.5rem 1rem;
+    background: var(--accent-color);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.payment-url .copy-btn:hover {
+    background: #00d475;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+}
+
+.payment-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.payment-actions .btn-primary,
+.payment-actions .btn-secondary {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.payment-actions .btn-primary {
+    background: linear-gradient(135deg, #00ff88, #00d4ff);
+    color: #000;
+}
+
+.payment-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4);
+}
+
+.payment-actions .btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.payment-actions .btn-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent-color);
+}
+
+.payment-status {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .solana-payment-content {
+        padding: 1.5rem;
+    }
+    
+    .amount-value {
+        font-size: 2.5rem;
+    }
+    
+    .amount-currency {
+        font-size: 1.2rem;
+    }
+    
+    #solana-qr-code {
+        width: 180px;
+        height: 180px;
+    }
+}
+
 .plan-indicators .indicator.active {
     background: var(--accent-color);
     transform: scale(1.2);
