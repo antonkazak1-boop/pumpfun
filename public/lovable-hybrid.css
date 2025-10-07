@@ -866,8 +866,8 @@ body.lovable-theme {
 
 /* Neon glow effects */
 .neon-glow-green {
-  color: hsla(var(--lovable-neon-green));
-  text-shadow: 0 0 20px hsla(var(--lovable-neon-green) / 0.5);
+  color: #00ff88 !important;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
 }
 
 .neon-glow-blue {
@@ -1586,6 +1586,29 @@ body.lovable-theme::after {
   line-height: 1.1;
   margin-bottom: 24px;
   letter-spacing: -0.02em;
+}
+
+/* Fix for main page title styling in Lovable theme */
+.lovable-theme .text-5xl,
+.lovable-theme .text-7xl {
+  line-height: 1.1 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.lovable-theme .text-5xl.md\:text-7xl {
+  line-height: 1.1 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Fix text rendering issues in Lovable theme */
+.lovable-theme .text-xl {
+  line-height: 1.5 !important;
+  font-weight: 400 !important;
+}
+
+.lovable-theme .text-muted-foreground {
+  color: hsla(var(--lovable-muted-foreground)) !important;
+  opacity: 0.8 !important;
 }
 
 .lovable-neon-text {
