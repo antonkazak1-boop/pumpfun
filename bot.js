@@ -935,7 +935,8 @@ async function handleSuccessfulPayment(ctx) {
                 subscriptionType,  // tierName
                 'telegram_stars',  // paymentMethod
                 null,              // transactionHash
-                false              // kolscanDiscount
+                false,             // kolscanDiscount
+                payment.total_amount // starsAmount
             );
             
             console.log(`✅ User ${user.id} subscribed to ${subscriptionType} plan - DB updated successfully!`);

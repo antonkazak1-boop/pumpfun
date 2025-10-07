@@ -459,7 +459,7 @@ class SubscriptionSystem {
     }
 
     // Create subscription
-    async createSubscription(userId, tierName, paymentMethod, transactionHash, kolscanDiscount = false) {
+    async createSubscription(userId, tierName, paymentMethod, transactionHash, kolscanDiscount = false, starsAmount = null) {
         try {
             const tier = await this.getSubscriptionTier(tierName);
             if (!tier) {
@@ -487,11 +487,11 @@ class SubscriptionSystem {
             // Create subscription
             const subscriptionResult = await this.pool.query(`
                 INSERT INTO subscriptions (
-                    user_id, subscription_type, expires_at, price_sol, 
+                    user_id, subscription_type, expires_at, price_sol, price_stars,
                     payment_method, transaction_hash, kolscan_discount_applied, discount_percentage
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 RETURNING *
-            `, [user.telegram_user_id, tierName, expiresAt, finalPrice, paymentMethod, transactionHash, kolscanDiscount, discountPercentage]);
+            `, [user.telegram_user_id, tierName, expiresAt, finalPrice, starsAmount, paymentMethod, transactionHash, kolscanDiscount, discountPercentage]);
             
             // Update user
             await this.pool.query(`
@@ -503,9 +503,9 @@ class SubscriptionSystem {
             // Create payment record
             await this.pool.query(`
                 INSERT INTO payments (
-                    user_id, subscription_id, amount_sol, payment_method, transaction_hash, status
-                ) VALUES ($1, $2, $3, $4, $5, 'confirmed')
-            `, [user.telegram_user_id, subscriptionResult.rows[0].id, finalPrice, paymentMethod, transactionHash]);
+                    user_id, subscription_id, amount_sol, amount_stars, payment_method, transaction_hash, status
+                ) VALUES ($1, $2, $3, $4, $5, $6, 'confirmed')
+            `, [user.telegram_user_id, subscriptionResult.rows[0].id, finalPrice, starsAmount, paymentMethod, transactionHash]);
             
             console.log(`✅ Subscription created for user ${user.username || user.first_name}: ${tierName}`);
             return subscriptionResult.rows[0];
