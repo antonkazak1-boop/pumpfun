@@ -2881,8 +2881,8 @@ function showSubscriptionMenu() {
                     <div class="plan-header">
                         <h4>💎 Basic</h4>
                         <div class="plan-price">
-                            <span class="price">0.1 SOL</span>
-                            <span class="stars">~100 ⭐</span>
+                            <span class="price">0.01 SOL</span>
+                            <span class="stars">~1 ⭐</span>
                         </div>
                     </div>
                     <ul class="plan-features">
@@ -2906,8 +2906,8 @@ function showSubscriptionMenu() {
                     <div class="plan-header">
                         <h4>🚀 Pro</h4>
                         <div class="plan-price">
-                            <span class="price">0.25 SOL</span>
-                            <span class="stars">~250 ⭐</span>
+                            <span class="price">0.02 SOL</span>
+                            <span class="stars">~2 ⭐</span>
                         </div>
                     </div>
                     <ul class="plan-features">

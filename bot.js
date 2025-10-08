@@ -21,15 +21,15 @@ if (!MINI_APP_URL || MINI_APP_URL === 'YOUR_MINI_APP_HTTPS_URL') {
 // Создание бота
 const bot = new Telegraf(BOT_TOKEN);
 
-// Subscription pricing constants
+// Subscription pricing constants (TESTING PRICES)
 const SUBSCRIPTION_PRICES = {
     basic: {
-        sol: 0.1,
+        sol: 0.01,         // 0.01 SOL for testing (normally 0.1 SOL)
         stars: 1,          // Stars amount (what user sees and API gets) - TESTING
         stars_cents: 1     // Same as stars for Telegram API - TESTING
     },
     pro: {
-        sol: 0.25,
+        sol: 0.02,         // 0.02 SOL for testing (normally 0.25 SOL)
         stars: 2,          // Stars amount (what user sees and API gets) - TESTING
         stars_cents: 2     // Same as stars for Telegram API - TESTING
     }

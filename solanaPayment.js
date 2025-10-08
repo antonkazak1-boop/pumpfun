@@ -5,8 +5,8 @@ const axios = require('axios');
 class SolanaPayment {
     constructor() {
         this.connection = new Connection(process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com');
-        this.MERCHANT_WALLET = process.env.MERCHANT_WALLET || 'YOUR_MERCHANT_WALLET_ADDRESS_HERE';
-        this.KOLSCAN_TOKEN_ADDRESS = process.env.KOLSCAN_TOKEN_ADDRESS || 'YOUR_KOLSCAN_TOKEN_ADDRESS_HERE';
+        this.MERCHANT_WALLET = process.env.MERCHANT_WALLET || 'G1baEgxW9rFLbPr8M6SmAxEbpeLw5Z5j4xyYwt8emTha';
+        this.KOLSCAN_TOKEN_ADDRESS = process.env.KOLSCAN_TOKEN_ADDRESS || 'Db8vz7nh1jbjxVBatBRgQWafqB5iDaW7A1VNh6DmraxP';
     }
 
     // Check SOL balance of a wallet
@@ -172,10 +172,10 @@ class SolanaPayment {
     // Get subscription pricing with KOLScan discount
     async getSubscriptionPricing(subscriptionType, walletAddress = null) {
         try {
+            // Testing prices (reduced for testing)
             const basePrices = {
-                basic: 0.5,
-                pro: 1.0,
-                premium: 2.0
+                basic: 0.01,  // 0.01 SOL for testing (normally 0.1 SOL)
+                pro: 0.02     // 0.02 SOL for testing (normally 0.25 SOL)
             };
 
             const basePrice = basePrices[subscriptionType] || basePrices.pro;

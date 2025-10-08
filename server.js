@@ -296,6 +296,12 @@ pool = new Pool({
     max: 100    // Максимальное количество подключений
 });
 
+// Add error handler to prevent app crash
+pool.on('error', (err, client) => {
+    console.error('❌ Unexpected error on idle client', err);
+    // Don't exit process, just log the error
+});
+
 // Тест подключения и инициализация таблицы
 console.log('Testing database connection...');
 pool.query('SELECT NOW() as current_time').then(async result => {
