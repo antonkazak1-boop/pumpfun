@@ -54,6 +54,7 @@ let isLoading = false;
 let subscriptionStatus = null;
 let availableTiers = [];
 let currentUserId = null;
+let loadedTabs = new Set(); // Для отслеживания загруженных вкладок (Lazy Loading)
 
 // Tab to API endpoint mapping
 const TAB_API_MAP = {
@@ -841,12 +842,94 @@ async function showTokenDetails(tokenMint) {
     }
 }
 
-// Закрытие модального окна
+// Закрытие модального окна с анимацией
 function closeTokenModal() {
     const modal = document.getElementById('tokenModal');
     if (modal) {
-        modal.classList.remove('active');
+        // Добавляем класс closing для анимации
+        modal.classList.add('closing');
+        
+        // Удаляем modal после анимации
+        setTimeout(() => {
+            modal.classList.remove('active');
+            modal.classList.remove('closing');
+        }, 300);
     }
+}
+
+// Swipe жесты для модальных окон (универсальная функция)
+function initModalSwipe() {
+    const modals = ['tokenModal', 'subscriptionModal', 'solanaPaymentModal'];
+    
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        
+        const modalContent = modal.querySelector('.modal-content') || modal.querySelector('.subscription-modal-content');
+        if (!modalContent) return;
+        
+        let startY = 0;
+        let currentY = 0;
+        let isDragging = false;
+        
+        // Проверяем, если это мобильное устройство
+        const isMobile = window.innerWidth < 768;
+        
+        if (!isMobile) return; // Swipe только на мобильных
+        
+        modalContent.addEventListener('touchstart', (e) => {
+            // Только если касание началось в верхней части модального окна
+            const rect = modalContent.getBoundingClientRect();
+            if (e.touches[0].clientY - rect.top < 50) {
+                startY = e.touches[0].clientY;
+                isDragging = true;
+            }
+        }, { passive: true });
+        
+        modalContent.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            
+            currentY = e.touches[0].clientY;
+            const diff = currentY - startY;
+            
+            // Только свайп вниз
+            if (diff > 0) {
+                modalContent.style.transform = `translateY(${diff}px)`;
+                modalContent.style.transition = 'none';
+                
+                // Уменьшаем прозрачность фона
+                const opacity = Math.max(0.3, 1 - (diff / 300));
+                modal.style.backgroundColor = `rgba(0, 0, 0, ${opacity * 0.85})`;
+            }
+        }, { passive: true });
+        
+        modalContent.addEventListener('touchend', () => {
+            if (!isDragging) return;
+            
+            const diff = currentY - startY;
+            
+            // Если свайп больше 100px, закрываем модальное окно
+            if (diff > 100) {
+                // Закрываем соответствующее модальное окно
+                if (modalId === 'tokenModal') {
+                    closeTokenModal();
+                } else if (modalId === 'subscriptionModal') {
+                    closeSubscriptionModal();
+                } else if (modal.style) {
+                    modal.style.display = 'none';
+                }
+            } else {
+                // Возвращаем на место
+                modalContent.style.transform = '';
+                modalContent.style.transition = '';
+                modal.style.backgroundColor = '';
+            }
+            
+            isDragging = false;
+            startY = 0;
+            currentY = 0;
+        });
+    });
 }
 
 // Отображение ошибки в контейнере
@@ -865,7 +948,36 @@ function renderError(containerId, error) {
         </div>`;
 }
 
-// Загрузка данных для текущей вкладки
+// Показать skeleton loader для контейнера
+function showSkeletonLoader(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const skeletonHTML = `
+        <div class="skeleton-container">
+            ${Array(5).fill(0).map(() => `
+                <div class="skeleton-card">
+                    <div class="skeleton-row">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-info">
+                            <div class="skeleton-title"></div>
+                            <div class="skeleton-subtitle"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-stats">
+                        <div class="skeleton-stat"></div>
+                        <div class="skeleton-stat"></div>
+                        <div class="skeleton-stat"></div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    container.innerHTML = skeletonHTML;
+}
+
+// Загрузка данных для текущей вкладки с Skeleton Loader
 async function loadTabData(tabName) {
     if (isLoading) return;
     
@@ -883,6 +995,7 @@ async function loadTabData(tabName) {
     if (tabName === 'coins') {
         try {
             showLoading();
+            showSkeletonLoader(dataContainerId); // Показываем skeleton
             await loadCoinsData('low', '24h'); // Load with default filters (Low Caps, 24h)
             updateLastUpdateTime();
         } catch (error) {
@@ -901,6 +1014,7 @@ async function loadTabData(tabName) {
     
     try {
         showLoading();
+        showSkeletonLoader(dataContainerId); // Показываем skeleton перед загрузкой
         
         const data = await fetchData(endpoint);
         renderFunction(data);
@@ -914,7 +1028,7 @@ async function loadTabData(tabName) {
     }
 }
 
-// Переключение вкладки
+// Переключение вкладки с Lazy Loading
 function switchTab(tabName) {
     if (currentTab === tabName || isLoading) return;
     
@@ -933,7 +1047,7 @@ function switchTab(tabName) {
         return;
     }
     
-    // Обновление активной вкладки в навигации
+    // Обновление активной вкладки в навигации с плавным переходом
     document.querySelectorAll('.tab-button').forEach(button => {
         button.classList.remove('active');
     });
@@ -943,21 +1057,34 @@ function switchTab(tabName) {
         activeTabButton.classList.add('active');
     }
     
-    // Обновление содержимого вкладок
+    // Обновление содержимого вкладок с плавной анимацией
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
     });
     
     const activeTabContent = document.getElementById(tabName);
     if (activeTabContent) {
-        activeTabContent.classList.add('active');
+        // Добавляем небольшую задержку для плавного перехода
+        setTimeout(() => {
+            activeTabContent.classList.add('active');
+        }, 50);
     }
     
     currentTab = tabName;
-    loadTabData(tabName).then(() => {
-        // Анимация карточек после загрузки данных
+    
+    // Lazy Loading: загружаем данные только если вкладка еще не была загружена
+    const shouldLoadData = !loadedTabs.has(tabName);
+    
+    if (shouldLoadData) {
+        loadTabData(tabName).then(() => {
+            loadedTabs.add(tabName); // Отмечаем вкладку как загруженную
+            // Анимация карточек после загрузки данных
+            setTimeout(animateCards, 100);
+        });
+    } else {
+        // Если данные уже загружены, просто анимируем
         setTimeout(animateCards, 100);
-    });
+    }
 }
 
 // ===== PORTFOLIO FUNCTIONS =====
@@ -1181,7 +1308,11 @@ function animateCards() {
 function refreshCurrentTab() {
     if (!isLoading) {
         animateRefreshButton();
-        loadTabData(currentTab);
+        // Сбрасываем статус загрузки для текущей вкладки, чтобы принудительно обновить
+        loadedTabs.delete(currentTab);
+        loadTabData(currentTab).then(() => {
+            loadedTabs.add(currentTab);
+        });
     }
 }
 
@@ -3616,5 +3747,8 @@ function initializeComponents() {
     
     // Initialize wallet stats
     initWalletStats();
+    
+    // Initialize modal swipe gestures
+    initModalSwipe();
 }
 

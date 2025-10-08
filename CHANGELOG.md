@@ -4,6 +4,80 @@
 
 ---
 
+## [1.2.0] - 2025-10-08 (UX/UI Improvements Update)
+
+### ✨ UI/UX Enhancements
+#### Fixed
+- ✅ **Админка**: Убрана шестеренка из header, оставлена кнопка в footer
+- ✅ **Модальное окно**: Исправлена прокрутка (верхняя часть больше не обрезана)
+- ✅ **Modal header**: Теперь sticky, остается видимым при прокрутке
+- ✅ **Кнопка Copy**: Яркий градиентный дизайн с анимацией hover
+- ✅ **Swipe жесты**: Универсальная функция для всех модальных окон
+- ✅ **Skeleton loaders**: Добавлены для всех вкладок с API данными
+- ✅ **Плавные переходы**: Fade-in/out анимации между вкладками
+- ✅ **Lazy loading**: Данные загружаются только при первом открытии вкладки
+
+#### Added - Skeleton Loaders
+- Shimmer анимация для skeleton элементов
+- Автоматическое отображение перед загрузкой данных
+- Плавное исчезновение после загрузки
+- Staggered delays для волнового эффекта
+
+#### Added - Smooth Transitions
+- CSS transitions для всех tab-content
+- Staggered animations для карточек (поочередное появление)
+- Fade in + slide up эффекты
+- Animation delays: 0.05s, 0.1s, 0.15s, 0.2s, 0.25s
+
+#### Added - Swipe Gestures
+- Touch events для свайпа модальных окон вниз
+- Динамическое изменение opacity фона при свайпе
+- Автоматическое закрытие при свайпе > 100px
+- Поддержка для: tokenModal, subscriptionModal, solanaPaymentModal
+- Работает только на мобильных устройствах (< 768px)
+
+#### Added - Lazy Loading
+- `loadedTabs` Set для отслеживания загруженных вкладок
+- Данные загружаются только при первом открытии
+- Кнопка Refresh сбрасывает кеш и перезагружает данные
+- Значительное улучшение производительности
+
+#### Technical Details
+```javascript
+// Skeleton Loader
+showSkeletonLoader(containerId) // Показать skeleton
+loadTabData(tabName) // Загрузить с skeleton
+
+// Swipe Gestures
+initModalSwipe() // Инициализация для всех модалов
+touchstart -> touchmove -> touchend
+
+// Lazy Loading
+loadedTabs.has(tabName) // Проверка загрузки
+loadedTabs.add(tabName) // Отметить как загруженное
+loadedTabs.delete(tabName) // Сброс для refresh
+```
+
+#### CSS Classes Added
+```css
+.skeleton-container
+.skeleton-card
+.skeleton-avatar, .skeleton-title, .skeleton-subtitle, .skeleton-stat
+.modal.closing
+.tab-content.active (с transitions)
+.data-item (с animation-delay)
+.copy-button (яркая кнопка)
+.modal-header (sticky)
+```
+
+#### Files Modified
+- `public/style-modern.css` - Skeleton styles, Modal animations, Copy button
+- `public/script.js` - Lazy loading, Swipe gestures, Skeleton integration
+- `public/index.html` - Admin button repositioned to footer
+- `TESTING_UX_IMPROVEMENTS.md` - Новая документация для тестирования
+
+---
+
 ## [1.1.0] - 2025-10-07 (Evening Update)
 
 ### 💎 Solana Payment System
