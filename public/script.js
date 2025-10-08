@@ -2683,18 +2683,18 @@ async function checkSubscriptionStatus() {
 // Access control configuration
 const ACCESS_RULES = {
     free: {
-        allowedTabs: ['about', 'dashboard', 'analytics', 'freshTokens', 'coins'],
+        allowedTabs: ['about', 'dashboard', 'analytics', 'freshTokens', 'coins', 'admin'],
         maxTokensPerTab: 10,
         refreshInterval: 60000 // 1 minute
     },
     trial: {
-        allowedTabs: ['about', 'dashboard', 'analytics', 'freshTokens', 'coins', 'smartMoney', 'clusterBuy', 'volumeSurge', 'coBuy', 'whaleMoves', 'topGainers', 'recentActivity', 'trendingMeta', 'portfolio', 'walletStats'],
+        allowedTabs: ['about', 'dashboard', 'analytics', 'freshTokens', 'coins', 'smartMoney', 'clusterBuy', 'volumeSurge', 'coBuy', 'whaleMoves', 'topGainers', 'recentActivity', 'trendingMeta', 'portfolio', 'walletStats', 'admin'],
         maxTokensPerTab: 50,
         refreshInterval: 30000, // 30 seconds
         daysAllowed: 5
     },
     basic: {
-        allowedTabs: ['about', 'dashboard', 'analytics', 'freshTokens', 'coins', 'smartMoney', 'clusterBuy', 'volumeSurge', 'coBuy', 'whaleMoves', 'topGainers', 'recentActivity'],
+        allowedTabs: ['about', 'dashboard', 'analytics', 'freshTokens', 'coins', 'smartMoney', 'clusterBuy', 'volumeSurge', 'coBuy', 'whaleMoves', 'topGainers', 'recentActivity', 'admin'],
         maxTokensPerTab: 100,
         refreshInterval: 30000
     },
@@ -2786,10 +2786,23 @@ function hasAccessToTab(tabName) {
 
 // Show upgrade prompt when user tries to access locked content
 function showUpgradePrompt(feature = 'this feature') {
-    const message = `🔒 ${feature} is available for Premium subscribers.\n\nUpgrade now to unlock all features!`;
-    
-    if (confirm(message)) {
-        showSubscriptionMenu();
+    // Check if running in Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+        // Running in Telegram - show subscription menu
+        const message = `🔒 ${feature} is available for Premium subscribers.\n\nUpgrade now to unlock all features!`;
+        
+        if (confirm(message)) {
+            showSubscriptionMenu();
+        }
+    } else {
+        // Running in web browser - redirect to Telegram bot
+        const message = `🔒 ${feature} is available for Premium subscribers.\n\nPlease open this app in Telegram to subscribe.\n\nClick OK to open Telegram bot.`;
+        
+        if (confirm(message)) {
+            // Redirect to Telegram bot with subscribe command
+            const botUsername = 'pumpfun_insights_bot'; // Replace with your bot username
+            window.open(`https://t.me/${botUsername}?start=subscribe`, '_blank');
+        }
     }
 }
 

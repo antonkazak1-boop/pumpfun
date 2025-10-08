@@ -1094,9 +1094,12 @@
         <!-- Подвал с информацией -->
         <footer class="app-footer">
             <div class="footer-info">
-                <p><i class="fas fa-clock"></i> Последнее обновление: <span id="lastUpdate">-</span></p>
-                <p><i class="fas fa-database"></i> Статус API: <span id="apiStatus" class="status-indicator">проверка...</span></p>
+                <p><i class="fas fa-clock"></i> Last update: <span id="lastUpdate">-</span></p>
+                <p><i class="fas fa-database"></i> API Status: <span id="apiStatus" class="status-indicator">checking...</span></p>
             </div>
+            <button onclick="switchTab('admin')" class="admin-panel-btn" style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(255, 107, 53, 0.1); border: 1px solid rgba(255, 107, 53, 0.3); border-radius: 8px; color: #ff6b35; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease;">
+                <i class="fas fa-cog"></i> Admin Panel
+            </button>
         </footer>
     </div>
 
