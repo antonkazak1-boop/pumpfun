@@ -3258,11 +3258,16 @@ function showSolanaPaymentModal(paymentData) {
                     <p class="qr-instruction">Scan with Phantom, Solflare, or any Solana wallet</p>
                 </div>
                 
-                <div class="payment-url">
-                    <input type="text" value="${paymentUrl}" readonly id="solana-pay-url">
-                    <button onclick="copySolanaPayUrl()" class="copy-btn">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
+                <div class="payment-details">
+                    <div class="detail-row">
+                        <label>Merchant Wallet:</label>
+                        <div class="wallet-display">
+                            <input type="text" value="${paymentUrl.split('solana:')[1]?.split('?')[0] || ''}" readonly id="solana-merchant-wallet" class="wallet-input">
+                            <button onclick="copyMerchantWallet()" class="copy-btn-visible">
+                                <i class="fas fa-copy"></i> Copy Address
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="payment-actions">
@@ -3307,13 +3312,31 @@ function generateSolanaQR(url) {
     // For now, we show a placeholder and rely on URL copying
 }
 
-// Copy Solana Pay URL
-function copySolanaPayUrl() {
-    const input = document.getElementById('solana-pay-url');
+// Copy Merchant Wallet Address
+function copyMerchantWallet() {
+    const input = document.getElementById('solana-merchant-wallet');
     if (input) {
         input.select();
         document.execCommand('copy');
-        showNotification('✅ Payment URL copied! Paste in your wallet.', 'success');
+        
+        // Also use modern clipboard API as fallback
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(input.value);
+        }
+        
+        showNotification('✅ Wallet address copied! Paste in your wallet app.', 'success');
+        
+        // Visual feedback
+        const btn = event.target.closest('.copy-btn-visible');
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.style.background = '#10b981';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+            }, 2000);
+        }
     }
 }
 

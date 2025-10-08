@@ -4284,6 +4284,8 @@ body.menu-open {
     padding: 1rem;
     opacity: 0;
     transition: opacity 0.3s ease;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .solana-payment-modal.active {
@@ -4456,40 +4458,66 @@ body.menu-open {
     margin: 0;
 }
 
-.payment-url {
+.payment-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.detail-row label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wallet-display {
     display: flex;
     gap: 0.5rem;
     padding: 0.75rem;
     background: var(--bg-tertiary);
     border-radius: 12px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
 }
 
-.payment-url input {
+.wallet-input {
     flex: 1;
     background: transparent;
     border: none;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-size: 0.9rem;
     font-family: monospace;
     outline: none;
+    min-width: 0;
 }
 
-.payment-url .copy-btn {
+.copy-btn-visible {
     padding: 0.5rem 1rem;
     background: var(--accent-color);
-    color: var(--bg-primary);
+    color: #000;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
     transition: all 0.3s ease;
     white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+    flex-shrink: 0;
 }
 
-.payment-url .copy-btn:hover {
+.copy-btn-visible:hover {
     background: #00d475;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.5);
+}
+
+.copy-btn-visible:active {
+    transform: scale(0.95);
 }
 
 .payment-actions {

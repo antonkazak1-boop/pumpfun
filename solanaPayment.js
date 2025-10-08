@@ -127,14 +127,43 @@ class SolanaPayment {
             let paymentFound = false;
             let actualAmount = 0;
 
-            for (const instruction of transaction.transaction.message.instructions) {
-                if (instruction.programId.equals(SystemProgram.programId)) {
-                    const decoded = SystemProgram.decodeTransferInstruction(instruction);
-                    if (decoded.keys.to.pubkey.equals(merchantWallet)) {
-                        paymentFound = true;
-                        actualAmount = decoded.data.lamports / LAMPORTS_PER_SOL;
-                        break;
+            // Parse transaction to find SOL transfer
+            const accountKeys = transaction.transaction.message.accountKeys;
+            const instructions = transaction.transaction.message.instructions;
+
+            for (const instruction of instructions) {
+                try {
+                    // Get program ID from accountKeys
+                    const programId = accountKeys[instruction.programIdIndex];
+                    
+                    if (!programId) continue;
+                    
+                    // Check if it's a System Program transfer
+                    if (programId.equals(SystemProgram.programId)) {
+                        // Manual decode of transfer instruction
+                        const data = instruction.data;
+                        
+                        // Check if it's a transfer (instruction type 2)
+                        if (data && data.length > 0 && data[0] === 2) {
+                            // Get accounts involved in transfer
+                            const fromIndex = instruction.accounts[0];
+                            const toIndex = instruction.accounts[1];
+                            const toAddress = accountKeys[toIndex];
+                            
+                            // Check if transfer is to our merchant wallet
+                            if (toAddress && toAddress.equals(merchantWallet)) {
+                                // Extract amount (8 bytes after instruction type)
+                                const amountBuffer = data.slice(4, 12);
+                                const lamports = Number(amountBuffer.readBigUInt64LE());
+                                actualAmount = lamports / LAMPORTS_PER_SOL;
+                                paymentFound = true;
+                                break;
+                            }
+                        }
                     }
+                } catch (err) {
+                    console.log('Error parsing instruction:', err.message);
+                    continue;
                 }
             }
 

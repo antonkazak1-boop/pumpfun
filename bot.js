@@ -21,6 +21,9 @@ if (!MINI_APP_URL || MINI_APP_URL === 'YOUR_MINI_APP_HTTPS_URL') {
 // Создание бота
 const bot = new Telegraf(BOT_TOKEN);
 
+// Enable session support
+bot.use(Telegraf.session());
+
 // Subscription pricing constants (TESTING PRICES)
 const SUBSCRIPTION_PRICES = {
     basic: {
@@ -606,61 +609,165 @@ Click the button below to pay with Stars:
 });
 
 bot.action('pay_sol_basic', async (ctx) => {
+    const userId = ctx.from.id;
+    const userName = ctx.from.first_name || ctx.from.username || 'User';
+    
+    // Ask for wallet address for discount check
     ctx.editMessageText(`
 ☀️ *Payment with Solana (SOL)*
 
 **Basic Subscription - ${SUBSCRIPTION_PRICES.basic.sol} SOL**
 
-To pay with SOL:
-1. Launch Mini App below
-2. Connect your Solana wallet
-3. Complete payment
-
 💡 **Get 25% discount with $KOLScan tokens!**
-• Minimum 1000 $KOLScan required
-• Final price: ${(SUBSCRIPTION_PRICES.basic.sol * 0.75).toFixed(3)} SOL
+
+To check for discount, send me your Solana wallet address:
+(or click "Skip" to pay full price)
 
 ━━━━━━━━━━━━━━━━━━━━
-*Secure blockchain payment*
+Example: \`BAr5cs...nopQ8f9\`
 ━━━━━━━━━━━━━━━━━━━━
     `, {
         parse_mode: 'Markdown',
         reply_markup: {
             inline_keyboard: [
-                [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+                [Markup.button.callback('⏩ Skip (No Discount)', 'sol_basic_no_discount')],
                 [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
             ]
         }
     });
+    
+    // Store state for next message
+    ctx.session = ctx.session || {};
+    ctx.session.awaitingWallet = 'basic';
 });
 
 bot.action('pay_sol_pro', async (ctx) => {
+    const userId = ctx.from.id;
+    const userName = ctx.from.first_name || ctx.from.username || 'User';
+    
+    // Ask for wallet address for discount check
     ctx.editMessageText(`
 ☀️ *Payment with Solana (SOL)*
 
 **Pro Subscription - ${SUBSCRIPTION_PRICES.pro.sol} SOL**
 
-To pay with SOL:
-1. Launch Mini App below
-2. Connect your Solana wallet
-3. Complete payment
-
 💡 **Get 25% discount with $KOLScan tokens!**
-• Minimum 1000 $KOLScan required
-• Final price: ${(SUBSCRIPTION_PRICES.pro.sol * 0.75).toFixed(4)} SOL
+
+To check for discount, send me your Solana wallet address:
+(or click "Skip" to pay full price)
 
 ━━━━━━━━━━━━━━━━━━━━
-*Secure blockchain payment*
+Example: \`BAr5cs...nopQ8f9\`
 ━━━━━━━━━━━━━━━━━━━━
     `, {
         parse_mode: 'Markdown',
         reply_markup: {
             inline_keyboard: [
-                [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
+                [Markup.button.callback('⏩ Skip (No Discount)', 'sol_pro_no_discount')],
                 [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
             ]
         }
     });
+    
+    // Store state for next message
+    ctx.session = ctx.session || {};
+    ctx.session.awaitingWallet = 'pro';
+});
+
+// Handle "Skip Discount" actions
+bot.action('sol_basic_no_discount', async (ctx) => {
+    await showSolanaPaymentInstructions(ctx, 'basic', null);
+});
+
+bot.action('sol_pro_no_discount', async (ctx) => {
+    await showSolanaPaymentInstructions(ctx, 'pro', null);
+});
+
+// Function to show Solana payment instructions
+async function showSolanaPaymentInstructions(ctx, tier, walletAddress) {
+    const userId = ctx.from.id;
+    const price = SUBSCRIPTION_PRICES[tier].sol;
+    
+    // Check for discount if wallet provided
+    let finalPrice = price;
+    let hasDiscount = false;
+    
+    if (walletAddress) {
+        // In real scenario, check KOLScan balance via API
+        // For now, assume no discount unless verified
+        hasDiscount = false;
+        finalPrice = price;
+    }
+    
+    const merchantWallet = 'G1baEgxW9rFLbPr8M6SmAxEbpeLw5Z5j4xyYwt8emTha';
+    
+    const message = `
+💎 *Solana Payment Instructions*
+
+**${tier.toUpperCase()} Subscription**
+${hasDiscount ? `~~${price} SOL~~ → **${finalPrice} SOL** (25% discount!)` : `**${finalPrice} SOL**`}
+
+━━━━━━━━━━━━━━━━━━━━
+📍 *Send exactly ${finalPrice} SOL to:*
+
+\`${merchantWallet}\`
+
+👆 *Tap to copy address*
+━━━━━━━━━━━━━━━━━━━━
+
+📱 *Payment Steps:*
+1. Open your Solana wallet (Phantom, Solflare, etc.)
+2. Tap the address above to copy
+3. Send exactly **${finalPrice} SOL**
+4. Copy your transaction signature
+5. Click "I've Paid" button below
+
+⏱ *Wait 30-60 seconds for confirmation*
+
+━━━━━━━━━━━━━━━━━━━━
+⚠️ Make sure to send the exact amount!
+━━━━━━━━━━━━━━━━━━━━
+    `;
+    
+    ctx.editMessageText(message, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [Markup.button.callback(`✅ I've Paid - Verify`, `verify_sol_${tier}`)],
+                [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
+            ]
+        }
+    });
+}
+
+// Handle payment verification
+bot.action(/verify_sol_(.+)/, async (ctx) => {
+    const tier = ctx.match[1];
+    
+    ctx.editMessageText(`
+🔍 *Payment Verification*
+
+Please send me your **transaction signature**:
+
+Example: \`2ZE7R...xV3kL\`
+
+You can find it in your wallet app after sending SOL.
+
+━━━━━━━━━━━━━━━━━━━━
+⏱ Make sure transaction is confirmed (30-60 sec)
+━━━━━━━━━━━━━━━━━━━━
+    `, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [Markup.button.callback('🔙 Cancel', 'back_to_plans')]
+            ]
+        }
+    });
+    
+    // Store state
+    ctx.session = ctx.session || {};
+    ctx.session.awaitingSignature = tier;
 });
 
 bot.action('back_to_plans', async (ctx) => {
@@ -809,15 +916,115 @@ GitHub: github.com/your-repo
 });
 
 // Обработчик неизвестных команд
-bot.on('text', (ctx) => {
+bot.on('text', async (ctx) => {
     const message = ctx.message.text;
+    const userId = ctx.from.id;
     
     if (message.startsWith('/')) {
         ctx.reply('❓ Неизвестная команда. Используйте /help для получения списка доступных команд.');
         return;
     }
     
-    // Обработка обычных сообщений
+    // Check if waiting for transaction signature
+    if (ctx.session && ctx.session.awaitingSignature) {
+        const tier = ctx.session.awaitingSignature;
+        const signature = message.trim();
+        
+        ctx.reply('⏳ Verifying transaction on blockchain...');
+        
+        try {
+            // Call verification API
+            const response = await fetch(`${process.env.BACKEND_URL || 'https://pump-dex-mini-app.onrender.com'}/api/payment/verify-solana`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    signature: signature,
+                    expectedAmount: SUBSCRIPTION_PRICES[tier].sol,
+                    userId: userId,
+                    subscriptionType: tier
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                ctx.replyWithMarkdown(`
+✅ *Payment Verified!*
+
+Your ${tier.toUpperCase()} subscription is now active!
+
+🎉 *Welcome to Premium!*
+• Access all tabs
+• ${tier === 'pro' ? 'Unlimited' : '50'} notifications
+• Priority support
+• 30 days access
+
+Launch the Mini App to start using:
+                `, Markup.inlineKeyboard([
+                    [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)]
+                ]));
+                
+                // Clear session
+                delete ctx.session.awaitingSignature;
+            } else {
+                ctx.reply(`❌ Verification failed: ${data.error}\n\nPlease make sure:\n• Transaction is confirmed (wait 30-60 sec)\n• You sent the correct amount\n• Signature is copied correctly`);
+            }
+        } catch (error) {
+            console.error('Error verifying payment:', error);
+            ctx.reply('❌ Error verifying payment. Please try again or contact support.');
+        }
+        
+        return;
+    }
+    
+    // Check if waiting for wallet address
+    if (ctx.session && ctx.session.awaitingWallet) {
+        const tier = ctx.session.awaitingWallet;
+        const walletAddress = message.trim();
+        
+        // Validate wallet address format (basic check)
+        if (walletAddress.length < 32 || walletAddress.length > 44) {
+            ctx.reply('❌ Invalid Solana wallet address. Please try again or skip discount.');
+            return;
+        }
+        
+        ctx.reply('⏳ Checking KOLScan balance...');
+        
+        try {
+            // Check KOLScan balance
+            const response = await fetch(`${process.env.BACKEND_URL || 'https://pump-dex-mini-app.onrender.com'}/api/kolscan/balance/${walletAddress}`);
+            const data = await response.json();
+            
+            if (data.success && data.hasMinimumHold) {
+                // Has discount!
+                const price = SUBSCRIPTION_PRICES[tier].sol;
+                const discountedPrice = (price * 0.75).toFixed(4);
+                
+                ctx.reply(`🎉 Discount applied! You hold ${data.balance} $KOLScan tokens.\n\nYour price: ${discountedPrice} SOL (25% off!)`);
+                
+                await showSolanaPaymentInstructions(ctx, tier, walletAddress);
+            } else {
+                ctx.reply(`ℹ️ No discount available. You need at least 1000 $KOLScan tokens.\n\nContinuing with regular price...`);
+                
+                await showSolanaPaymentInstructions(ctx, tier, null);
+            }
+            
+            // Clear session
+            delete ctx.session.awaitingWallet;
+        } catch (error) {
+            console.error('Error checking KOLScan balance:', error);
+            ctx.reply('❌ Error checking balance. Continuing with regular price...');
+            
+            await showSolanaPaymentInstructions(ctx, tier, null);
+            delete ctx.session.awaitingWallet;
+        }
+        
+        return;
+    }
+    
+    // Default response
     ctx.replyWithMarkdown(
         `Привет! Я бот для анализа торговли на Solana.\n\nДля работы используйте Mini App:`,
         Markup.inlineKeyboard([
