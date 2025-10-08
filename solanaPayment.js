@@ -101,7 +101,7 @@ class SolanaPayment {
     }
 
     // Verify transaction
-    async verifyTransaction(signature, expectedAmount) {
+    async verifyTransaction(signature, expectedAmount, expectedFromWallet = null) {
         try {
             const transaction = await this.connection.getTransaction(signature, {
                 commitment: 'confirmed'
@@ -126,6 +126,7 @@ class SolanaPayment {
             const merchantWallet = new PublicKey(this.MERCHANT_WALLET);
             let paymentFound = false;
             let actualAmount = 0;
+            let actualFromWallet = null;
 
             // Parse transaction to find SOL transfer
             const accountKeys = transaction.transaction.message.accountKeys;
@@ -148,6 +149,7 @@ class SolanaPayment {
                             // Get accounts involved in transfer
                             const fromIndex = instruction.accounts[0];
                             const toIndex = instruction.accounts[1];
+                            const fromAddress = accountKeys[fromIndex];
                             const toAddress = accountKeys[toIndex];
                             
                             // Check if transfer is to our merchant wallet
@@ -156,6 +158,7 @@ class SolanaPayment {
                                 const amountBuffer = data.slice(4, 12);
                                 const lamports = Number(amountBuffer.readBigUInt64LE());
                                 actualAmount = lamports / LAMPORTS_PER_SOL;
+                                actualFromWallet = fromAddress.toBase58();
                                 paymentFound = true;
                                 break;
                             }
@@ -174,6 +177,16 @@ class SolanaPayment {
                 };
             }
 
+            // If expectedFromWallet is provided, verify sender matches
+            if (expectedFromWallet) {
+                if (!actualFromWallet || actualFromWallet !== expectedFromWallet) {
+                    return {
+                        success: false,
+                        error: `Payment must come from wallet used for discount: ${expectedFromWallet}`
+                    };
+                }
+            }
+
             // Verify amount (allow small tolerance for fees)
             const tolerance = 0.001; // 0.001 SOL tolerance
             if (Math.abs(actualAmount - expectedAmount) > tolerance) {
@@ -183,11 +196,21 @@ class SolanaPayment {
                 };
             }
 
+            // Check transaction is recent (within last 10 minutes)
+            const now = Math.floor(Date.now() / 1000);
+            if (transaction.blockTime && (now - transaction.blockTime) > 600) {
+                return {
+                    success: false,
+                    error: 'Transaction is too old. Please make a new payment.'
+                };
+            }
+
             return {
                 success: true,
                 amount: actualAmount,
                 signature: signature,
-                blockTime: transaction.blockTime
+                blockTime: transaction.blockTime,
+                fromWallet: actualFromWallet
             };
         } catch (error) {
             console.error('Error verifying transaction:', error);

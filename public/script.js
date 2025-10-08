@@ -3178,6 +3178,18 @@ async function payWithSol(tierName) {
     try {
         console.log(`💳 Initiating SOL payment for ${tierName} tier`);
         
+        // Check if running in Telegram WebApp
+        if (!window.Telegram || !window.Telegram.WebApp) {
+            // Running in web browser - redirect to Telegram bot
+            const message = '🔒 Solana payments are only available in Telegram.\n\nClick OK to open Telegram bot.';
+            
+            if (confirm(message)) {
+                const botUsername = 'pumpfun_insights_bot';
+                window.open(`https://t.me/${botUsername}?start=subscribe`, '_blank');
+            }
+            return;
+        }
+        
         // Get tier info
         const tier = availableTiers.find(t => t.tier_name === tierName);
         if (!tier) {
@@ -3213,7 +3225,8 @@ async function payWithSol(tierName) {
                 amount: data.amount,
                 discount: data.discount,
                 hasKolscanDiscount: data.hasKolscanDiscount,
-                tierName: tierName
+                tierName: tierName,
+                walletAddress: walletAddress || null
             });
             
             console.log(`✅ SOL payment initiated for ${tierName}`);

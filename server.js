@@ -2100,7 +2100,7 @@ app.post('/api/payment/solana', async (req, res) => {
 // Verify Solana transaction
 app.post('/api/payment/verify-solana', async (req, res) => {
     try {
-        const { signature, expectedAmount, userId, subscriptionType } = req.body;
+        const { signature, expectedAmount, userId, subscriptionType, fromWallet } = req.body;
         
         if (!solanaPayment) {
             return res.status(500).json({ success: false, error: 'Solana payment not initialized' });
@@ -2110,8 +2110,8 @@ app.post('/api/payment/verify-solana', async (req, res) => {
             return res.status(500).json({ success: false, error: 'Subscription system not available' });
         }
         
-        // Verify transaction
-        const verification = await solanaPayment.verifyTransaction(signature, expectedAmount);
+        // Verify transaction (with optional fromWallet check)
+        const verification = await solanaPayment.verifyTransaction(signature, expectedAmount, fromWallet);
         
         if (verification.success) {
             // Create subscription
