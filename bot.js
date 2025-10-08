@@ -1,4 +1,4 @@
-const { Telegraf, Markup } = require('telegraf');
+const { Telegraf, Markup, session } = require('telegraf');
 
 // Конфигурация бота
 const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_TELEGRAM_BOT_TOKEN';
@@ -22,7 +22,7 @@ if (!MINI_APP_URL || MINI_APP_URL === 'YOUR_MINI_APP_HTTPS_URL') {
 const bot = new Telegraf(BOT_TOKEN);
 
 // Enable session support
-bot.use(Telegraf.session());
+bot.use(session());
 
 // Subscription pricing constants (TESTING PRICES)
 const SUBSCRIPTION_PRICES = {
