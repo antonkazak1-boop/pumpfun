@@ -628,14 +628,21 @@ function renderFreshTokens(data) {
         counter.querySelector('span').textContent = `Showing ${data.length} token${data.length === 1 ? '' : 's'}`;
     }
     
-    // Apply sorting
+    // Apply sorting with direction
     const sortedData = [...data];
+    const direction = freshFilters.sortDirection === 'desc' ? -1 : 1;
+    
     if (freshFilters.sort === 'mcap') {
-        sortedData.sort((a, b) => (parseFloat(b.market_cap || 0) - parseFloat(a.market_cap || 0)));
+        sortedData.sort((a, b) => direction * (parseFloat(b.market_cap || 0) - parseFloat(a.market_cap || 0)));
     } else if (freshFilters.sort === 'volume') {
-        sortedData.sort((a, b) => (parseFloat(b.total_volume || 0) - parseFloat(a.total_volume || 0)));
+        sortedData.sort((a, b) => direction * (parseFloat(b.total_volume || 0) - parseFloat(a.total_volume || 0)));
+    } else if (freshFilters.sort === 'age') {
+        sortedData.sort((a, b) => {
+            const timeA = new Date(a.first_seen).getTime();
+            const timeB = new Date(b.first_seen).getTime();
+            return direction * (timeB - timeA);
+        });
     }
-    // 'age' is default (already sorted by first_seen DESC)
     
     container.innerHTML = sortedData.map((item, index) => {
         const pumpUrl = `https://pump.fun/coin/${item.token_mint}`;
@@ -2229,7 +2236,8 @@ function resetMarketFilters() {
 let freshFilters = {
     age: '24h',  // Default to 24h instead of 1h
     freshCap: 'all',
-    sort: 'age'  // age, mcap, volume
+    sort: 'age',  // age, mcap, volume
+    sortDirection: 'desc'  // desc or asc
 };
 
 function initFreshTokensFilters() {
@@ -2246,12 +2254,28 @@ function initFreshTokensFilters() {
             const filterType = btn.dataset.filter;
             const filterValue = btn.dataset.value;
             
+            // For sort buttons, toggle direction if clicking the same button
+            if (filterType === 'sort') {
+                if (freshFilters.sort === filterValue) {
+                    // Toggle direction
+                    freshFilters.sortDirection = freshFilters.sortDirection === 'desc' ? 'asc' : 'desc';
+                } else {
+                    // New sort field, default to desc
+                    freshFilters.sort = filterValue;
+                    freshFilters.sortDirection = 'desc';
+                }
+                
+                // Update button text with arrow
+                updateSortButtonArrows();
+            } else {
+                // Regular filter
+                freshFilters[filterType] = filterValue;
+            }
+            
             // Update active
             document.querySelectorAll(`[data-filter="${filterType}"]`).forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            // Update state
-            freshFilters[filterType] = filterValue;
             localStorage.setItem('freshFilters', JSON.stringify(freshFilters));
             
             // Apply
@@ -2261,6 +2285,24 @@ function initFreshTokensFilters() {
     
     // Restore states
     restoreFreshFilterStates();
+    updateSortButtonArrows();
+}
+
+function updateSortButtonArrows() {
+    document.querySelectorAll('[data-filter="sort"]').forEach(btn => {
+        const value = btn.dataset.value;
+        const isActive = freshFilters.sort === value;
+        const arrow = freshFilters.sortDirection === 'desc' ? ' ↓' : ' ↑';
+        
+        // Update button text
+        const baseText = {
+            'age': 'Age',
+            'mcap': 'Market Cap',
+            'volume': 'Volume'
+        }[value] || value;
+        
+        btn.innerHTML = baseText + (isActive ? arrow : '');
+    });
 }
 
 function restoreFreshFilterStates() {
@@ -2328,9 +2370,10 @@ async function applyFreshFilters() {
 }
 
 function resetFreshFilters() {
-    freshFilters = { age: '24h', freshCap: 'all', sort: 'age' };
+    freshFilters = { age: '24h', freshCap: 'all', sort: 'age', sortDirection: 'desc' };
     localStorage.setItem('freshFilters', JSON.stringify(freshFilters));
     restoreFreshFilterStates();
+    updateSortButtonArrows();
     applyFreshFilters();
 }
 
@@ -4177,6 +4220,33 @@ function setupEventHandlers() {
             stopAutoRefresh();
         }
     });
+}
+
+// === TOKEN METADATA CACHING ===
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
+function getCachedTokenMetadata(tokenMint) {
+    const cacheKey = `token_meta_${tokenMint}`;
+    const cached = localStorage.getItem(cacheKey);
+    
+    if (cached) {
+        const data = JSON.parse(cached);
+        if (Date.now() - data.timestamp < CACHE_DURATION) {
+            return data.metadata;
+        }
+        // Cache expired
+        localStorage.removeItem(cacheKey);
+    }
+    return null;
+}
+
+function cacheTokenMetadata(tokenMint, metadata) {
+    const cacheKey = `token_meta_${tokenMint}`;
+    const data = {
+        metadata: metadata,
+        timestamp: Date.now()
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(data));
 }
 
 // Copy to clipboard with visual feedback
