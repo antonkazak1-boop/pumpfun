@@ -44,8 +44,8 @@ function initTheme() {
 
 // Configuration
 const BACKEND_URL = window.location.origin; // Use the same domain as Mini App
-const REFRESH_INTERVAL = 30000; // 30 seconds
-const API_TIMEOUT = 10000; // 10 seconds
+const REFRESH_INTERVAL = 60000; // 60 seconds (reduced load on DB)
+const API_TIMEOUT = 15000; // 15 seconds (more time for slow responses)
 
 // Global variables
 let currentTab = 'about';
@@ -2073,39 +2073,57 @@ function restoreFreshFilterStates() {
 }
 
 async function applyFreshFilters() {
-    showSkeletonLoader('freshTokensData');
-    
-    // Fetch data
-    const endpoint = 'freshtokens';
-    const data = await fetchData(endpoint);
-    
-    // Apply filters
-    let filteredData = data || [];
-    
-    // Age filter (client-side based on created_at)
-    if (freshFilters.age !== 'all') {
-        const now = new Date();
-        const hoursAgo = freshFilters.age === '1h' ? 1 : freshFilters.age === '6h' ? 6 : 24;
-        const cutoff = new Date(now - hoursAgo * 60 * 60 * 1000);
+    try {
+        showSkeletonLoader('freshTokensData');
         
-        filteredData = filteredData.filter(token => {
-            const created = new Date(token.created_at || token.timestamp);
-            return created >= cutoff;
-        });
+        // Fetch data
+        const endpoint = 'freshtokens';
+        const data = await fetchData(endpoint);
+        
+        if (!data || data.length === 0) {
+            renderFreshTokens([]);
+            return;
+        }
+        
+        // Apply filters (optimized)
+        let filteredData = data;
+        
+        // Age filter
+        if (freshFilters.age !== 'all') {
+            const now = Date.now();
+            const hoursMs = {
+                '1h': 60 * 60 * 1000,
+                '6h': 6 * 60 * 60 * 1000,
+                '24h': 24 * 60 * 60 * 1000
+            };
+            const cutoff = now - (hoursMs[freshFilters.age] || hoursMs['1h']);
+            
+            filteredData = filteredData.filter(token => {
+                const created = new Date(token.created_at || token.timestamp).getTime();
+                return created >= cutoff;
+            });
+        }
+        
+        // Market cap filter
+        if (freshFilters.freshCap !== 'all') {
+            const capRanges = {
+                'micro': [0, 10000],
+                'small': [10000, 50000],
+                'medium': [50000, Infinity]
+            };
+            const [min, max] = capRanges[freshFilters.freshCap] || [0, Infinity];
+            
+            filteredData = filteredData.filter(token => {
+                const cap = parseFloat(token.market_cap || 0);
+                return cap >= min && cap < max;
+            });
+        }
+        
+        renderFreshTokens(filteredData);
+    } catch (error) {
+        console.error('Error applying fresh filters:', error);
+        renderFreshTokens([]);
     }
-    
-    // Market cap filter
-    if (freshFilters.freshCap !== 'all') {
-        filteredData = filteredData.filter(token => {
-            const cap = parseFloat(token.market_cap || 0);
-            if (freshFilters.freshCap === 'micro') return cap < 10000;
-            if (freshFilters.freshCap === 'small') return cap >= 10000 && cap <= 50000;
-            if (freshFilters.freshCap === 'medium') return cap > 50000;
-            return true;
-        });
-    }
-    
-    renderFreshTokens(filteredData);
 }
 
 function resetFreshFilters() {
