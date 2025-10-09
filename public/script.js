@@ -1249,21 +1249,33 @@ function refreshCurrentTab() {
 
 // Автоматическое обновление
 function startAutoRefresh() {
-    // DISABLED: Auto-refresh interrupts user browsing
-    // Users can manually refresh using the Refresh button
-    console.log('ℹ️ Auto-refresh disabled. Use Refresh button to update data.');
-    
     if (refreshTimer) {
         clearInterval(refreshTimer);
-        refreshTimer = null;
     }
     
-    // Optional: Uncomment to enable auto-refresh
-    // refreshTimer = setInterval(() => {
-    //     if (!isLoading && document.visibilityState === 'visible') {
-    //         loadTabData(currentTab);
-    //     }
-    // }, REFRESH_INTERVAL);
+    // Smart refresh: Update data without resetting scroll
+    refreshTimer = setInterval(async () => {
+        // Only refresh if:
+        // 1. Not currently loading
+        // 2. Page is visible
+        // 3. Not in a modal or typing
+        if (!isLoading && document.visibilityState === 'visible' && !document.activeElement.matches('input, textarea')) {
+            console.log('🔄 Smart refresh: updating data in background...');
+            
+            // Save current scroll position
+            const scrollTop = window.scrollY || document.documentElement.scrollTop;
+            
+            // Load new data
+            await loadTabData(currentTab);
+            
+            // Restore scroll position after data loads
+            requestAnimationFrame(() => {
+                window.scrollTo(0, scrollTop);
+            });
+        }
+    }, REFRESH_INTERVAL);
+    
+    console.log('✅ Smart auto-refresh enabled (preserves scroll position)');
 }
 
 // Остановка автоматического обновления
