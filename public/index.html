@@ -119,7 +119,7 @@
                             <i class="fas fa-search"></i>
                             <span>Wallet Stats</span>
                             <small>lookup</small>
-                </button>
+                        </button>
                     </div>
                 </div>
 
@@ -134,10 +134,10 @@
                             <i class="fas fa-coins"></i>
                             <span>Coins Market</span>
                             <small>market</small>
-                </button>
-                <button class="tab-button" data-tab="volumeSurge">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Volume Surge</span>
+                        </button>
+                        <button class="tab-button" data-tab="volumeSurge">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Volume Surge</span>
                             <small>2h</small>
                         </button>
                         <button class="tab-button" data-tab="whaleMoves">
@@ -904,15 +904,9 @@
             <!-- Top Gainers Tab -->
             <div id="topGainers" class="tab-content">
                 <div class="tab-header">
-                    <h2><i class="fas fa-trophy"></i> Most Bought Tokens</h2>
+                    <h2><i class="fas fa-trophy"></i> Most Bought Tokens (1 hour)</h2>
                     <p class="tab-description">Tokens with highest trading volume (click buyers for details)</p>
                 </div>
-                
-                <!-- Token Counter -->
-                <div class="token-counter" id="topGainersCounter">
-                    <i class="fas fa-list"></i> <span>Loading...</span>
-                </div>
-                
                 <div id="topGainersData" class="data-list">
                     <div class="loading-placeholder">Loading data...</div>
                 </div>
@@ -971,11 +965,6 @@
                     <button class="reset-filters-btn" onclick="resetMarketFilters()">
                         <i class="fas fa-redo"></i> Reset
                     </button>
-                </div>
-                
-                <!-- Token Counter -->
-                <div class="token-counter" id="coinsCounter">
-                    <i class="fas fa-list"></i> <span>Loading...</span>
                 </div>
 
                 <div id="coinsData" class="coins-grid">

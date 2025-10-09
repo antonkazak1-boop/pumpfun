@@ -782,7 +782,7 @@ app.get('/api/token/details/:mint', async (req, res) => {
         const { mint } = req.params;
         const query = `
             SELECT 
-                wallet, side, sol_spent, sol_received, tx_signature, ts
+                wallet, side, sol_spent, tx_signature, ts
             FROM events
             WHERE token_mint = $1 AND ts >= NOW() - INTERVAL '2 hours'
             ORDER BY ts DESC
@@ -1477,13 +1477,13 @@ app.get('/api/freshtokens', async (req, res) => {
             )
             SELECT 
                 e.token_mint, 
-                   COUNT(DISTINCT e.wallet) AS early_buyers,
-                   SUM(e.sol_spent) AS total_volume,
+                COUNT(DISTINCT e.wallet) AS early_buyers, 
+                SUM(e.sol_spent) AS total_volume, 
                 fa.first_seen,
                 COUNT(*) AS tx_count
             FROM events e
             JOIN first_appearance fa ON e.token_mint = fa.token_mint
-            WHERE e.side = 'BUY'
+            WHERE e.side = 'BUY' 
             AND fa.first_seen > now() - interval '24 hours' 
             AND e.ts > now() - interval '24 hours'
             AND e.token_mint != 'So11111111111111111111111111111111111111112'
