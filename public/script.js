@@ -718,6 +718,8 @@ function renderFreshTokens(data) {
 // Рендеринг Top Gainers данных
 function renderTopGainers(data) {
     const container = document.getElementById('topGainersData');
+    const counter = document.getElementById('topGainersCounter');
+    
     if (!container) return;
     
     if (!data || data.length === 0) {
@@ -727,7 +729,13 @@ function renderTopGainers(data) {
                 <h3>No Top Gainers</h3>
                 <p>No tokens with volume over 100 SOL detected in the last hour</p>
             </div>`;
+        if (counter) counter.querySelector('span').textContent = 'Showing 0 tokens';
         return;
+    }
+    
+    // Update counter
+    if (counter) {
+        counter.querySelector('span').textContent = `Showing ${data.length} token${data.length === 1 ? '' : 's'}`;
     }
     
     container.innerHTML = data.map((item, index) => {
@@ -735,18 +743,31 @@ function renderTopGainers(data) {
         const dexUrl = `https://dexscreener.com/solana/${item.token_mint}`;
         const tokenSymbol = item.symbol || item.token_mint.substring(0, 8);
         const tokenName = item.name || 'Unknown Token';
+        const marketCap = item.market_cap ? `$${formatNumber(item.market_cap)}` : 'N/A';
+        
+        // Badges logic
+        let badges = '';
+        if (parseFloat(item.total_volume || 0) > 100) badges += '<span class="token-badge badge-hot">🔥 High Volume</span>';
+        if (item.total_buyers > 50) badges += '<span class="token-badge badge-trending">📈 Popular</span>';
+        if (parseFloat(item.largest_buy || 0) > 50) badges += '<span class="token-badge badge-new">🐋 Whale Buy</span>';
         
         return `
             <div class="data-item">
-                <h3>
-                    <img src="${item.image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
-                    <i class="fas fa-trophy"></i>
-                    ${index + 1}. ${tokenSymbol} - ${tokenName}
-                </h3>
+                <div class="data-header">
+                    <h3>
+                        <img src="${item.image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
+                        ${index + 1}. ${tokenSymbol} - ${tokenName}
+                    </h3>
+                    <div class="token-badges">${badges}</div>
+                </div>
                 <div class="item-stats">
                     <div class="stat-item">
+                        <div class="stat-label">Market Cap</div>
+                        <div class="stat-value positive">${marketCap}</div>
+                    </div>
+                    <div class="stat-item stat-clickable" onclick="showEarlyBuyers('${item.token_mint}')" title="Click to see buyers list">
                         <div class="stat-label">Buyers</div>
-                        <div class="stat-value positive">${item.total_buyers || 0}</div>
+                        <div class="stat-value positive">${item.total_buyers || 0} <i class="fas fa-users" style="font-size: 10px; opacity: 0.7;"></i></div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Total Volume</div>
@@ -760,16 +781,23 @@ function renderTopGainers(data) {
                         <div class="stat-label">Largest Buy</div>
                         <div class="stat-value positive">${formatNumber(item.largest_buy)} SOL</div>
                     </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Contract</div>
+                        <div class="stat-value contract-address" onclick="copyToClipboard('${item.token_mint}', this)" title="Tap to copy">
+                            ${item.token_mint.substring(0, 6)}...${item.token_mint.substring(item.token_mint.length - 4)}
+                            <i class="fas fa-copy" style="margin-left: 4px; opacity: 0.5;"></i>
+                        </div>
+                    </div>
                 </div>
                 <div class="item-actions">
-                    <a href="${pumpUrl}" target="_blank" class="action-button">
+                    <a href="${pumpUrl}" target="_blank" class="action-button pump-button">
                         <i class="fas fa-external-link-alt"></i> Pump.fun
                     </a>
                     <a href="${dexUrl}" target="_blank" class="action-button secondary">
                         <i class="fas fa-chart-line"></i> DexScreener
                     </a>
                     <button class="action-button secondary" onclick="showTokenDetails('${item.token_mint}')">
-                        <i class="fas fa-info-circle"></i> Детали
+                        <i class="fas fa-info-circle"></i> Details
                     </button>
                 </div>
             </div>
@@ -1927,6 +1955,7 @@ function updateActivityContent(data, type) {
 // Функция рендеринга Coins вкладки
 function renderCoins(data) {
     const container = document.getElementById('coinsData');
+    const counter = document.getElementById('coinsCounter');
     container.classList.add('coins-grid');
     
     if (!data || data.length === 0) {
@@ -1937,10 +1966,23 @@ function renderCoins(data) {
                 <p>No coins found for the selected criteria</p>
             </div>
         `;
+        if (counter) counter.querySelector('span').textContent = 'Showing 0 coins';
         return;
     }
     
-    const coinsHTML = data.map(coin => `
+    // Update counter
+    if (counter) {
+        counter.querySelector('span').textContent = `Showing ${data.length} coin${data.length === 1 ? '' : 's'}`;
+    }
+    
+    const coinsHTML = data.map(coin => {
+        // Badges logic
+        let badges = '';
+        if (parseFloat(coin.volume_sol || 0) > 100) badges += '<span class="token-badge badge-hot">🔥 High Volume</span>';
+        if (coin.trader_count > 50) badges += '<span class="token-badge badge-trending">📈 Popular</span>';
+        if (parseFloat(coin.market_cap || 0) > 1000000) badges += '<span class="token-badge badge-new">💎 High Cap</span>';
+        
+        return `
         <div class="coin-card" data-contract="${coin.token_mint}">
             <div class="coin-header">
                 <div class="coin-avatar">
@@ -1951,6 +1993,7 @@ function renderCoins(data) {
                     <div class="coin-name">${coin.name || 'Unknown Token'}</div>
                     <div class="coin-cap">${formatMarketCap(coin.market_cap)}</div>
                 </div>
+                ${badges ? `<div class="token-badges">${badges}</div>` : ''}
             </div>
             <div class="coin-metrics">
                 <div class="metric">
@@ -1973,13 +2016,20 @@ function renderCoins(data) {
                     <span class="metric-label">Net Volume</span>
                     <span class="metric-value">${formatSOL(coin.volume_sol)}</span>
                 </div>
+                <div class="metric contract-address" onclick="copyToClipboard('${coin.token_mint}', this)" title="Tap to copy">
+                    <span class="metric-label">Contract</span>
+                    <span class="metric-value" style="font-size: 11px;">
+                        ${coin.token_mint.substring(0, 6)}...${coin.token_mint.substring(coin.token_mint.length - 4)}
+                        <i class="fas fa-copy" style="margin-left: 4px; opacity: 0.5;"></i>
+                    </span>
+                </div>
             </div>
             <div class="coin-actions">
                 <button class="view-traders-btn" onclick="showCoinTraders('${coin.token_mint}')">
                     <i class="fas fa-users"></i>
                     View Traders (${coin.trader_count})
                 </button>
-                <a href="https://pump.fun/coin/${coin.token_mint}" target="_blank" class="action-button">
+                <a href="https://pump.fun/coin/${coin.token_mint}" target="_blank" class="action-button pump-button">
                     <i class="fas fa-external-link-alt"></i>
                     Pump.fun
                 </a>
