@@ -996,7 +996,7 @@ async function loadTabData(tabName) {
         try {
             showLoading();
             showSkeletonLoader(dataContainerId); // Показываем skeleton
-            await loadCoinsData('low', '24h'); // Load with default filters (Low Caps, 24h)
+            await loadCoinsData(); // Load with current filters
             updateLastUpdateTime();
         } catch (error) {
             console.error(`Ошибка загрузки данных для ${tabName}:`, error);
@@ -1939,56 +1939,129 @@ function showTradersDropdown(coinCard, traders) {
 }
 
 // Обработчики фильтров для Coins tab
+// Coin Market Filters State
+let marketFilters = {
+    cap: 'low',
+    volume: 'all',
+    change: 'all',
+    period: '24h'
+};
+
 function initCoinsFilters() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const timeButtons = document.querySelectorAll('.time-btn');
+    // Load saved filters
+    const saved = localStorage.getItem('marketFilters');
+    if (saved) {
+        marketFilters = JSON.parse(saved);
+    }
     
+    const filterButtons = document.querySelectorAll('.market-filters .filter-btn');
+    const timeButtons = document.querySelectorAll('.market-filters .time-btn');
+    
+    // Filter buttons
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Get current active period
-            const activeTimeBtn = document.querySelector('.time-btn.active');
-            const currentPeriod = activeTimeBtn ? activeTimeBtn.dataset.period : '24h';
+            const filterType = btn.dataset.filter;
+            const filterValue = btn.dataset.value;
             
-            // Get new cap filter
-            const capFilter = btn.dataset.cap;
+            // Update active
+            document.querySelectorAll(`[data-filter="${filterType}"]`).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             
-            // Reload data with new filter and current period
-            loadCoinsData(capFilter, currentPeriod);
+            // Update state
+            marketFilters[filterType] = filterValue;
+            localStorage.setItem('marketFilters', JSON.stringify(marketFilters));
+            
+            // Apply
+            applyMarketFilters();
         });
     });
     
+    // Time buttons
     timeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Get current active cap filter
-            const activeFilterBtn = document.querySelector('.filter-btn.active');
-            const currentCapFilter = activeFilterBtn ? activeFilterBtn.dataset.cap : 'low';
-            
-            // Get new period
             const period = btn.dataset.period;
             
-            // Reload data with current cap filter and new period
-            loadCoinsData(currentCapFilter, period);
+            // Update active
+            timeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Update state
+            marketFilters.period = period;
+            localStorage.setItem('marketFilters', JSON.stringify(marketFilters));
+            
+            // Apply
+            applyMarketFilters();
         });
+    });
+    
+    // Restore states
+    restoreMarketFilterStates();
+}
+
+function restoreMarketFilterStates() {
+    document.querySelectorAll('[data-filter="cap"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === marketFilters.cap);
+    });
+    document.querySelectorAll('[data-filter="volume"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === marketFilters.volume);
+    });
+    document.querySelectorAll('[data-filter="change"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === marketFilters.change);
+    });
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.period === marketFilters.period);
     });
 }
 
+async function applyMarketFilters() {
+    showSkeletonLoader('coinsData');
+    await loadCoinsData();
+}
+
+function resetMarketFilters() {
+    marketFilters = { cap: 'low', volume: 'all', change: 'all', period: '24h' };
+    localStorage.setItem('marketFilters', JSON.stringify(marketFilters));
+    restoreMarketFilterStates();
+    applyMarketFilters();
+}
+
 // Загрузка данных Coins с фильтрами
-async function loadCoinsData(capFilter = 'low', period = '24h') {
+async function loadCoinsData() {
     try {
-        // Update active states for filter buttons
-        updateFilterButtonStates(capFilter, period);
-        
         const params = new URLSearchParams();
-        if (capFilter && capFilter !== 'all') {
-            params.append('cap', capFilter);
-        }
-        params.append('period', period);
+        params.append('cap', marketFilters.cap);
+        params.append('period', marketFilters.period);
         
         const response = await fetch(`/api/coins/market?${params}`);
         const data = await response.json();
         
         if (data.success) {
-            renderCoins(data.data);
+            // Apply client-side filters (volume, change)
+            let filteredData = data.data || [];
+            
+            // Volume filter
+            if (marketFilters.volume !== 'all') {
+                filteredData = filteredData.filter(coin => {
+                    const volume = parseFloat(coin.volume_24h || 0);
+                    if (marketFilters.volume === 'low') return volume < 10;
+                    if (marketFilters.volume === 'medium') return volume >= 10 && volume <= 100;
+                    if (marketFilters.volume === 'high') return volume > 100;
+                    return true;
+                });
+            }
+            
+            // Price change filter
+            if (marketFilters.change !== 'all') {
+                filteredData = filteredData.filter(coin => {
+                    const change = parseFloat(coin.price_change_24h || 0);
+                    if (marketFilters.change === 'gainers') return change > 5;
+                    if (marketFilters.change === 'losers') return change < -5;
+                    if (marketFilters.change === 'stable') return change >= -5 && change <= 5;
+                    return true;
+                });
+            }
+            
+            renderCoins(filteredData);
         } else {
             console.error('Coins API error:', data.error);
             renderCoins([]);
@@ -1999,26 +2072,7 @@ async function loadCoinsData(capFilter = 'low', period = '24h') {
     }
 }
 
-// Update filter button active states
-function updateFilterButtonStates(capFilter, period) {
-    // Update cap filter buttons
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.cap === capFilter) {
-            btn.classList.add('active');
-        }
-    });
-    
-    // Update time filter buttons
-    const timeButtons = document.querySelectorAll('.time-btn');
-    timeButtons.forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.period === period) {
-            btn.classList.add('active');
-        }
-    });
-}
+// Old function - removed, using restoreMarketFilterStates() instead
 
 // Функция рендеринга Wallet Stats (как на Kolscan)
 function renderWalletStats(data) {

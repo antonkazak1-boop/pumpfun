@@ -2544,19 +2544,61 @@ body {
 
 .market-filters {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
     margin-bottom: 1.5rem;
-    padding: 1rem;
+    padding: 1.5rem;
     background: var(--card-background);
     border-radius: 12px;
     border: 1px solid var(--border-color);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-label i {
+    color: var(--accent-color);
+    font-size: 0.85rem;
 }
 
 .filter-buttons, .time-filters {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+}
+
+.reset-filters-btn {
+    padding: 0.6rem 1.2rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-end;
+}
+
+.reset-filters-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .filter-btn, .time-btn {

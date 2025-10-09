@@ -867,18 +867,52 @@
                     <p class="tab-description">Track coins by market cap and trader activity</p>
                 </div>
                 
-                <!-- Market Cap Filters -->
+                <!-- Market Filters -->
                 <div class="market-filters">
-                    <div class="filter-buttons">
-                        <button class="filter-btn active" data-cap="low">Low Caps (0-99K)</button>
-                        <button class="filter-btn" data-cap="mid">Mid Caps (100K-999K)</button>
-                        <button class="filter-btn" data-cap="high">High Caps (1M+)</button>
+                    <!-- Market Cap -->
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-chart-pie"></i> Market Cap:</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="cap" data-value="low">0-99K</button>
+                            <button class="filter-btn" data-filter="cap" data-value="mid">100K-999K</button>
+                            <button class="filter-btn" data-filter="cap" data-value="high">1M+</button>
+                        </div>
                     </div>
-                    <div class="time-filters">
-                        <button class="time-btn active" data-period="24h">24h</button>
-                        <button class="time-btn" data-period="7d">7d</button>
-                        <button class="time-btn" data-period="30d">30d</button>
+                    
+                    <!-- Volume -->
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-fire"></i> Volume:</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="volume" data-value="all">All</button>
+                            <button class="filter-btn" data-filter="volume" data-value="low">&lt; 10 SOL</button>
+                            <button class="filter-btn" data-filter="volume" data-value="medium">10-100 SOL</button>
+                            <button class="filter-btn" data-filter="volume" data-value="high">&gt; 100 SOL</button>
+                        </div>
                     </div>
+                    
+                    <!-- Price Change -->
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-chart-line"></i> 24h Change:</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="change" data-value="all">All</button>
+                            <button class="filter-btn" data-filter="change" data-value="gainers">🚀 Gainers</button>
+                            <button class="filter-btn" data-filter="change" data-value="losers">📉 Losers</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Time Period -->
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-clock"></i> Period:</label>
+                        <div class="time-filters">
+                            <button class="time-btn active" data-period="24h">24h</button>
+                            <button class="time-btn" data-period="7d">7d</button>
+                            <button class="time-btn" data-period="30d">30d</button>
+                        </div>
+                    </div>
+                    
+                    <button class="reset-filters-btn" onclick="resetMarketFilters()">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
                 </div>
 
                 <div id="coinsData" class="coins-grid">
