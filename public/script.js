@@ -738,19 +738,19 @@ function renderTopGainers(data) {
                 </h3>
                 <div class="item-stats">
                     <div class="stat-item">
-                        <div class="stat-label">Покупатели</div>
+                        <div class="stat-label">Buyers</div>
                         <div class="stat-value positive">${item.total_buyers || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Общий объем</div>
+                        <div class="stat-label">Total Volume</div>
                         <div class="stat-value neutral">${formatNumber(item.total_volume)} SOL</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Средняя покупка</div>
+                        <div class="stat-label">Avg Buy</div>
                         <div class="stat-value">${formatNumber(item.avg_buy_size)} SOL</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Крупнейшая покупка</div>
+                        <div class="stat-label">Largest Buy</div>
                         <div class="stat-value positive">${formatNumber(item.largest_buy)} SOL</div>
                     </div>
                 </div>
@@ -778,7 +778,7 @@ async function showTokenDetails(tokenMint) {
     
     if (!modal || !title || !content) return;
     
-    title.textContent = `Детали токена: ${shortenAddress(tokenMint)}`;
+    title.textContent = `Token Details: ${shortenAddress(tokenMint)}`;
     content.innerHTML = '<div class="loading-placeholder">Loading token data...</div>';
     
     modal.classList.add('active');
@@ -809,48 +809,50 @@ async function showTokenDetails(tokenMint) {
         content.innerHTML = `
             <div class="token-stats">
                 <div class="stat-item">
-                    <div class="stat-label">Адрес токена</div>
-                    <div class="stat-value" style="font-size: 0.9rem; word-break: break-all;">${tokenMint}</div>
+                    <div class="stat-label">Contract Address</div>
+                    <div class="stat-value contract-address" onclick="copyToClipboard('${tokenMint}', this)" title="Tap to copy" style="font-size: 0.9rem; word-break: break-all; cursor: pointer;">
+                        ${tokenMint} <i class="fas fa-copy" style="margin-left: 4px; opacity: 0.5;"></i>
+                    </div>
                 </div>
                 <div class="item-stats" style="margin: 1rem 0;">
                     <div class="stat-item">
-                        <div class="stat-label">Покупки (2ч)</div>
+                        <div class="stat-label">Buys (2h)</div>
                         <div class="stat-value positive">${buyTrades.length}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Продажи (2ч)</div>
+                        <div class="stat-label">Sells (2h)</div>
                         <div class="stat-value negative">${sellTrades.length}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Объем покупок</div>
+                        <div class="stat-label">Buy Volume</div>
                         <div class="stat-value positive">${formatNumber(totalBuyVolume)} SOL</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Объем продаж</div>
+                        <div class="stat-label">Sell Volume</div>
                         <div class="stat-value negative">${formatNumber(totalSellVolume)} SOL</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Покупателей</div>
+                        <div class="stat-label">Buyers</div>
                         <div class="stat-value">${uniqueBuyers}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Продавцов</div>
+                        <div class="stat-label">Sellers</div>
                         <div class="stat-value">${uniqueSellers}</div>
                     </div>
                 </div>
             </div>
             
-            <h4 style="margin-top: 2rem; margin-bottom: 1rem;">Последние транзакции:</h4>
+            <h4 style="margin-top: 2rem; margin-bottom: 1rem;">Recent Transactions:</h4>
             <div style="max-height: 300px; overflow-y: auto;">
                 ${tokenData.slice(0, 10).map(trade => `
                     <div class="data-item" style="margin-bottom: 0.5rem; padding: 0.75rem;">
                         <div class="item-stats">
                             <div class="stat-item">
-                                <div class="stat-label">Тип</div>
+                                <div class="stat-label">Type</div>
                                 <div class="stat-value ${trade.side === 'BUY' ? 'positive' : 'negative'}">${trade.side}</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-label">Трейдер</div>
+                                <div class="stat-label">Trader</div>
                                 <div class="stat-value">${trade.wallet_name || shortenAddress(trade.wallet)}</div>
                             </div>
                             <div class="stat-item">
@@ -858,7 +860,7 @@ async function showTokenDetails(tokenMint) {
                                 <div class="stat-value">${formatNumber(trade.sol_spent)}</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-label">Время</div>
+                                <div class="stat-label">Time</div>
                                 <div class="stat-value">${formatTime(trade.ts)}</div>
                             </div>
                         </div>
@@ -2140,7 +2142,7 @@ async function applyFreshFilters() {
         let filteredData = data;
         
         // Age filter
-        if (freshFilters.age !== 'all') {
+        if (freshFilters.age !== '1h') {
             const now = Date.now();
             const hoursMs = {
                 '1h': 60 * 60 * 1000,
@@ -2150,7 +2152,7 @@ async function applyFreshFilters() {
             const cutoff = now - (hoursMs[freshFilters.age] || hoursMs['1h']);
             
             filteredData = filteredData.filter(token => {
-                const created = new Date(token.created_at || token.timestamp).getTime();
+                const created = new Date(token.first_seen || token.created_at || token.timestamp).getTime();
                 return created >= cutoff;
             });
         }

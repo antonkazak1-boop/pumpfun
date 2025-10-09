@@ -1416,21 +1416,115 @@ body {
 }
 
 /* Pump.fun Button Styling */
-.pump-button {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+a.pump-button,
+a.action-button.pump-button {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
     color: white !important;
-    border: none !important;
+    border: 1px solid rgba(102, 126, 234, 0.3) !important;
 }
 
-.pump-button:hover {
-    opacity: 0.9;
+a.pump-button:hover,
+a.action-button.pump-button:hover {
+    background: linear-gradient(135deg, #7689eb, #8556b3) !important;
+    opacity: 1;
     transform: translateY(-2px);
+}
+
+/* Fresh Tokens - Compact Filters */
+.fresh-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.fresh-filters .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fresh-filters .filter-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.fresh-filters .filter-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.fresh-filters .filter-btn {
+    padding: 6px 10px;
+    font-size: 12px;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
     .container {
         padding: 0 12px;
+    }
+    
+    /* Fresh Tokens - 2 columns grid on mobile */
+    #freshTokensData.data-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    #freshTokensData .data-item {
+        padding: 10px;
+    }
+    
+    #freshTokensData .data-header h3 {
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    #freshTokensData .token-avatar {
+        width: 24px;
+        height: 24px;
+    }
+    
+    #freshTokensData .item-stats {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    
+    #freshTokensData .stat-item {
+        padding: 6px 8px;
+    }
+    
+    #freshTokensData .stat-label {
+        font-size: 10px;
+    }
+    
+    #freshTokensData .stat-value {
+        font-size: 12px;
+    }
+    
+    #freshTokensData .item-actions {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    #freshTokensData .action-button {
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+    
+    #freshTokensData .token-badges {
+        flex-wrap: wrap;
+        gap: 3px;
+    }
+    
+    #freshTokensData .token-badge {
+        font-size: 9px;
+        padding: 2px 6px;
     }
     
     .data-list {
