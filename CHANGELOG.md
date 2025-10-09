@@ -4,6 +4,54 @@
 
 ---
 
+## [1.3.2] - 2025-10-09 (Most Bought Improvements & Silent Refresh)
+
+### 🏆 Most Bought Tab - Complete Update
+#### Added
+- ✅ **Period Filters**: 1 Hour, 6 Hours, 24 Hours (настраиваемый период)
+- ✅ **SQL Improvements**: Исправлены поля `total_buyers`, добавлен `largest_buy`
+- ✅ **Better Sorting**: ORDER BY total_volume DESC (сортировка по объему покупок)
+- ✅ **Buyers Modal**: Клик на "Buyers" → Early Buyers модалка с токеном и именем
+- ✅ **Token Counter**: "Showing X tokens" с динамическим обновлением
+- ✅ **Better Description**: Подробное описание вкладки
+
+#### Fixed
+- ✅ **Buyers Count**: Теперь показывает реальное количество покупателей (было 0)
+- ✅ **Period Accuracy**: SQL использует правильный интервал (1h/6h/24h)
+
+### ⚡ Silent Auto-Refresh (Anti-Flicker)
+#### Changed
+- ✅ **No More Flickering**: Auto-refresh больше НЕ показывает skeleton loader
+- ✅ **Silent Update**: Данные обновляются в фоне без визуальных артефактов
+- ✅ **Scroll Preserved**: Позиция скролла сохраняется при обновлении
+- ✅ **Better UX**: Нет раздражающих миганий каждые 60 секунд
+
+#### Technical Details
+```javascript
+// БЫЛО: loadTabData() → skeleton loader → мигание
+// СТАЛО: fetchData() + renderFunction() → тихое обновление
+
+if (endpoint && renderFunction) {
+  const data = await fetchData(endpoint);
+  renderFunction(data); // No skeleton, no loading overlay!
+}
+```
+
+### 👥 Early Buyers Modal Improvements
+#### Changed
+- ✅ **Removed Swipe Gestures**: Убраны жесты вверх/вниз (мешали скроллу)
+- ✅ **Click Outside to Close**: Тап мимо модалки → закрывает
+- ✅ **Better Scrolling**: Скролл внутри модалки работает без багов
+- ✅ **Shows Token Name**: "Early Buyers: $TICKER - Token Name" вместо контракта
+
+### 🎨 Pump.fun Button - Final Fix
+#### Changed
+- ✅ **Darker Green**: `#10b981 → #059669` (спокойный зелёный, не кислотный)
+- ✅ **Nuclear CSS Selector**: `a[href*="pump.fun"]` применяется ко ВСЕМ Pump.fun кнопкам
+- ✅ **White Text**: Белый текст на зелёном фоне (лучше читается)
+
+---
+
 ## [1.3.1] - 2025-10-09 (Critical Fixes & Early Buyers Modal)
 
 ### 🐛 Critical Bug Fixes
