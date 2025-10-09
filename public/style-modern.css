@@ -1422,9 +1422,9 @@ body {
 .data-item a[href*="pump.fun"],
 a.action-button.pump-button,
 a.pump-button {
-    background: linear-gradient(135deg, #43e97b, #38f9d7) !important;
-    color: #0a0a0f !important;
-    border: 1px solid rgba(67, 233, 123, 0.3) !important;
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
     font-weight: 600 !important;
 }
 
@@ -1434,10 +1434,10 @@ a.pump-button {
 .data-item a[href*="pump.fun"]:hover,
 a.action-button.pump-button:hover,
 a.pump-button:hover {
-    background: linear-gradient(135deg, #52f58a, #47fae6) !important;
+    background: linear-gradient(135deg, #34d399, #10b981) !important;
     opacity: 1 !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 15px rgba(67, 233, 123, 0.4) !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
 }
 
 /* Clickable Stat Items */

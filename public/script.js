@@ -678,7 +678,7 @@ function renderFreshTokens(data) {
                         <div class="stat-label">Market Cap</div>
                         <div class="stat-value positive">${marketCap}</div>
                     </div>
-                    <div class="stat-item stat-clickable" onclick="showEarlyBuyers('${item.token_mint}')" title="Click to see buyers list">
+                    <div class="stat-item stat-clickable" onclick="showEarlyBuyers('${item.token_mint}', '${tokenSymbol}', '${tokenName.replace(/'/g, "\\'")}')" title="Click to see buyers list">
                         <div class="stat-label">Early Buyers</div>
                         <div class="stat-value positive">${item.early_buyers || 0} <i class="fas fa-users" style="font-size: 10px; opacity: 0.7;"></i></div>
                     </div>
@@ -752,9 +752,9 @@ function renderTopGainers(data) {
                     ${index + 1}. ${tokenSymbol} - ${tokenName}
                 </h3>
                 <div class="item-stats">
-                    <div class="stat-item">
+                    <div class="stat-item stat-clickable" onclick="showEarlyBuyers('${item.token_mint}', '${tokenSymbol}', '${tokenName.replace(/'/g, "\\'")}')" title="Click to see buyers list">
                         <div class="stat-label">Buyers</div>
-                        <div class="stat-value positive">${item.total_buyers || 0}</div>
+                        <div class="stat-value positive">${item.total_buyers || 0} <i class="fas fa-users" style="font-size: 10px; opacity: 0.7;"></i></div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Total Volume</div>
@@ -917,14 +917,18 @@ function closeTokenModal() {
 }
 
 // Show Early Buyers modal
-async function showEarlyBuyers(tokenMint) {
+async function showEarlyBuyers(tokenMint, tokenSymbol, tokenName) {
     const modal = document.getElementById('earlyBuyersModal');
     const title = document.getElementById('earlyBuyersTitle');
     const content = document.getElementById('earlyBuyersContent');
     
     if (!modal || !title || !content) return;
     
-    title.textContent = `Early Buyers: ${shortenAddress(tokenMint)}`;
+    // Show token name if provided
+    const displayName = tokenSymbol && tokenName 
+        ? `${tokenSymbol} - ${tokenName}` 
+        : shortenAddress(tokenMint);
+    title.textContent = `Early Buyers: ${displayName}`;
     content.innerHTML = '<div class="loading-placeholder">Loading buyers...</div>';
     
     modal.classList.add('active');
@@ -940,7 +944,7 @@ async function showEarlyBuyers(tokenMint) {
                 <div class="empty-state">
                     <i class="fas fa-users"></i>
                     <h3>No Buyers Data</h3>
-                    <p>No buyer activity found for this token</p>
+                    <p>No buyer activity found for this token in the last 2 hours</p>
                 </div>`;
             return;
         }
