@@ -792,7 +792,7 @@ body {
 }
 
 .action-button.primary,
-.action-button:not(.secondary) {
+.action-button:not(.secondary):not(.pump-button) {
     background: var(--gradient-primary);
     color: white;
 }
@@ -809,7 +809,7 @@ body {
 }
 
 .action-button.primary:hover,
-.action-button:not(.secondary):hover {
+.action-button:not(.secondary):not(.pump-button):hover {
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
@@ -1428,6 +1428,92 @@ a.action-button.pump-button:hover {
     background: linear-gradient(135deg, #7689eb, #8556b3) !important;
     opacity: 1;
     transform: translateY(-2px);
+}
+
+/* Clickable Stat Items */
+.stat-clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stat-clickable:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: scale(1.05);
+}
+
+.stat-clickable:active {
+    transform: scale(0.95);
+}
+
+/* Buyers List Modal Styles */
+.buyers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.buyer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    padding: 12px;
+    transition: var(--transition);
+}
+
+.buyer-item:hover {
+    background: var(--bg-hover);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.buyer-rank {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--accent-primary);
+    min-width: 35px;
+    text-align: center;
+}
+
+.buyer-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.buyer-wallet {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.buyer-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.buyer-spent {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.buyer-txs {
+    color: var(--info);
+}
+
+.buyer-time {
+    color: var(--text-muted);
+}
+
+.compact-modal .modal-content {
+    max-width: 500px;
+    max-height: 70vh;
 }
 
 /* Fresh Tokens - Compact Filters */

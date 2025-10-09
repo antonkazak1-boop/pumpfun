@@ -671,9 +671,9 @@ function renderFreshTokens(data) {
                         <div class="stat-label">Market Cap</div>
                         <div class="stat-value positive">${marketCap}</div>
                     </div>
-                    <div class="stat-item">
+                    <div class="stat-item stat-clickable" onclick="showEarlyBuyers('${item.token_mint}')" title="Click to see buyers list">
                         <div class="stat-label">Early Buyers</div>
-                        <div class="stat-value positive">${item.early_buyers || 0}</div>
+                        <div class="stat-value positive">${item.early_buyers || 0} <i class="fas fa-users" style="font-size: 10px; opacity: 0.7;"></i></div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">Volume</div>
@@ -899,6 +899,156 @@ function closeTokenModal() {
             modal.classList.remove('closing');
         }, 300);
     }
+}
+
+// Show Early Buyers modal
+async function showEarlyBuyers(tokenMint) {
+    const modal = document.getElementById('earlyBuyersModal');
+    const title = document.getElementById('earlyBuyersTitle');
+    const content = document.getElementById('earlyBuyersContent');
+    
+    if (!modal || !title || !content) return;
+    
+    title.textContent = `Early Buyers: ${shortenAddress(tokenMint)}`;
+    content.innerHTML = '<div class="loading-placeholder">Loading buyers...</div>';
+    
+    modal.classList.add('active');
+    
+    // Initialize swipe for this modal
+    initEarlyBuyersSwipe();
+    
+    try {
+        const tokenData = await fetchData(`token/details/${tokenMint}`);
+        
+        if (!tokenData || tokenData.length === 0) {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>No Buyers Data</h3>
+                    <p>No buyer activity found for this token</p>
+                </div>`;
+            return;
+        }
+        
+        // Get unique buyers with their purchase info
+        const buyers = tokenData.filter(trade => trade.side === 'BUY');
+        const buyerMap = {};
+        
+        buyers.forEach(trade => {
+            const wallet = trade.wallet;
+            if (!buyerMap[wallet]) {
+                buyerMap[wallet] = {
+                    wallet: wallet,
+                    name: trade.wallet_name,
+                    totalSpent: 0,
+                    txCount: 0,
+                    firstBuy: trade.ts
+                };
+            }
+            buyerMap[wallet].totalSpent += parseFloat(trade.sol_spent || 0);
+            buyerMap[wallet].txCount++;
+            if (new Date(trade.ts) < new Date(buyerMap[wallet].firstBuy)) {
+                buyerMap[wallet].firstBuy = trade.ts;
+            }
+        });
+        
+        // Convert to array and sort by total spent
+        const buyersList = Object.values(buyerMap).sort((a, b) => b.totalSpent - a.totalSpent);
+        
+        content.innerHTML = `
+            <div class="buyers-list">
+                ${buyersList.map((buyer, index) => `
+                    <div class="buyer-item">
+                        <div class="buyer-rank">#${index + 1}</div>
+                        <div class="buyer-info">
+                            <div class="buyer-wallet contract-address" onclick="copyToClipboard('${buyer.wallet}', this)" title="Tap to copy">
+                                ${buyer.name || shortenAddress(buyer.wallet)}
+                                <i class="fas fa-copy" style="margin-left: 4px; opacity: 0.5; font-size: 10px;"></i>
+                            </div>
+                            <div class="buyer-stats">
+                                <span class="buyer-spent">${formatSOL(buyer.totalSpent)}</span>
+                                <span class="buyer-txs">${buyer.txCount} TX</span>
+                                <span class="buyer-time">${formatTimeAgo(new Date(buyer.firstBuy))}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading early buyers:', error);
+        content.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error</h3>
+                <p>Failed to load buyers data</p>
+            </div>`;
+    }
+}
+
+// Close Early Buyers modal
+function closeEarlyBuyersModal() {
+    const modal = document.getElementById('earlyBuyersModal');
+    if (modal) {
+        modal.classList.add('closing');
+        setTimeout(() => {
+            modal.classList.remove('active');
+            modal.classList.remove('closing');
+        }, 300);
+    }
+}
+
+// Swipe gestures for Early Buyers modal
+function initEarlyBuyersSwipe() {
+    const modal = document.getElementById('earlyBuyersModal');
+    if (!modal) return;
+    
+    const modalContent = modal.querySelector('.modal-content');
+    if (!modalContent) return;
+    
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    
+    const handleTouchStart = (e) => {
+        startY = e.touches[0].clientY;
+        isDragging = true;
+    };
+    
+    const handleTouchMove = (e) => {
+        if (!isDragging) return;
+        currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        
+        // Allow swipe up or down
+        if (Math.abs(deltaY) > 10) {
+            modalContent.style.transform = `translateY(${deltaY}px)`;
+            modal.style.backgroundColor = `rgba(0, 0, 0, ${0.8 - Math.abs(deltaY) / 500})`;
+        }
+    };
+    
+    const handleTouchEnd = () => {
+        if (!isDragging) return;
+        const deltaY = currentY - startY;
+        
+        // Close if swiped up or down more than 100px
+        if (Math.abs(deltaY) > 100) {
+            closeEarlyBuyersModal();
+        } else {
+            modalContent.style.transform = '';
+            modal.style.backgroundColor = '';
+        }
+        
+        isDragging = false;
+    };
+    
+    modalContent.removeEventListener('touchstart', handleTouchStart);
+    modalContent.removeEventListener('touchmove', handleTouchMove);
+    modalContent.removeEventListener('touchend', handleTouchEnd);
+    
+    modalContent.addEventListener('touchstart', handleTouchStart);
+    modalContent.addEventListener('touchmove', handleTouchMove);
+    modalContent.addEventListener('touchend', handleTouchEnd);
 }
 
 // Swipe жесты для модальных окон (универсальная функция)
@@ -2077,7 +2227,7 @@ function resetMarketFilters() {
 // === FRESH TOKENS FILTERS ===
 
 let freshFilters = {
-    age: '1h',
+    age: '24h',  // Default to 24h instead of 1h
     freshCap: 'all',
     sort: 'age'  // age, mcap, volume
 };
@@ -2141,21 +2291,19 @@ async function applyFreshFilters() {
         // Apply filters (optimized)
         let filteredData = data;
         
-        // Age filter
-        if (freshFilters.age !== '1h') {
-            const now = Date.now();
-            const hoursMs = {
-                '1h': 60 * 60 * 1000,
-                '6h': 6 * 60 * 60 * 1000,
-                '24h': 24 * 60 * 60 * 1000
-            };
-            const cutoff = now - (hoursMs[freshFilters.age] || hoursMs['1h']);
-            
-            filteredData = filteredData.filter(token => {
-                const created = new Date(token.first_seen || token.created_at || token.timestamp).getTime();
-                return created >= cutoff;
-            });
-        }
+        // Age filter (always apply)
+        const now = Date.now();
+        const hoursMs = {
+            '1h': 60 * 60 * 1000,
+            '6h': 6 * 60 * 60 * 1000,
+            '24h': 24 * 60 * 60 * 1000
+        };
+        const cutoff = now - (hoursMs[freshFilters.age] || hoursMs['24h']);
+        
+        filteredData = filteredData.filter(token => {
+            const created = new Date(token.first_seen || token.created_at || token.timestamp).getTime();
+            return created >= cutoff;
+        });
         
         // Market cap filter
         if (freshFilters.freshCap !== 'all') {
@@ -2180,7 +2328,7 @@ async function applyFreshFilters() {
 }
 
 function resetFreshFilters() {
-    freshFilters = { age: '1h', freshCap: 'all', sort: 'age' };
+    freshFilters = { age: '24h', freshCap: 'all', sort: 'age' };
     localStorage.setItem('freshFilters', JSON.stringify(freshFilters));
     restoreFreshFilterStates();
     applyFreshFilters();

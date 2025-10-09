@@ -859,9 +859,9 @@
                     <div class="filter-group">
                         <label class="filter-label"><i class="fas fa-clock"></i> Age:</label>
                         <div class="filter-buttons">
-                            <button class="filter-btn active" data-filter="age" data-value="1h">Last Hour</button>
+                            <button class="filter-btn" data-filter="age" data-value="1h">Last Hour</button>
                             <button class="filter-btn" data-filter="age" data-value="6h">Last 6h</button>
-                            <button class="filter-btn" data-filter="age" data-value="24h">Last 24h</button>
+                            <button class="filter-btn active" data-filter="age" data-value="24h">Last 24h</button>
                         </div>
                     </div>
                     
@@ -1189,6 +1189,19 @@
             </div>
             <div id="modalTokenContent" class="modal-body">
                 <!-- Содержимое будет заполнено динамически -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для Early Buyers -->
+    <div id="earlyBuyersModal" class="modal">
+        <div class="modal-content compact-modal">
+            <div class="modal-header">
+                <h3 id="earlyBuyersTitle">Early Buyers</h3>
+                <span class="close" onclick="closeEarlyBuyersModal()">&times;</span>
+            </div>
+            <div id="earlyBuyersContent" class="modal-body">
+                <!-- Список покупателей будет заполнен динамически -->
             </div>
         </div>
     </div>
