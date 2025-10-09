@@ -608,6 +608,8 @@ function renderSmartMoney(data) {
 // Рендеринг Fresh Tokens данных
 function renderFreshTokens(data) {
     const container = document.getElementById('freshTokensData');
+    const counter = document.getElementById('freshTokenCounter');
+    
     if (!container) return;
     
     if (!data || data.length === 0) {
@@ -615,50 +617,90 @@ function renderFreshTokens(data) {
             <div class="empty-state">
                 <i class="fas fa-seedling"></i>
                 <h3>No New Tokens</h3>
-                <p>No new tokens with activity appeared in the last 5 minutes</p>
+                <p>No new tokens with activity appeared in the selected period</p>
             </div>`;
+        if (counter) counter.querySelector('span').textContent = 'Showing 0 tokens';
         return;
     }
     
-    container.innerHTML = data.map((item, index) => {
+    // Update counter
+    if (counter) {
+        counter.querySelector('span').textContent = `Showing ${data.length} token${data.length === 1 ? '' : 's'}`;
+    }
+    
+    // Apply sorting
+    const sortedData = [...data];
+    if (freshFilters.sort === 'mcap') {
+        sortedData.sort((a, b) => (parseFloat(b.market_cap || 0) - parseFloat(a.market_cap || 0)));
+    } else if (freshFilters.sort === 'volume') {
+        sortedData.sort((a, b) => (parseFloat(b.total_volume || 0) - parseFloat(a.total_volume || 0)));
+    }
+    // 'age' is default (already sorted by first_seen DESC)
+    
+    container.innerHTML = sortedData.map((item, index) => {
         const pumpUrl = `https://pump.fun/coin/${item.token_mint}`;
         const timeSinceCreation = new Date() - new Date(item.first_seen);
         const minutesAgo = Math.floor(timeSinceCreation / (1000 * 60));
+        const hoursAgo = Math.floor(minutesAgo / 60);
         
         const tokenSymbol = item.symbol || item.token_mint.substring(0, 8);
         const tokenName = item.name || 'Unknown Token';
+        const marketCap = item.market_cap ? `$${formatNumber(item.market_cap)}` : 'N/A';
+        const txCount = item.tx_count || 0;
+        
+        // Badges logic
+        let badges = '';
+        if (minutesAgo < 10) badges += '<span class="token-badge badge-new">🆕 New</span>';
+        if (parseFloat(item.total_volume || 0) > 50) badges += '<span class="token-badge badge-hot">🔥 Hot</span>';
+        if (item.early_buyers > 20) badges += '<span class="token-badge badge-trending">📈 Trending</span>';
+        
+        // Age display
+        const ageText = hoursAgo > 0 ? `${hoursAgo}h ${minutesAgo % 60}m ago` : `${minutesAgo}m ago`;
         
         return `
             <div class="data-item fresh-item">
-                <h3>
-                    <img src="${item.image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
-                    <i class="fas fa-seedling"></i>
-                    ${index + 1}. ${tokenSymbol} - ${tokenName}
-                </h3>
+                <div class="data-header">
+                    <h3>
+                        <img src="${item.image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
+                        ${index + 1}. ${tokenSymbol} - ${tokenName}
+                    </h3>
+                    <div class="token-badges">${badges}</div>
+                </div>
                 <div class="item-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Market Cap</div>
+                        <div class="stat-value positive">${marketCap}</div>
+                    </div>
                     <div class="stat-item">
                         <div class="stat-label">Early Buyers</div>
                         <div class="stat-value positive">${item.early_buyers || 0}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Total Volume</div>
+                        <div class="stat-label">Volume</div>
                         <div class="stat-value neutral">${formatSOL(item.total_volume)}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Age</div>
-                        <div class="stat-value">${minutesAgo}m ago</div>
+                        <div class="stat-label">TX Count</div>
+                        <div class="stat-value">${txCount}</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Created</div>
-                        <div class="stat-value">${formatTime(item.first_seen)}</div>
+                        <div class="stat-label">Age</div>
+                        <div class="stat-value">${ageText}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Contract</div>
+                        <div class="stat-value contract-address" onclick="copyToClipboard('${item.token_mint}', this)" title="Tap to copy">
+                            ${item.token_mint.substring(0, 6)}...${item.token_mint.substring(item.token_mint.length - 4)}
+                            <i class="fas fa-copy" style="margin-left: 4px; opacity: 0.5;"></i>
+                        </div>
                     </div>
                 </div>
                 <div class="item-actions">
-                    <a href="${pumpUrl}" target="_blank" class="action-button">
+                    <a href="${pumpUrl}" target="_blank" class="action-button pump-button">
                         <i class="fas fa-external-link-alt"></i> Pump.fun
                     </a>
                     <button class="action-button secondary" onclick="showTokenDetails('${item.token_mint}')">
-                        <i class="fas fa-info-circle"></i> Детали
+                        <i class="fas fa-info-circle"></i> Details
                     </button>
                 </div>
             </div>
@@ -2034,7 +2076,8 @@ function resetMarketFilters() {
 
 let freshFilters = {
     age: '1h',
-    freshCap: 'all'
+    freshCap: 'all',
+    sort: 'age'  // age, mcap, volume
 };
 
 function initFreshTokensFilters() {
@@ -2074,6 +2117,9 @@ function restoreFreshFilterStates() {
     });
     document.querySelectorAll('[data-filter="freshCap"]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.value === freshFilters.freshCap);
+    });
+    document.querySelectorAll('[data-filter="sort"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === freshFilters.sort);
     });
 }
 
@@ -2132,7 +2178,7 @@ async function applyFreshFilters() {
 }
 
 function resetFreshFilters() {
-    freshFilters = { age: '1h', freshCap: 'all' };
+    freshFilters = { age: '1h', freshCap: 'all', sort: 'age' };
     localStorage.setItem('freshFilters', JSON.stringify(freshFilters));
     restoreFreshFilterStates();
     applyFreshFilters();
@@ -3980,6 +4026,24 @@ function setupEventHandlers() {
         } else {
             stopAutoRefresh();
         }
+    });
+}
+
+// Copy to clipboard with visual feedback
+function copyToClipboard(text, element) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Visual feedback
+        const originalText = element.innerHTML;
+        element.innerHTML = '<i class="fas fa-check" style="color: var(--success);"></i> Copied!';
+        element.style.color = 'var(--success)';
+        
+        setTimeout(() => {
+            element.innerHTML = originalText;
+            element.style.color = '';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard');
     });
 }
 

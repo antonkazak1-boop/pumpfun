@@ -876,9 +876,24 @@
                         </div>
                     </div>
                     
+                    <!-- Sort Filter -->
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-sort"></i> Sort by:</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="sort" data-value="age">Age ↓</button>
+                            <button class="filter-btn" data-filter="sort" data-value="mcap">Market Cap ↓</button>
+                            <button class="filter-btn" data-filter="sort" data-value="volume">Volume ↓</button>
+                        </div>
+                    </div>
+                    
                     <button class="reset-filters-btn" onclick="resetFreshFilters()">
                         <i class="fas fa-redo"></i> Reset
                     </button>
+                </div>
+                
+                <!-- Token Counter -->
+                <div class="token-counter" id="freshTokenCounter">
+                    <i class="fas fa-list"></i> <span>Loading...</span>
                 </div>
                 
                 <div id="freshTokensData" class="data-list">

@@ -1475,15 +1475,22 @@ app.get('/api/freshtokens', async (req, res) => {
                 FROM events
                 GROUP BY token_mint
             )
-            SELECT e.token_mint, COUNT(DISTINCT e.wallet) AS early_buyers, SUM(e.sol_spent) AS total_volume, fa.first_seen
+            SELECT 
+                e.token_mint, 
+                COUNT(DISTINCT e.wallet) AS early_buyers, 
+                SUM(e.sol_spent) AS total_volume, 
+                fa.first_seen,
+                COUNT(*) AS tx_count
             FROM events e
             JOIN first_appearance fa ON e.token_mint = fa.token_mint
-            WHERE e.side = 'BUY' AND fa.first_seen > now() - interval '5 minutes' AND e.ts > now() - interval '5 minutes'
+            WHERE e.side = 'BUY' 
+            AND fa.first_seen > now() - interval '24 hours' 
+            AND e.ts > now() - interval '24 hours'
             AND e.token_mint != 'So11111111111111111111111111111111111111112'
             GROUP BY e.token_mint, fa.first_seen
             HAVING SUM(e.sol_spent) > 0.01
             ORDER BY fa.first_seen DESC
-            LIMIT 100;
+            LIMIT 200;
         `;
         const result = await pool.query(query);
         

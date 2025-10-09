@@ -1344,6 +1344,89 @@ body {
     }
 }
 
+/* Token Counter */
+.token-counter {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    padding: 12px 20px;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.token-counter i {
+    color: var(--accent-primary);
+}
+
+.token-counter span {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Token Badges */
+.token-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.token-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-new {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.badge-hot {
+    background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+    color: white;
+}
+
+.badge-trending {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+/* Contract Address - Tap to Copy */
+.contract-address {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.contract-address:hover {
+    color: var(--accent-primary) !important;
+    transform: scale(1.05);
+}
+
+.contract-address:active {
+    transform: scale(0.95);
+}
+
+/* Pump.fun Button Styling */
+.pump-button {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.pump-button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
     .container {
@@ -1352,6 +1435,7 @@ body {
     
     .data-list {
         grid-template-columns: 1fr;
+        gap: 12px; /* Уменьшаем gap между карточками */
     }
     
     .app-header {
@@ -1369,7 +1453,19 @@ body {
     }
     
     .data-item {
-        padding: 20px;
+        padding: 14px 16px; /* Меньше padding для компактности */
+    }
+    
+    .data-header {
+        margin-bottom: 12px; /* Уменьшаем отступ */
+    }
+    
+    .item-stats {
+        gap: 10px; /* Меньше gap между статами */
+    }
+    
+    .stat-item {
+        padding: 8px 12px; /* Компактнее */
     }
     
     .item-stats {
