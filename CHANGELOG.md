@@ -4,6 +4,60 @@
 
 ---
 
+## [1.3.1] - 2025-10-09 (Critical Fixes & Early Buyers Modal)
+
+### 🐛 Critical Bug Fixes
+#### Fixed
+- ✅ **КРИТИЧНО: Sell Volume Calculation**: Исправлен расчет объема продаж - теперь использует `sol_received` вместо `sol_spent`
+  ```javascript
+  // БЫЛО (неправильно):
+  const totalSellVolume = sellTrades.reduce((sum, trade) => 
+    sum + parseFloat(trade.sol_spent || 0), 0);
+  // sol_spent = 0 для SELL → всегда показывало 0 SOL!
+  
+  // СТАЛО (правильно):
+  const totalSellVolume = sellTrades.reduce((sum, trade) => 
+    sum + parseFloat(trade.sol_received || 0), 0);
+  // sol_received = X для SELL → показывает реальный объем!
+  ```
+- ✅ **Default Filter Fix**: Базовый фильтр Fresh Tokens теперь 24h (вместо 1h)
+- ✅ **Age Filter Logic**: Фильтр возраста теперь всегда применяется корректно
+- ✅ **Pump.fun Button Color**: ОКОНЧАТЕЛЬНО исправлен цвет (добавлен `:not(.pump-button)` в селектор)
+
+### 👥 Early Buyers Modal
+#### Added
+- ✅ **Clickable Early Buyers Stat**: Клик на "Early Buyers" → открывает модалку со списком покупателей
+- ✅ **Buyer Ranking**: Покупатели отсортированы по общей потраченной сумме (#1, #2, #3...)
+- ✅ **Swipe Gestures**: Swipe вверх/вниз → закрывает модалку
+- ✅ **Tap-to-Copy Wallets**: Кошельки покупателей копируются по тапу
+- ✅ **Detailed Stats**: Для каждого покупателя: Total Spent, TX Count, First Buy Time
+
+#### UI/UX
+```css
+/* Clickable Stats */
+.stat-clickable { cursor: pointer; transition: all 0.2s ease; }
+.stat-clickable:hover { background: rgba(102, 126, 234, 0.1); transform: scale(1.05); }
+
+/* Buyers List */
+.buyer-item { display: flex; gap: 12px; padding: 12px; }
+.buyer-rank { color: var(--accent-primary); font-weight: bold; }
+.buyer-spent { color: var(--success); } // Зеленый
+.buyer-txs { color: var(--info); } // Синий
+```
+
+### 🎨 UI Improvements
+#### Added
+- ✅ **Compact Filters**: Фильтры Fresh Tokens более компактные (padding 6px вместо 12px)
+- ✅ **2-Column Mobile Grid**: Fresh Tokens на мобильных теперь в 2 колонки (вместо 1)
+- ✅ **Smaller Mobile Cards**: Padding 10px, font-size уменьшены (13px/10px/12px)
+
+### 🌐 Translations
+#### Fixed
+- ✅ **Token Details Modal**: Полностью переведена на английский
+- ✅ **Top Gainers Tab**: Переведен на английский (Buyers, Total Volume, Avg Buy, Largest Buy)
+
+---
+
 ## [1.3.0] - 2025-10-09 (Fresh Tokens & About Page Update)
 
 ### ✨ About Page Enhancements
