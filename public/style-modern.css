@@ -4626,12 +4626,13 @@ body.menu-open {
     backdrop-filter: blur(15px);
     z-index: 10001;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 1rem;
+    padding: 2rem 1rem;
     opacity: 0;
     transition: opacity 0.3s ease;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -4644,12 +4645,28 @@ body.menu-open {
     max-width: 500px;
     padding: 2rem;
     border-radius: 20px;
+    background: var(--bg-card);
     transform: scale(0.95);
     transition: transform 0.3s ease;
+    margin: auto;
+    position: relative;
 }
 
 .solana-payment-modal.active .solana-payment-content {
     transform: scale(1);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .solana-payment-modal {
+        padding: 1rem 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .solana-payment-content {
+        margin-top: 0;
+        min-height: auto;
+    }
 }
 
 .payment-header {
@@ -4845,22 +4862,22 @@ body.menu-open {
 
 .copy-btn-visible {
     padding: 0.5rem 1rem;
-    background: var(--accent-color);
-    color: #000;
+    background: linear-gradient(135deg, #00ff88, #00d4ff) !important;
+    color: #000 !important;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
     transition: all 0.3s ease;
     white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 255, 136, 0.5) !important;
     flex-shrink: 0;
 }
 
 .copy-btn-visible:hover {
-    background: #00d475;
+    background: linear-gradient(135deg, #00d475, #00b8e6) !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.5);
+    box-shadow: 0 6px 20px rgba(0, 255, 136, 0.7) !important;
 }
 
 .copy-btn-visible:active {

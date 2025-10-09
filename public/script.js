@@ -1249,15 +1249,21 @@ function refreshCurrentTab() {
 
 // Автоматическое обновление
 function startAutoRefresh() {
+    // DISABLED: Auto-refresh interrupts user browsing
+    // Users can manually refresh using the Refresh button
+    console.log('ℹ️ Auto-refresh disabled. Use Refresh button to update data.');
+    
     if (refreshTimer) {
         clearInterval(refreshTimer);
+        refreshTimer = null;
     }
     
-    refreshTimer = setInterval(() => {
-        if (!isLoading && document.visibilityState === 'visible') {
-            loadTabData(currentTab);
-        }
-    }, REFRESH_INTERVAL);
+    // Optional: Uncomment to enable auto-refresh
+    // refreshTimer = setInterval(() => {
+    //     if (!isLoading && document.visibilityState === 'visible') {
+    //         loadTabData(currentTab);
+    //     }
+    // }, REFRESH_INTERVAL);
 }
 
 // Остановка автоматического обновления
@@ -3446,8 +3452,69 @@ function showSolanaPaymentModal(paymentData) {
     // Generate QR Code using a simple library (we'll add this script tag)
     generateSolanaQR(paymentUrl);
     
+    // Add swipe gesture for this modal
+    initSolanaModalSwipe(modal);
+    
     // Add animation
     setTimeout(() => modal.classList.add('active'), 10);
+}
+
+// Initialize swipe for Solana Payment Modal
+function initSolanaModalSwipe(modal) {
+    if (!modal) return;
+    
+    const modalContent = modal.querySelector('.solana-payment-content');
+    if (!modalContent) return;
+    
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    
+    // Only on mobile
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+    
+    modalContent.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+        isDragging = true;
+    }, { passive: true });
+    
+    modalContent.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        currentY = e.touches[0].clientY;
+        const diff = currentY - startY;
+        
+        // Only swipe down
+        if (diff > 0) {
+            modalContent.style.transform = `translateY(${diff}px)`;
+            modalContent.style.transition = 'none';
+            
+            // Reduce background opacity
+            const opacity = Math.max(0.3, 1 - (diff / 300));
+            modal.style.backgroundColor = `rgba(0, 0, 0, ${opacity * 0.85})`;
+        }
+    }, { passive: true });
+    
+    modalContent.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        
+        const diff = currentY - startY;
+        
+        // If swipe > 100px, close modal
+        if (diff > 100) {
+            closeSolanaPaymentModal();
+        } else {
+            // Return to position
+            modalContent.style.transform = '';
+            modalContent.style.transition = 'transform 0.3s ease';
+            modal.style.backgroundColor = '';
+        }
+        
+        isDragging = false;
+        startY = 0;
+        currentY = 0;
+    });
 }
 
 // Generate QR Code for Solana Pay
