@@ -4,6 +4,91 @@
 
 ---
 
+## [1.3.0] - 2025-10-09 (Fresh Tokens & About Page Update)
+
+### ✨ About Page Enhancements
+#### Added
+- ✅ **Premium CTA Button**: Золотая кнопка "Upgrade to Premium" с пульсирующим свечением и shine эффектом
+- ✅ **Number Animation**: Плавная анимация счета цифр (300+, 10418+, 50+, 77%) от 0 до целевого значения
+- ✅ **Perfect Alignment**: Идеальное выравнивание header, navigation и content по центру
+
+#### Fixed
+- ✅ **Mobile Number Animation**: Теперь работает на touch-устройствах
+- ✅ **Container Alignment**: `box-sizing: border-box` для всех layout элементов
+- ✅ **Mobile Padding**: Уменьшен с 16px до 12px для лучшего использования пространства
+
+#### Technical Details
+```javascript
+// Анимация цифр
+animateAboutNumbers() // Запускается при переключении на About
+// Длительность: 1.5 секунды, 50 шагов
+// Поддержка обычных чисел и процентов
+
+// Premium Button
+.premium-cta-button {
+  background: linear-gradient(135deg, #ffd700, #ffed4e, #ffd700);
+  animation: premium-glow 2s infinite; // Пульсация
+  animation: premium-shine 3s infinite; // Блеск
+}
+```
+
+### 🌱 Fresh Tokens Tab - Complete Overhaul
+#### Added
+- ✅ **Sorting**: Age ↓, Market Cap ↓, Volume ↓
+- ✅ **Token Badges**: 🆕 New (<10min), 🔥 Hot (>50 SOL), 📈 Trending (>20 buyers)
+- ✅ **Token Counter**: "Showing X tokens" (динамическое обновление)
+- ✅ **Tap-to-Copy Contracts**: Клик/тап → копирует полный адрес с визуальной обратной связью
+- ✅ **Market Cap Display**: Добавлен в карточки токенов
+- ✅ **TX Count**: Количество транзакций для каждого токена
+- ✅ **Enhanced Age Display**: "2h 15m ago" вместо просто минут
+
+#### Fixed
+- ✅ **SQL Query Expanded**: С 5 минут → 24 часа (фильтры 6h/24h теперь работают!)
+- ✅ **Pump.fun Button**: Перекрашена в фирменный градиент (убран фиолетовый)
+- ✅ **Mobile Compactness**: Padding уменьшен (14px вместо 20px), gap 12px вместо 24px
+- ✅ **More Tokens on Screen**: Больше данных без скролла на мобильных
+
+#### Database Changes
+```sql
+-- Fresh Tokens Query
+- Expanded: interval '5 minutes' → '24 hours'
+- Added: COUNT(*) AS tx_count
+- Increased: LIMIT 100 → 200
+```
+
+#### UI/UX Improvements
+```css
+/* Token Badges */
+.badge-new { background: linear-gradient(#10b981, #059669); }
+.badge-hot { background: linear-gradient(#f59e0b, #dc2626); }
+.badge-trending { background: linear-gradient(#667eea, #764ba2); }
+
+/* Tap-to-Copy */
+.contract-address { cursor: pointer; font-family: 'Courier New'; }
+.contract-address:hover { transform: scale(1.05); }
+
+/* Mobile Compact */
+@media (max-width: 768px) {
+  .data-item { padding: 14px 16px; } // Was 20px
+  .data-list { gap: 12px; } // Was 24px
+}
+```
+
+### 🔧 Performance & Stability
+#### Fixed
+- ✅ **Database Connection Errors**: Добавлен error handler для pg-pool
+- ✅ **Refresh Interval**: Увеличен с 30s → 60s (меньше нагрузка на БД)
+- ✅ **API Timeout**: Увеличен с 10s → 15s (больше времени на ответ)
+- ✅ **Smart Refresh**: Сохраняет scroll position при auto-refresh
+
+### 📱 Mobile Optimizations
+- Компактные карточки токенов (14px padding вместо 20px)
+- Меньше gap между элементами (12px вместо 24px)
+- Badges адаптивны и читаемы на маленьких экранах
+- Tap-to-copy работает без задержек на touch-устройствах
+
+---
+
 ## [1.2.0] - 2025-10-08 (UX/UI Improvements Update)
 
 ### ✨ UI/UX Enhancements
