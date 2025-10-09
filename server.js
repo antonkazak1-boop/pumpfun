@@ -1522,13 +1522,18 @@ app.get('/api/freshtokens', async (req, res) => {
 app.get('/api/topgainers', async (req, res) => {
     try {
         const query = `
-            SELECT token_mint, COUNT(DISTINCT wallet) as buyer_count, SUM(sol_spent) as total_volume, AVG(sol_spent) as avg_buy_size
+            SELECT 
+                token_mint, 
+                COUNT(DISTINCT wallet) as total_buyers, 
+                SUM(sol_spent) as total_volume, 
+                AVG(sol_spent) as avg_buy_size,
+                MAX(sol_spent) as largest_buy
             FROM events
-            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '24 hours'
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '1 hour'
             AND token_mint != 'So11111111111111111111111111111111111111112'
             GROUP BY token_mint
             HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 0.01
-            ORDER BY buyer_count DESC, total_volume DESC
+            ORDER BY total_volume DESC
             LIMIT 100;
         `;
         const result = await pool.query(query);
