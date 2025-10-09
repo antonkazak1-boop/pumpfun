@@ -1019,14 +1019,17 @@ function initEarlyBuyersSwipe() {
     if (!modal) return;
     
     const modalContent = modal.querySelector('.modal-content');
-    if (!modalContent) return;
+    const modalBody = modal.querySelector('.modal-body');
+    if (!modalContent || !modalBody) return;
     
     let startY = 0;
     let currentY = 0;
     let isDragging = false;
+    let startScrollTop = 0;
     
     const handleTouchStart = (e) => {
         startY = e.touches[0].clientY;
+        startScrollTop = modalBody.scrollTop;
         isDragging = true;
     };
     
@@ -1035,10 +1038,11 @@ function initEarlyBuyersSwipe() {
         currentY = e.touches[0].clientY;
         const deltaY = currentY - startY;
         
-        // Allow swipe up or down
-        if (Math.abs(deltaY) > 10) {
+        // Only allow swipe down and only if at top of scroll
+        if (deltaY > 10 && modalBody.scrollTop === 0) {
+            e.preventDefault(); // Prevent scroll
             modalContent.style.transform = `translateY(${deltaY}px)`;
-            modal.style.backgroundColor = `rgba(0, 0, 0, ${0.8 - Math.abs(deltaY) / 500})`;
+            modal.style.backgroundColor = `rgba(0, 0, 0, ${0.8 - deltaY / 500})`;
         }
     };
     
@@ -1046,8 +1050,8 @@ function initEarlyBuyersSwipe() {
         if (!isDragging) return;
         const deltaY = currentY - startY;
         
-        // Close if swiped up or down more than 100px
-        if (Math.abs(deltaY) > 100) {
+        // Close only if swiped down more than 100px from top
+        if (deltaY > 100 && modalBody.scrollTop === 0) {
             closeEarlyBuyersModal();
         } else {
             modalContent.style.transform = '';
@@ -1057,12 +1061,19 @@ function initEarlyBuyersSwipe() {
         isDragging = false;
     };
     
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeEarlyBuyersModal();
+        }
+    });
+    
     modalContent.removeEventListener('touchstart', handleTouchStart);
     modalContent.removeEventListener('touchmove', handleTouchMove);
     modalContent.removeEventListener('touchend', handleTouchEnd);
     
-    modalContent.addEventListener('touchstart', handleTouchStart);
-    modalContent.addEventListener('touchmove', handleTouchMove);
+    modalContent.addEventListener('touchstart', handleTouchStart, { passive: false });
+    modalContent.addEventListener('touchmove', handleTouchMove, { passive: false });
     modalContent.addEventListener('touchend', handleTouchEnd);
 }
 
