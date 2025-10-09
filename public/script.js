@@ -1955,7 +1955,9 @@ function updateActivityContent(data, type) {
 // Функция рендеринга Coins вкладки
 function renderCoins(data) {
     const container = document.getElementById('coinsData');
-    container.classList.add('coins-grid');
+    const counter = document.getElementById('coinsCounter');
+    container.classList.remove('coins-grid');
+    container.classList.add('data-list');
     
     if (!data || data.length === 0) {
         container.innerHTML = `
@@ -1965,73 +1967,75 @@ function renderCoins(data) {
                 <p>No coins found for the selected criteria</p>
             </div>
         `;
+        if (counter) counter.querySelector('span').textContent = 'Showing 0 coins';
         return;
     }
     
-    const coinsHTML = data.map(coin => `
-        <div class="coin-card" data-contract="${coin.token_mint}">
-            <div class="coin-header">
-                <div class="coin-avatar">
-                    <img src="${coin.image || '/img/token-placeholder.png'}" alt="${coin.symbol || 'UNKNOWN'}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
+    // Update counter
+    if (counter) {
+        counter.querySelector('span').textContent = `Showing ${data.length} coin${data.length === 1 ? '' : 's'}`;
+    }
+    
+    const coinsHTML = data.map((coin, index) => {
+        const tokenSymbol = coin.symbol || 'UNKNOWN';
+        const tokenName = coin.name || 'Unknown Token';
+        
+        // Badges logic
+        let badges = '';
+        if (parseFloat(coin.volume_sol || 0) > 100) badges += '<span class="token-badge badge-hot">🔥 High Volume</span>';
+        if (coin.trader_count > 30) badges += '<span class="token-badge badge-trending">📈 Active</span>';
+        if (parseFloat(coin.market_cap || 0) > 1000000) badges += '<span class="token-badge badge-new">💎 High Cap</span>';
+        
+        return `
+        <div class="data-item">
+            <div class="data-header">
+                <h3>
+                    <img src="${coin.image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
+                    ${index + 1}. ${tokenSymbol} - ${tokenName}
+                </h3>
+                <div class="token-badges">${badges}</div>
+            </div>
+            <div class="item-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Market Cap</div>
+                    <div class="stat-value positive">${formatMarketCap(coin.market_cap)}</div>
                 </div>
-                <div class="coin-info">
-                    <div class="coin-ticker">$${coin.symbol || 'UNKNOWN'}</div>
-                    <div class="coin-name">${coin.name || 'Unknown Token'}</div>
-                    <div class="coin-cap">${formatMarketCap(coin.market_cap)}</div>
+                <div class="stat-item stat-clickable" onclick="showCoinTraders('${coin.token_mint}')" title="Click to see traders">
+                    <div class="stat-label">Traders</div>
+                    <div class="stat-value positive">${coin.trader_count} <i class="fas fa-users" style="font-size: 10px; opacity: 0.7;"></i></div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Trades</div>
+                    <div class="stat-value">${coin.total_trades}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Buy Volume</div>
+                    <div class="stat-value positive">${formatSOL(coin.buy_volume || 0)}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Sell Volume</div>
+                    <div class="stat-value negative">${formatSOL(coin.sell_volume || 0)}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Net Volume</div>
+                    <div class="stat-value">${formatSOL(coin.volume_sol)}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Contract</div>
+                    <div class="stat-value contract-address" onclick="copyToClipboard('${coin.token_mint}', this)" title="Tap to copy">
+                        ${coin.token_mint.substring(0, 6)}...${coin.token_mint.substring(coin.token_mint.length - 4)}
+                        <i class="fas fa-copy" style="margin-left: 4px; opacity: 0.5;"></i>
+                    </div>
                 </div>
             </div>
-            <div class="coin-metrics">
-                <div class="metric">
-                    <span class="metric-label">Traders</span>
-                    <span class="metric-value">${coin.trader_count}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Trades</span>
-                    <span class="metric-value">${coin.total_trades}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Buy Volume</span>
-                    <span class="metric-value positive">${formatSOL(coin.buy_volume || 0)}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Sell Volume</span>
-                    <span class="metric-value negative">${formatSOL(coin.sell_volume || 0)}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Net Volume</span>
-                    <span class="metric-value">${formatSOL(coin.volume_sol)}</span>
-                </div>
-            </div>
-            <div class="coin-actions">
-                <button class="view-traders-btn" onclick="showCoinTraders('${coin.token_mint}')">
-                    <i class="fas fa-users"></i>
-                    View Traders (${coin.trader_count})
-                </button>
-                <a href="https://pump.fun/coin/${coin.token_mint}" target="_blank" class="action-button">
-                    <i class="fas fa-external-link-alt"></i>
-                    Pump.fun
+            <div class="item-actions">
+                <a href="https://pump.fun/coin/${coin.token_mint}" target="_blank" class="action-button pump-button">
+                    <i class="fas fa-external-link-alt"></i> Pump.fun
                 </a>
+                <button class="action-button secondary" onclick="showTokenDetails('${coin.token_mint}', '${tokenSymbol}', '${tokenName.replace(/'/g, "\\'")}')">
+                    <i class="fas fa-info-circle"></i> Details
+                </button>
             </div>
-            
-            ${coin.top_traders && coin.top_traders.length > 0 ? `
-            <div class="coin-traders-preview">
-                <h4><i class="fas fa-users"></i> Top Traders</h4>
-                <div class="traders-list">
-                    ${coin.top_traders.slice(0, 3).map(trader => `
-                        <div class="trader-item">
-                            <div class="trader-wallet">${shortenAddress(trader.wallet)}</div>
-                            <div class="trader-stats">
-                                <span class="buy-volume">+${formatSOL(trader.buy_volume)}</span>
-                                <span class="sell-volume">-${formatSOL(trader.sell_volume)}</span>
-                                <span class="net-volume ${trader.net_volume >= 0 ? 'positive' : 'negative'}">
-                                    ${trader.net_volume >= 0 ? '+' : ''}${formatSOL(trader.net_volume)}
-                                </span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            ` : ''}
         </div>
     `).join('');
     

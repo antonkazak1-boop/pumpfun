@@ -1563,62 +1563,74 @@ a.pump-button:hover {
         padding: 0 12px;
     }
     
-    /* Fresh Tokens - 2 columns grid on mobile */
-    #freshTokensData.data-list {
+    /* Fresh Tokens & Most Bought - 2 columns grid on mobile */
+    #freshTokensData.data-list,
+    #topGainersData.data-list {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
     }
     
-    #freshTokensData .data-item {
+    #freshTokensData .data-item,
+    #topGainersData .data-item {
         padding: 10px;
     }
     
-    #freshTokensData .data-header h3 {
+    #freshTokensData .data-header h3,
+    #topGainersData .data-header h3 {
         font-size: 13px;
         display: flex;
         flex-direction: column;
         gap: 4px;
     }
     
-    #freshTokensData .token-avatar {
+    #freshTokensData .token-avatar,
+    #topGainersData .token-avatar {
         width: 24px;
         height: 24px;
     }
     
-    #freshTokensData .item-stats {
+    #freshTokensData .item-stats,
+    #topGainersData .item-stats {
         grid-template-columns: 1fr;
         gap: 6px;
     }
     
-    #freshTokensData .stat-item {
+    #freshTokensData .stat-item,
+    #topGainersData .stat-item {
         padding: 6px 8px;
     }
     
-    #freshTokensData .stat-label {
+    #freshTokensData .stat-label,
+    #topGainersData .stat-label {
         font-size: 10px;
     }
     
-    #freshTokensData .stat-value {
+    #freshTokensData .stat-value,
+    #topGainersData .stat-value {
         font-size: 12px;
     }
     
-    #freshTokensData .item-actions {
+    #freshTokensData .item-actions,
+    #topGainersData .item-actions {
         flex-direction: column;
         gap: 6px;
     }
     
-    #freshTokensData .action-button {
+    #freshTokensData .action-button,
+    #topGainersData .action-button {
         font-size: 11px;
         padding: 8px 12px;
     }
     
-    #freshTokensData .token-badges {
+    #freshTokensData .token-badges,
+    #topGainersData .token-badges {
         flex-wrap: wrap;
         gap: 3px;
     }
     
-    #freshTokensData .token-badge {
+    #freshTokensData .token-badge,
+    #topGainersData .token-badge {
         font-size: 9px;
         padding: 2px 6px;
     }
