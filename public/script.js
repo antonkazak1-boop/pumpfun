@@ -1072,6 +1072,11 @@ function switchTab(tabName) {
     
     currentTab = tabName;
     
+    // Запуск анимации цифр для About страницы
+    if (tabName === 'about') {
+        setTimeout(animateAboutNumbers, 300);
+    }
+    
     // Lazy Loading: загружаем данные только если вкладка еще не была загружена
     const shouldLoadData = !loadedTabs.has(tabName);
     
@@ -3978,6 +3983,37 @@ function setupEventHandlers() {
     });
 }
 
+// Animate numbers on About page
+function animateAboutNumbers() {
+    const aboutTab = document.getElementById('about');
+    if (!aboutTab || !aboutTab.classList.contains('active')) return;
+    
+    const numberElements = aboutTab.querySelectorAll('.text-3xl.font-bold span.inline-block');
+    
+    numberElements.forEach(el => {
+        const text = el.textContent.trim();
+        const isPercentage = text.includes('%');
+        const targetValue = parseInt(text.replace(/[^0-9]/g, ''));
+        
+        if (isNaN(targetValue)) return;
+        
+        let currentValue = 0;
+        const increment = Math.ceil(targetValue / 50); // 50 steps
+        const duration = 1500; // 1.5 seconds
+        const stepTime = duration / 50;
+        
+        const timer = setInterval(() => {
+            currentValue += increment;
+            if (currentValue >= targetValue) {
+                currentValue = targetValue;
+                clearInterval(timer);
+            }
+            
+            el.textContent = isPercentage ? currentValue : currentValue.toLocaleString();
+        }, stepTime);
+    });
+}
+
 // Initialize components
 function initializeComponents() {
     // Initialize traders scroll
@@ -3994,5 +4030,10 @@ function initializeComponents() {
     
     // Initialize modal swipe gestures
     initModalSwipe();
+    
+    // Animate About page numbers on first load
+    if (currentTab === 'about') {
+        setTimeout(animateAboutNumbers, 300);
+    }
 }
 
