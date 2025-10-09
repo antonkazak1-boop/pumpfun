@@ -802,7 +802,7 @@ async function showTokenDetails(tokenMint) {
         
         // Статистика
         const totalBuyVolume = buyTrades.reduce((sum, trade) => sum + parseFloat(trade.sol_spent || 0), 0);
-        const totalSellVolume = sellTrades.reduce((sum, trade) => sum + parseFloat(trade.sol_spent || 0), 0);
+        const totalSellVolume = sellTrades.reduce((sum, trade) => sum + parseFloat(trade.sol_received || 0), 0); // FIXED: use sol_received for SELL
         const uniqueBuyers = new Set(buyTrades.map(trade => trade.wallet)).size;
         const uniqueSellers = new Set(sellTrades.map(trade => trade.wallet)).size;
         
@@ -857,7 +857,7 @@ async function showTokenDetails(tokenMint) {
                             </div>
                             <div class="stat-item">
                                 <div class="stat-label">SOL</div>
-                                <div class="stat-value">${formatNumber(trade.sol_spent)}</div>
+                                <div class="stat-value">${formatNumber(trade.side === 'BUY' ? trade.sol_spent : trade.sol_received)}</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-label">Time</div>
