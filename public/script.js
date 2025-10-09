@@ -2025,6 +2025,96 @@ function resetMarketFilters() {
     applyMarketFilters();
 }
 
+// === FRESH TOKENS FILTERS ===
+
+let freshFilters = {
+    age: '1h',
+    freshCap: 'all'
+};
+
+function initFreshTokensFilters() {
+    // Load saved
+    const saved = localStorage.getItem('freshFilters');
+    if (saved) {
+        freshFilters = JSON.parse(saved);
+    }
+    
+    const filterButtons = document.querySelectorAll('.fresh-filters .filter-btn');
+    
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filterType = btn.dataset.filter;
+            const filterValue = btn.dataset.value;
+            
+            // Update active
+            document.querySelectorAll(`[data-filter="${filterType}"]`).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Update state
+            freshFilters[filterType] = filterValue;
+            localStorage.setItem('freshFilters', JSON.stringify(freshFilters));
+            
+            // Apply
+            applyFreshFilters();
+        });
+    });
+    
+    // Restore states
+    restoreFreshFilterStates();
+}
+
+function restoreFreshFilterStates() {
+    document.querySelectorAll('[data-filter="age"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === freshFilters.age);
+    });
+    document.querySelectorAll('[data-filter="freshCap"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === freshFilters.freshCap);
+    });
+}
+
+async function applyFreshFilters() {
+    showSkeletonLoader('freshTokensData');
+    
+    // Fetch data
+    const endpoint = 'freshtokens';
+    const data = await fetchData(endpoint);
+    
+    // Apply filters
+    let filteredData = data || [];
+    
+    // Age filter (client-side based on created_at)
+    if (freshFilters.age !== 'all') {
+        const now = new Date();
+        const hoursAgo = freshFilters.age === '1h' ? 1 : freshFilters.age === '6h' ? 6 : 24;
+        const cutoff = new Date(now - hoursAgo * 60 * 60 * 1000);
+        
+        filteredData = filteredData.filter(token => {
+            const created = new Date(token.created_at || token.timestamp);
+            return created >= cutoff;
+        });
+    }
+    
+    // Market cap filter
+    if (freshFilters.freshCap !== 'all') {
+        filteredData = filteredData.filter(token => {
+            const cap = parseFloat(token.market_cap || 0);
+            if (freshFilters.freshCap === 'micro') return cap < 10000;
+            if (freshFilters.freshCap === 'small') return cap >= 10000 && cap <= 50000;
+            if (freshFilters.freshCap === 'medium') return cap > 50000;
+            return true;
+        });
+    }
+    
+    renderFreshTokens(filteredData);
+}
+
+function resetFreshFilters() {
+    freshFilters = { age: '1h', freshCap: 'all' };
+    localStorage.setItem('freshFilters', JSON.stringify(freshFilters));
+    restoreFreshFilterStates();
+    applyFreshFilters();
+}
+
 // Загрузка данных Coins с фильтрами
 async function loadCoinsData() {
     try {
@@ -3877,6 +3967,9 @@ function initializeComponents() {
     
     // Initialize coins filters
     initCoinsFilters();
+    
+    // Initialize fresh tokens filters
+    initFreshTokensFilters();
     
     // Initialize wallet stats
     initWalletStats();
