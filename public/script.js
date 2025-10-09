@@ -718,6 +718,8 @@ function renderFreshTokens(data) {
 // Рендеринг Top Gainers данных
 function renderTopGainers(data) {
     const container = document.getElementById('topGainersData');
+    const counter = document.getElementById('topGainersCounter');
+    
     if (!container) return;
     
     if (!data || data.length === 0) {
@@ -727,7 +729,13 @@ function renderTopGainers(data) {
                 <h3>No Top Gainers</h3>
                 <p>No tokens with volume over 100 SOL detected in the last hour</p>
             </div>`;
+        if (counter) counter.querySelector('span').textContent = 'Showing 0 tokens';
         return;
+    }
+    
+    // Update counter
+    if (counter) {
+        counter.querySelector('span').textContent = `Showing ${data.length} token${data.length === 1 ? '' : 's'}`;
     }
     
     container.innerHTML = data.map((item, index) => {
@@ -762,14 +770,14 @@ function renderTopGainers(data) {
                     </div>
                 </div>
                 <div class="item-actions">
-                    <a href="${pumpUrl}" target="_blank" class="action-button">
+                    <a href="${pumpUrl}" target="_blank" class="action-button pump-button">
                         <i class="fas fa-external-link-alt"></i> Pump.fun
                     </a>
                     <a href="${dexUrl}" target="_blank" class="action-button secondary">
                         <i class="fas fa-chart-line"></i> DexScreener
                     </a>
                     <button class="action-button secondary" onclick="showTokenDetails('${item.token_mint}')">
-                        <i class="fas fa-info-circle"></i> Детали
+                        <i class="fas fa-info-circle"></i> Details
                     </button>
                 </div>
             </div>
