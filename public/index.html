@@ -905,7 +905,19 @@
             <div id="topGainers" class="tab-content">
                 <div class="tab-header">
                     <h2><i class="fas fa-trophy"></i> Most Bought Tokens</h2>
-                    <p class="tab-description">Top tokens by purchase volume in the last 1 hour. Sorted by total buy volume. Click "Buyers" to see who bought.</p>
+                    <p class="tab-description">Top tokens by purchase volume. Sorted by total buy volume. Click "Buyers" to see who bought.</p>
+                </div>
+                
+                <!-- Period Filter -->
+                <div class="fresh-filters">
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fas fa-clock"></i> Period:</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="period" data-value="1h">1 Hour</button>
+                            <button class="filter-btn" data-filter="period" data-value="6h">6 Hours</button>
+                            <button class="filter-btn" data-filter="period" data-value="24h">24 Hours</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Token Counter -->

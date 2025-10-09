@@ -1521,6 +1521,14 @@ app.get('/api/freshtokens', async (req, res) => {
 
 app.get('/api/topgainers', async (req, res) => {
     try {
+        const period = req.query.period || '1h';
+        const intervalMap = {
+            '1h': '1 hour',
+            '6h': '6 hours',
+            '24h': '24 hours'
+        };
+        const interval = intervalMap[period] || '1 hour';
+        
         const query = `
             SELECT 
                 token_mint, 
@@ -1529,7 +1537,7 @@ app.get('/api/topgainers', async (req, res) => {
                 AVG(sol_spent) as avg_buy_size,
                 MAX(sol_spent) as largest_buy
             FROM events
-            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '1 hour'
+            WHERE side = 'BUY' AND ts >= NOW() - INTERVAL '${interval}'
             AND token_mint != 'So11111111111111111111111111111111111111112'
             GROUP BY token_mint
             HAVING COUNT(DISTINCT wallet) >= 1 AND SUM(sol_spent) > 0.01

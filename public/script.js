@@ -1017,68 +1017,17 @@ function closeEarlyBuyersModal() {
     }
 }
 
-// Swipe gestures for Early Buyers modal
+// Click outside to close Early Buyers modal
 function initEarlyBuyersSwipe() {
     const modal = document.getElementById('earlyBuyersModal');
     if (!modal) return;
     
-    const modalContent = modal.querySelector('.modal-content');
-    const modalBody = modal.querySelector('.modal-body');
-    if (!modalContent || !modalBody) return;
-    
-    let startY = 0;
-    let currentY = 0;
-    let isDragging = false;
-    let startScrollTop = 0;
-    
-    const handleTouchStart = (e) => {
-        startY = e.touches[0].clientY;
-        startScrollTop = modalBody.scrollTop;
-        isDragging = true;
-    };
-    
-    const handleTouchMove = (e) => {
-        if (!isDragging) return;
-        currentY = e.touches[0].clientY;
-        const deltaY = currentY - startY;
-        
-        // Only allow swipe down and only if at top of scroll
-        if (deltaY > 10 && modalBody.scrollTop === 0) {
-            e.preventDefault(); // Prevent scroll
-            modalContent.style.transform = `translateY(${deltaY}px)`;
-            modal.style.backgroundColor = `rgba(0, 0, 0, ${0.8 - deltaY / 500})`;
-        }
-    };
-    
-    const handleTouchEnd = () => {
-        if (!isDragging) return;
-        const deltaY = currentY - startY;
-        
-        // Close only if swiped down more than 100px from top
-        if (deltaY > 100 && modalBody.scrollTop === 0) {
-            closeEarlyBuyersModal();
-        } else {
-            modalContent.style.transform = '';
-            modal.style.backgroundColor = '';
-        }
-        
-        isDragging = false;
-    };
-    
-    // Close on background click
+    // Close on background click (removed swipe gestures for better scroll)
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             closeEarlyBuyersModal();
         }
     });
-    
-    modalContent.removeEventListener('touchstart', handleTouchStart);
-    modalContent.removeEventListener('touchmove', handleTouchMove);
-    modalContent.removeEventListener('touchend', handleTouchEnd);
-    
-    modalContent.addEventListener('touchstart', handleTouchStart, { passive: false });
-    modalContent.addEventListener('touchmove', handleTouchMove, { passive: false });
-    modalContent.addEventListener('touchend', handleTouchEnd);
 }
 
 // Swipe жесты для модальных окон (универсальная функция)
@@ -1221,6 +1170,22 @@ async function loadTabData(tabName) {
             showLoading();
             showSkeletonLoader(dataContainerId); // Показываем skeleton
             await loadCoinsData(); // Load with current filters
+            updateLastUpdateTime();
+        } catch (error) {
+            console.error(`Ошибка загрузки данных для ${tabName}:`, error);
+            renderError(dataContainerId, error);
+        } finally {
+            hideLoading();
+        }
+        return;
+    }
+    
+    // Special handling for Top Gainers with period filter
+    if (tabName === 'topGainers') {
+        try {
+            showLoading();
+            showSkeletonLoader(dataContainerId);
+            await loadTopGainersData();
             updateLastUpdateTime();
         } catch (error) {
             console.error(`Ошибка загрузки данных для ${tabName}:`, error);
@@ -1494,8 +1459,24 @@ function startAutoRefresh() {
             // Save current scroll position
             const scrollTop = window.scrollY || document.documentElement.scrollTop;
             
-            // Load new data
-            await loadTabData(currentTab);
+            // Silent refresh - no skeleton loader, no loading indicator
+            const endpoint = TAB_API_MAP[currentTab];
+            const renderFunction = TAB_RENDER_MAP[currentTab];
+            
+            if (endpoint && renderFunction) {
+                try {
+                    const data = await fetchData(endpoint);
+                    renderFunction(data);
+                } catch (error) {
+                    console.error('Silent refresh error:', error);
+                }
+            } else if (currentTab === 'coins') {
+                await loadCoinsData();
+            } else if (currentTab === 'topGainers') {
+                await loadTopGainersData();
+            } else if (currentTab === 'freshTokens') {
+                await applyFreshFilters();
+            }
             
             // Restore scroll position after data loads
             requestAnimationFrame(() => {
@@ -1504,7 +1485,7 @@ function startAutoRefresh() {
         }
     }, REFRESH_INTERVAL);
     
-    console.log('✅ Smart auto-refresh enabled (preserves scroll position)');
+    console.log('✅ Smart auto-refresh enabled (silent, preserves scroll position)');
 }
 
 // Остановка автоматического обновления
@@ -2398,6 +2379,41 @@ function resetFreshFilters() {
     restoreFreshFilterStates();
     updateSortButtonArrows();
     applyFreshFilters();
+}
+
+// === TOP GAINERS (MOST BOUGHT) FILTERS ===
+let topGainersPeriod = '1h';
+
+function initTopGainersFilters() {
+    const saved = localStorage.getItem('topGainersPeriod');
+    if (saved) topGainersPeriod = saved;
+    
+    const periodButtons = document.querySelectorAll('#topGainers [data-filter="period"]');
+    periodButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            topGainersPeriod = btn.dataset.value;
+            localStorage.setItem('topGainersPeriod', topGainersPeriod);
+            
+            periodButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            loadTopGainersData();
+        });
+        
+        // Restore active state
+        btn.classList.toggle('active', btn.dataset.value === topGainersPeriod);
+    });
+}
+
+async function loadTopGainersData() {
+    try {
+        showSkeletonLoader('topGainersData');
+        const data = await fetchData(`topgainers?period=${topGainersPeriod}`);
+        renderTopGainers(data);
+    } catch (error) {
+        console.error('Error loading top gainers:', error);
+        renderTopGainers([]);
+    }
 }
 
 // Загрузка данных Coins с фильтрами
@@ -4331,6 +4347,9 @@ function initializeComponents() {
     
     // Initialize fresh tokens filters
     initFreshTokensFilters();
+    
+    // Initialize top gainers filters
+    initTopGainersFilters();
     
     // Initialize wallet stats
     initWalletStats();
