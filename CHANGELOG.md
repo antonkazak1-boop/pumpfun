@@ -4,6 +4,30 @@
 
 ---
 
+## [1.4.1] - 2025-10-12 (Telegram Invoice Modal)
+
+### 💎 Telegram Invoice Modal
+#### Changed
+- ✅ **replyWithInvoice**: Оплата Stars теперь через МОДАЛКУ прямо в чате (вместо ссылки)
+- ✅ **Better UX**: Нет перехода на внешнюю страницу, всё в Telegram
+- ✅ **JSON Payload**: Payload теперь JSON с `{userId, tier, timestamp}`
+- ✅ **Improved Parsing**: `handleSuccessfulPayment` парсит и JSON и legacy payload
+
+#### Technical Details
+```javascript
+// OLD: createInvoiceLink → opens external page
+const invoice = await bot.telegram.createInvoiceLink({...});
+
+// NEW: replyWithInvoice → inline modal in chat
+await ctx.replyWithInvoice({
+  title: 'Sol Fun Pro',
+  payload: JSON.stringify({ userId, tier: 'pro', timestamp: Date.now() }),
+  ...
+});
+```
+
+---
+
 ## [1.4.0] - 2025-10-12 (Payment Intent System & Security)
 
 ### 🔒 Secure Solana Payment System
