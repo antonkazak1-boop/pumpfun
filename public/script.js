@@ -117,10 +117,21 @@ function initTelegramWebApp() {
         tg.enableClosingConfirmation();
         console.log('⚠️ Closing confirmation enabled');
         
+        // Request fullscreen (Telegram 8.0+)
+        if (tg.requestFullscreen) {
+            tg.requestFullscreen();
+            console.log('📱 Fullscreen requested');
+        }
+        
         // Set theme colors for better integration
         tg.setHeaderColor('#1a1a1a');
         tg.setBackgroundColor('#0a0a0a');
         console.log('🎨 Theme colors set');
+        
+        // Add fullscreen toggle button (if supported)
+        if (tg.requestFullscreen && tg.exitFullscreen) {
+            addFullscreenToggle(tg);
+        }
         
         // Main button setup (optional)
         tg.MainButton.hide();
@@ -269,6 +280,52 @@ function showUpdateNotification() {
     setTimeout(() => {
         notification.remove();
     }, 10000);
+}
+
+// Add fullscreen toggle button
+function addFullscreenToggle(tg) {
+    const toggleButton = document.createElement('button');
+    toggleButton.id = 'fullscreen-toggle';
+    toggleButton.className = 'fullscreen-toggle';
+    toggleButton.innerHTML = '<i class="fas fa-expand"></i>';
+    toggleButton.title = 'Toggle Fullscreen';
+    
+    // Add to header
+    const header = document.querySelector('.app-header');
+    if (header) {
+        header.appendChild(toggleButton);
+        
+        // Update button icon based on state
+        const updateIcon = () => {
+            if (tg.isFullscreen) {
+                toggleButton.innerHTML = '<i class="fas fa-compress"></i>';
+                toggleButton.title = 'Exit Fullscreen';
+            } else {
+                toggleButton.innerHTML = '<i class="fas fa-expand"></i>';
+                toggleButton.title = 'Enter Fullscreen';
+            }
+        };
+        
+        // Toggle fullscreen on click
+        toggleButton.addEventListener('click', () => {
+            if (tg.isFullscreen) {
+                tg.exitFullscreen();
+                console.log('📱 Exiting fullscreen');
+            } else {
+                tg.requestFullscreen();
+                console.log('📱 Entering fullscreen');
+            }
+            
+            // Update icon after a delay (wait for state change)
+            setTimeout(updateIcon, 100);
+        });
+        
+        // Listen for fullscreen changes
+        tg.onEvent('fullscreenChanged', updateIcon);
+        
+        // Initial icon update
+        updateIcon();
+    }
 }
 
 // HTTP requests with timeout
