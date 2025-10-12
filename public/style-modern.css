@@ -1436,6 +1436,27 @@ body {
     color: #ffffff;
 }
 
+/* Compact filters (one line) */
+.compact-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.compact-filters .filter-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-width: auto;
+}
+
+.filter-divider {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 16px;
+    margin: 0 4px;
+}
+
 .badge-hot {
     background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
     color: white;

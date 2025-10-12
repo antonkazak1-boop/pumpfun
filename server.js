@@ -1091,47 +1091,57 @@ app.get('/api/wallet/stats/:address', async (req, res) => {
 // Получение списка известных трейдеров для Portfolio вкладки
 app.get('/api/traders/list', async (req, res) => {
     try {
-        // Получаем уникальные кошельки с их профилями и PnL
-        const query = `
-            WITH trader_stats AS (
-                SELECT wallet,
-                       COUNT(*) as total_trades,
-                       COUNT(CASE WHEN side = 'BUY' THEN 1 END) as buy_count,
-                       COUNT(CASE WHEN side = 'SELL' THEN 1 END) as sell_count,
-                       COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) + 
-                       COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) as total_volume,
-                       COUNT(DISTINCT token_mint) as unique_tokens,
-                       MAX(ts) as last_activity,
-                       AVG(CASE WHEN side = 'BUY' THEN sol_spent END) as avg_buy_size,
-                       MAX(CASE WHEN side = 'BUY' THEN sol_spent END) as max_buy_size,
-                       COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) - 
-                       COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as realized_pnl,
-                       COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as total_invested,
-                       COUNT(DISTINCT CASE WHEN side = 'SELL' AND sol_received > sol_spent THEN token_mint END) as winning_tokens,
-                       COUNT(DISTINCT CASE WHEN side = 'SELL' THEN token_mint END) as sold_tokens
-                FROM events
-                WHERE ts >= NOW() - INTERVAL '30 days'
-                  AND wallet IS NOT NULL
-                GROUP BY wallet 
-                HAVING COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) > 0
-            )
-            SELECT *,
-                   CASE WHEN total_invested > 0 
-                        THEN (realized_pnl / total_invested * 100) 
-                        ELSE 0 
-                   END as roi_percentage,
-                   CASE WHEN sold_tokens > 0 
-                        THEN (winning_tokens::FLOAT / sold_tokens * 100) 
-                        ELSE 0 
-                   END as win_rate
-            FROM trader_stats
-            WHERE total_volume > 0
-            ORDER BY total_volume DESC 
-            LIMIT 200
-        `;
+        // Try to use materialized view first (FAST!)
+        let query = `SELECT * FROM trader_stats_daily ORDER BY total_volume DESC LIMIT 200`;
         
-        const result = await pool.query(query);
-        console.log(`📊 Found ${result.rows.length} traders in database`);
+        let result;
+        try {
+            result = await pool.query(query);
+            console.log(`📊 Found ${result.rows.length} traders from materialized view (FAST)`);
+        } catch (mvError) {
+            // Fallback to real-time calculation if materialized view doesn't exist
+            console.log('⚠️ Materialized view not found, using real-time query (SLOW)');
+            
+            query = `
+                WITH trader_stats AS (
+                    SELECT wallet,
+                           COUNT(*) as total_trades,
+                           COUNT(CASE WHEN side = 'BUY' THEN 1 END) as buy_count,
+                           COUNT(CASE WHEN side = 'SELL' THEN 1 END) as sell_count,
+                           COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) + 
+                           COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) as total_volume,
+                           COUNT(DISTINCT token_mint) as unique_tokens,
+                           MAX(ts) as last_activity,
+                           AVG(CASE WHEN side = 'BUY' THEN sol_spent END) as avg_buy_size,
+                           MAX(CASE WHEN side = 'BUY' THEN sol_spent END) as max_buy_size,
+                           COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) - 
+                           COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as realized_pnl,
+                           COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as total_invested,
+                           COUNT(DISTINCT CASE WHEN side = 'SELL' AND sol_received > sol_spent THEN token_mint END) as winning_tokens,
+                           COUNT(DISTINCT CASE WHEN side = 'SELL' THEN token_mint END) as sold_tokens
+                    FROM events
+                    WHERE ts >= NOW() - INTERVAL '30 days'
+                      AND wallet IS NOT NULL
+                    GROUP BY wallet 
+                    HAVING COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) > 0
+                )
+                SELECT *,
+                       CASE WHEN total_invested > 0 
+                            THEN (realized_pnl / total_invested * 100) 
+                            ELSE 0 
+                       END as roi_percentage,
+                       CASE WHEN sold_tokens > 0 
+                            THEN (winning_tokens::FLOAT / sold_tokens * 100) 
+                            ELSE 0 
+                       END as win_rate
+                FROM trader_stats
+                WHERE total_volume > 0
+                ORDER BY total_volume DESC 
+                LIMIT 200
+            `;
+            result = await pool.query(query);
+            console.log(`📊 Found ${result.rows.length} traders from real-time query`);
+        }
         
         // Debug: show sample data
         if (result.rows.length > 0) {

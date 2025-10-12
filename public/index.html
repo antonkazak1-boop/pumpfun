@@ -865,19 +865,15 @@
                 </div>
                 
                 <!-- Smart Money Filters -->
-                <div class="filters-container smart-filters">
-                    <div class="filter-group">
-                        <button class="filter-btn active" data-period="7d">7 Days</button>
-                        <button class="filter-btn" data-period="30d">30 Days</button>
-                        <button class="filter-btn" data-period="90d">90 Days</button>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <button class="filter-btn active" data-sort="volume">Volume ↓</button>
-                        <button class="filter-btn" data-sort="roi">ROI ↓</button>
-                        <button class="filter-btn" data-sort="winrate">Win Rate ↓</button>
-                        <button class="filter-btn" data-sort="pnl">PnL ↓</button>
-                    </div>
+                <div class="filters-container smart-filters compact-filters">
+                    <button class="filter-btn active" data-period="7d">7d</button>
+                    <button class="filter-btn" data-period="30d">30d</button>
+                    <button class="filter-btn" data-period="90d">90d</button>
+                    <span class="filter-divider">|</span>
+                    <button class="filter-btn active" data-sort="volume">Vol ↓</button>
+                    <button class="filter-btn" data-sort="roi">ROI ↓</button>
+                    <button class="filter-btn" data-sort="winrate">Win ↓</button>
+                    <button class="filter-btn" data-sort="pnl">PnL ↓</button>
                 </div>
                 
                 <div class="token-counter" id="smartMoneyCounter">Showing 0 traders</div>
