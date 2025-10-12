@@ -1,3 +1,37 @@
+// === VERSION & CACHE CONTROL ===
+const APP_VERSION = '1.4.2';
+
+// Force clear old Service Worker and caches on version change
+(function() {
+    const lastVersion = localStorage.getItem('app_version');
+    if (lastVersion !== APP_VERSION) {
+        console.log(`🔄 Version changed: ${lastVersion} → ${APP_VERSION}`);
+        
+        // Clear Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+                regs.forEach(reg => {
+                    reg.unregister();
+                    console.log('🗑️ Service Worker removed');
+                });
+            });
+        }
+        
+        // Clear all caches
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => {
+                    caches.delete(name);
+                    console.log(`🗑️ Cache deleted: ${name}`);
+                });
+            });
+        }
+        
+        localStorage.setItem('app_version', APP_VERSION);
+        console.log(`✅ Updated to version ${APP_VERSION}`);
+    }
+})();
+
 // === THEME MANAGEMENT ===
 function toggleTheme() {
     const body = document.body;
@@ -176,19 +210,35 @@ function initTelegramWebApp() {
 
 // Initialize PWA features
 function initializePWA() {
-    // DISABLED: Service Worker makes app offline
-    // We want real-time data, not cached
-    console.log('⚠️ Service Worker disabled - using real-time API only');
-    
-    // Unregister existing service worker if any
+    // FORCE UNREGISTER Service Worker (makes app offline)
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
-            for (let registration of registrations) {
-                registration.unregister();
-                console.log('🗑️ Service Worker unregistered');
+            if (registrations.length > 0) {
+                console.log(`🗑️ Removing ${registrations.length} Service Worker(s)...`);
+                for (let registration of registrations) {
+                    registration.unregister().then(success => {
+                        if (success) {
+                            console.log('✅ Service Worker unregistered successfully');
+                        }
+                    });
+                }
+                
+                // Clear all caches
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        for (let name of names) {
+                            caches.delete(name);
+                            console.log(`🗑️ Cache deleted: ${name}`);
+                        }
+                    });
+                }
+            } else {
+                console.log('✅ No Service Workers found');
             }
         });
     }
+    
+    console.log('✅ PWA disabled - using real-time API only');
     
     // Handle PWA install prompt
     let deferredPrompt;
@@ -270,51 +320,8 @@ function showUpdateNotification() {
     }, 10000);
 }
 
-// Add fullscreen toggle button
-function addFullscreenToggle(tg) {
-    const toggleButton = document.createElement('button');
-    toggleButton.id = 'fullscreen-toggle';
-    toggleButton.className = 'fullscreen-toggle';
-    toggleButton.innerHTML = '<i class="fas fa-expand"></i>';
-    toggleButton.title = 'Toggle Fullscreen';
-    
-    // Add to header
-    const header = document.querySelector('.app-header');
-    if (header) {
-        header.appendChild(toggleButton);
-        
-        // Update button icon based on state
-        const updateIcon = () => {
-            if (tg.isFullscreen) {
-                toggleButton.innerHTML = '<i class="fas fa-compress"></i>';
-                toggleButton.title = 'Exit Fullscreen';
-            } else {
-                toggleButton.innerHTML = '<i class="fas fa-expand"></i>';
-                toggleButton.title = 'Enter Fullscreen';
-            }
-        };
-        
-        // Toggle fullscreen on click
-        toggleButton.addEventListener('click', () => {
-            if (tg.isFullscreen) {
-                tg.exitFullscreen();
-                console.log('📱 Exiting fullscreen');
-            } else {
-                tg.requestFullscreen();
-                console.log('📱 Entering fullscreen');
-            }
-            
-            // Update icon after a delay (wait for state change)
-            setTimeout(updateIcon, 100);
-        });
-        
-        // Listen for fullscreen changes
-        tg.onEvent('fullscreenChanged', updateIcon);
-        
-        // Initial icon update
-        updateIcon();
-    }
-}
+// REMOVED: addFullscreenToggle function
+// Fullscreen is automatic, no toggle needed
 
 // HTTP requests with timeout
 async function fetchWithTimeout(url, options = {}) {
