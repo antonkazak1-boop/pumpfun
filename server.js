@@ -2117,6 +2117,44 @@ app.post('/api/payment/solana', async (req, res) => {
     }
 });
 
+// Create payment intent (BEFORE user pays)
+app.post('/api/payment/create-intent', async (req, res) => {
+    try {
+        const { userId, subscriptionType, fromWallet } = req.body;
+        
+        if (!userId || !subscriptionType) {
+            return res.status(400).json({ success: false, error: 'Missing userId or subscriptionType' });
+        }
+        
+        const merchantWallet = process.env.MERCHANT_WALLET || 'G1baEgxW9rFLbPr8M6SmAxEbpeLw5Z5j4xyYwt8emTha';
+        const prices = { basic: 0.01, pro: 0.02 };
+        const expectedAmount = prices[subscriptionType];
+        
+        // Generate unique intent ID
+        const intentId = `intent_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Create payment intent
+        await pool.query(`
+            INSERT INTO payment_intents 
+            (intent_id, telegram_user_id, subscription_type, expected_amount_sol, from_wallet, merchant_wallet, expires_at)
+            VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '30 minutes')
+        `, [intentId, userId, subscriptionType, expectedAmount, fromWallet, merchantWallet]);
+        
+        console.log(`✅ Payment intent created: ${intentId} for user ${userId}`);
+        
+        res.json({
+            success: true,
+            intentId,
+            merchantWallet,
+            expectedAmount,
+            subscriptionType
+        });
+    } catch (error) {
+        console.error('Create payment intent error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Payment webhook handler for merchant wallet
 app.post('/webhook/payments', async (req, res) => {
     try {
@@ -2141,22 +2179,55 @@ app.post('/webhook/payments', async (req, res) => {
                     console.log(`✅ Payment received: ${amountSOL} SOL from ${fromWallet}`);
                     console.log(`📝 TX: ${signature}`);
                     
-                    // Determine subscription type based on amount
-                    let subscriptionType = null;
-                    if (Math.abs(amountSOL - 0.01) < 0.001) subscriptionType = 'basic';
-                    else if (Math.abs(amountSOL - 0.02) < 0.001) subscriptionType = 'pro';
+                    // Find matching payment intent
+                    const intentQuery = await pool.query(`
+                        SELECT * FROM payment_intents 
+                        WHERE merchant_wallet = $1 
+                        AND expected_amount_sol = $2 
+                        AND status = 'pending'
+                        AND (from_wallet IS NULL OR from_wallet = $3)
+                        AND expires_at > NOW()
+                        ORDER BY created_at DESC
+                        LIMIT 1
+                    `, [merchantWallet, amountSOL, fromWallet]);
                     
-                    if (subscriptionType) {
-                        console.log(`🎯 Auto-activating ${subscriptionType} subscription`);
+                    if (intentQuery.rows.length > 0) {
+                        const intent = intentQuery.rows[0];
                         
-                        // Save to pending_payments table for manual activation
+                        console.log(`🎯 Matched payment intent: ${intent.intent_id}`);
+                        
+                        // Update intent as paid
                         await pool.query(`
-                            INSERT INTO pending_payments (from_wallet, amount_sol, tx_signature, subscription_type, status)
-                            VALUES ($1, $2, $3, $4, 'pending')
-                            ON CONFLICT (tx_signature) DO NOTHING
-                        `, [fromWallet, amountSOL, signature, subscriptionType]);
+                            UPDATE payment_intents 
+                            SET status = 'paid', paid_at = NOW(), tx_signature = $1
+                            WHERE intent_id = $2
+                        `, [signature, intent.intent_id]);
                         
-                        console.log(`💾 Payment saved for manual activation`);
+                        // Auto-activate subscription if subscriptionSystem available
+                        if (subscriptionSystem) {
+                            await subscriptionSystem.createSubscription(
+                                intent.telegram_user_id,
+                                intent.subscription_type,
+                                'solana',
+                                signature
+                            );
+                            console.log(`✅ Subscription auto-activated for user ${intent.telegram_user_id}`);
+                        }
+                    } else {
+                        console.log(`⚠️ No matching payment intent found - saving to pending_payments`);
+                        
+                        // Fallback: save to pending_payments
+                        let subscriptionType = null;
+                        if (Math.abs(amountSOL - 0.01) < 0.001) subscriptionType = 'basic';
+                        else if (Math.abs(amountSOL - 0.02) < 0.001) subscriptionType = 'pro';
+                        
+                        if (subscriptionType) {
+                            await pool.query(`
+                                INSERT INTO pending_payments (from_wallet, amount_sol, tx_signature, subscription_type, status)
+                                VALUES ($1, $2, $3, $4, 'pending')
+                                ON CONFLICT (tx_signature) DO NOTHING
+                            `, [fromWallet, amountSOL, signature, subscriptionType]);
+                        }
                     }
                 }
             }
@@ -2202,6 +2273,34 @@ app.post('/api/payment/verify-solana', async (req, res) => {
         }
     } catch (error) {
         console.error('Verify Solana transaction error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Check payment intent status
+app.get('/api/payment/check-intent/:intentId', async (req, res) => {
+    try {
+        const { intentId } = req.params;
+        
+        const result = await pool.query(`
+            SELECT * FROM payment_intents WHERE intent_id = $1
+        `, [intentId]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Intent not found' });
+        }
+        
+        const intent = result.rows[0];
+        
+        res.json({
+            success: true,
+            status: intent.status,
+            subscriptionType: intent.subscription_type,
+            paidAt: intent.paid_at,
+            txSignature: intent.tx_signature
+        });
+    } catch (error) {
+        console.error('Check intent error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

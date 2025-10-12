@@ -141,10 +141,31 @@ CREATE TABLE IF NOT EXISTS pending_payments (
     activated_at TIMESTAMP WITH TIME ZONE
 );
 
+-- 7.6 PAYMENT_INTENTS TABLE - payment intent created BEFORE user pays
+CREATE TABLE IF NOT EXISTS payment_intents (
+    id SERIAL PRIMARY KEY,
+    intent_id VARCHAR(100) UNIQUE NOT NULL,
+    telegram_user_id BIGINT NOT NULL,
+    subscription_type VARCHAR(20) NOT NULL, -- 'basic', 'pro'
+    expected_amount_sol DECIMAL(20, 8) NOT NULL,
+    from_wallet VARCHAR(44), -- optional, for discount check
+    merchant_wallet VARCHAR(44) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'paid', 'expired', 'cancelled'
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE,
+    paid_at TIMESTAMP WITH TIME ZONE,
+    tx_signature VARCHAR(255)
+);
+
 -- Индексы для pending_payments
 CREATE INDEX IF NOT EXISTS idx_pending_payments_wallet ON pending_payments(from_wallet);
 CREATE INDEX IF NOT EXISTS idx_pending_payments_status ON pending_payments(status);
 CREATE INDEX IF NOT EXISTS idx_pending_payments_tx ON pending_payments(tx_signature);
+
+-- Индексы для payment_intents
+CREATE INDEX IF NOT EXISTS idx_payment_intents_intent_id ON payment_intents(intent_id);
+CREATE INDEX IF NOT EXISTS idx_payment_intents_user_id ON payment_intents(telegram_user_id);
+CREATE INDEX IF NOT EXISTS idx_payment_intents_status ON payment_intents(status);
 
 -- 8. USER_ALERTS TABLE - пользовательские алерты
 CREATE TABLE IF NOT EXISTS user_alerts (

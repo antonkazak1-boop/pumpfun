@@ -701,6 +701,28 @@ async function showSolanaPaymentInstructions(ctx, tier, walletAddress) {
     
     const merchantWallet = 'G1baEgxW9rFLbPr8M6SmAxEbpeLw5Z5j4xyYwt8emTha';
     
+    // Create payment intent
+    let intentId = null;
+    try {
+        const response = await fetch(`${process.env.BACKEND_URL || 'https://pump-dex-mini-app.onrender.com'}/api/payment/create-intent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                subscriptionType: tier,
+                fromWallet: walletAddress
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            intentId = data.intentId;
+            console.log(`✅ Payment intent created: ${intentId}`);
+        }
+    } catch (error) {
+        console.error('Error creating payment intent:', error);
+    }
+    
     const message = `
 💎 *Solana Payment Instructions*
 
@@ -719,53 +741,100 @@ ${hasDiscount ? `~~${price} SOL~~ → **${finalPrice} SOL** (25% discount!)` : `
 1. Open your Solana wallet (Phantom, Solflare, etc.)
 2. Tap the address above to copy
 3. Send exactly **${finalPrice} SOL**
-4. Copy your transaction signature
-5. Click "I've Paid" button below
+4. Wait 30-60 seconds for confirmation
+5. Click "Check Payment" button below
 
-⏱ *Wait 30-60 seconds for confirmation*
+⏱ *We'll auto-detect your payment!*
 
 ━━━━━━━━━━━━━━━━━━━━
 ⚠️ Make sure to send the exact amount!
 ━━━━━━━━━━━━━━━━━━━━
     `;
     
+    // Store intent ID in session
+    ctx.session = ctx.session || {};
+    ctx.session.paymentIntentId = intentId;
+    ctx.session.paymentTier = tier;
+    
     ctx.editMessageText(message, {
         parse_mode: 'Markdown',
         reply_markup: {
             inline_keyboard: [
-                [Markup.button.callback(`✅ I've Paid - Verify`, `verify_sol_${tier}`)],
+                [Markup.button.callback(`✅ Check Payment Status`, `check_payment_${tier}`)],
                 [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
             ]
         }
     });
 }
 
-// Handle payment verification
-bot.action(/verify_sol_(.+)/, async (ctx) => {
+// Handle payment status check
+bot.action(/check_payment_(.+)/, async (ctx) => {
     const tier = ctx.match[1];
     
-    ctx.editMessageText(`
-🔍 *Payment Verification*
-
-Please send me your **Solana wallet address** (the one you paid from):
-
-Example: \`7tiRXPM4wwBMRMYzmywRAE6jveS3gDbNyxgRrEoU6RLA\`
-
-━━━━━━━━━━━━━━━━━━━━
-💡 We'll automatically detect your payment via Helius webhook!
-━━━━━━━━━━━━━━━━━━━━
-    `, {
-        parse_mode: 'Markdown',
-        reply_markup: {
-            inline_keyboard: [
-                [Markup.button.callback('🔙 Cancel', 'back_to_plans')]
-            ]
-        }
-    });
+    ctx.answerCbQuery('⏳ Checking payment status...');
     
-    // Store state
-    ctx.session = ctx.session || {};
-    ctx.session.awaitingWalletForPayment = tier;
+    // Get intent ID from session
+    const intentId = ctx.session?.paymentIntentId;
+    
+    if (!intentId) {
+        ctx.reply('❌ No payment intent found. Please try again from /subscribe');
+        return;
+    }
+    
+    try {
+        // Check payment intent status
+        const response = await fetch(`${process.env.BACKEND_URL || 'https://pump-dex-mini-app.onrender.com'}/api/payment/check-intent/${intentId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            ctx.reply('❌ Error checking payment status. Please try again in 1 minute.');
+            return;
+        }
+        
+        if (data.status === 'paid') {
+            // Payment confirmed!
+            ctx.replyWithMarkdown(`
+✅ *Payment Confirmed!*
+
+Your *${tier.toUpperCase()}* subscription is now active!
+
+💰 Transaction: \`${data.txSignature}\`
+🎉 *Welcome to Premium!*
+• Access all tabs
+• ${tier === 'pro' ? 'Unlimited' : '50'} notifications
+• Priority support
+• 30 days access
+
+Launch the Mini App:
+            `, Markup.inlineKeyboard([
+                [Markup.button.webApp('🚀 Launch Sol Fun', MINI_APP_URL)]
+            ]));
+            
+            // Clear session
+            delete ctx.session.paymentIntentId;
+            delete ctx.session.paymentTier;
+        } else {
+            // Still pending
+            ctx.replyWithMarkdown(`
+⏳ *Payment Not Detected Yet*
+
+Status: ${data.status}
+
+💡 Please make sure:
+• You sent the exact amount (${SUBSCRIPTION_PRICES[tier].sol} SOL)
+• Transaction is confirmed (wait 30-60 seconds)
+• You sent to the correct address
+
+Try checking again in 1 minute...
+            `, Markup.inlineKeyboard([
+                [Markup.button.callback('🔄 Check Again', `check_payment_${tier}`)],
+                [Markup.button.callback('🔙 Back', 'back_to_plans')]
+            ]));
+        }
+    } catch (error) {
+        console.error('Error checking payment:', error);
+        ctx.reply('❌ Error checking payment. Please try again or contact support.');
+    }
 });
 
 bot.action('back_to_plans', async (ctx) => {
@@ -923,64 +992,6 @@ bot.on('text', async (ctx) => {
         return;
     }
     
-    // Check if waiting for wallet address for payment activation
-    if (ctx.session && ctx.session.awaitingWalletForPayment) {
-        const tier = ctx.session.awaitingWalletForPayment;
-        const walletAddress = message.trim();
-        
-        // Validate wallet address
-        if (walletAddress.length < 32 || walletAddress.length > 44) {
-            ctx.reply('❌ Invalid Solana wallet address. Please send a valid address.');
-            return;
-        }
-        
-        ctx.reply('⏳ Checking for payment...');
-        
-        try {
-            // Call activation API
-            const response = await fetch(`${process.env.BACKEND_URL || 'https://pump-dex-mini-app.onrender.com'}/api/payment/activate-pending`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: userId,
-                    fromWallet: walletAddress
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                ctx.replyWithMarkdown(`
-✅ *Payment Activated!*
-
-Your *${data.type.toUpperCase()}* subscription is now active!
-
-💰 Payment: ${data.amount} SOL
-🎉 *Welcome to Premium!*
-• Access all tabs
-• ${data.type === 'pro' ? 'Unlimited' : '50'} notifications
-• Priority support
-• 30 days access
-
-Launch the Mini App:
-                `, Markup.inlineKeyboard([
-                    [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)]
-                ]));
-                
-                // Clear session
-                delete ctx.session.awaitingWalletForPayment;
-            } else {
-                ctx.reply(`❌ ${data.error}\n\n💡 Make sure you:\n• Sent SOL to the correct address\n• Wait 1-2 minutes for blockchain confirmation\n• Use the same wallet address you paid from`);
-            }
-        } catch (error) {
-            console.error('Error activating payment:', error);
-            ctx.reply('❌ Error checking payment. Please try again in 1 minute or contact support.');
-        }
-        
-        return;
-    }
     
     // Check if waiting for wallet address
     if (ctx.session && ctx.session.awaitingWallet) {
