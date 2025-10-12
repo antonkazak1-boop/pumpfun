@@ -519,44 +519,27 @@ bot.action('pay_stars_basic', async (ctx) => {
     const userId = ctx.from.id;
     
     try {
-        // Create invoice for Telegram Stars
-        const invoice = await bot.telegram.createInvoiceLink({
-            title: 'Sol Fun Basic Subscription',
-            description: 'Basic subscription - 30 days access to all tabs',
-            payload: `basic_${userId}`,
+        // Send invoice directly in chat (MODAL)
+        await ctx.replyWithInvoice({
+            title: 'Sol Fun Basic',
+            description: 'Basic subscription - 30 days access to all premium features',
+            payload: JSON.stringify({ userId, tier: 'basic', timestamp: Date.now() }),
             provider_token: '', // Empty for Stars
             currency: 'XTR', // Telegram Stars
             prices: [{
-                label: `Basic Subscription - ${SUBSCRIPTION_PRICES.basic.stars} Stars`,
+                label: 'Basic Subscription',
                 amount: SUBSCRIPTION_PRICES.basic.stars_cents // 10000 cents = 100 stars
-            }]
+            }],
+            need_name: false,
+            need_phone_number: false,
+            need_email: false,
+            need_shipping_address: false,
+            is_flexible: false
         });
         
-        ctx.editMessageText(`
-⭐ *Payment with Telegram Stars*
-
-Click the button below to pay with Stars:
-
-💎 **Basic Subscription - ${SUBSCRIPTION_PRICES.basic.stars} Stars**
-• 30 days access
-• All tabs unlocked
-• 50 notifications/day
-
-━━━━━━━━━━━━━━━━━━━━
-*Secure payment via Telegram*
-━━━━━━━━━━━━━━━━━━━━
-        `, {
-            parse_mode: 'Markdown',
-            reply_markup: {
-                inline_keyboard: [
-                    [Markup.button.url('💳 Pay with Stars', invoice)],
-                    [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
-                ]
-            }
-        });
-        
+        ctx.answerCbQuery('💳 Invoice sent! Check the message below.');
     } catch (error) {
-        console.error('Error creating Stars invoice:', error);
+        console.error('Error sending Stars invoice:', error);
         ctx.answerCbQuery('❌ Payment system temporarily unavailable. Please try again later.');
     }
 });
@@ -565,45 +548,27 @@ bot.action('pay_stars_pro', async (ctx) => {
     const userId = ctx.from.id;
     
     try {
-        // Create invoice for Telegram Stars
-        const invoice = await bot.telegram.createInvoiceLink({
-            title: 'Sol Fun Pro Subscription',
-            description: 'Pro subscription - 30 days access with unlimited notifications',
-            payload: `pro_${userId}`,
+        // Send invoice directly in chat (MODAL)
+        await ctx.replyWithInvoice({
+            title: 'Sol Fun Pro',
+            description: 'Pro subscription - 30 days access with unlimited features & priority support',
+            payload: JSON.stringify({ userId, tier: 'pro', timestamp: Date.now() }),
             provider_token: '', // Empty for Stars
             currency: 'XTR', // Telegram Stars
             prices: [{
-                label: `Pro Subscription - ${SUBSCRIPTION_PRICES.pro.stars} Stars`,
+                label: 'Pro Subscription',
                 amount: SUBSCRIPTION_PRICES.pro.stars_cents // 25000 cents = 250 stars
-            }]
+            }],
+            need_name: false,
+            need_phone_number: false,
+            need_email: false,
+            need_shipping_address: false,
+            is_flexible: false
         });
         
-        ctx.editMessageText(`
-⭐ *Payment with Telegram Stars*
-
-Click the button below to pay with Stars:
-
-🚀 **Pro Subscription - ${SUBSCRIPTION_PRICES.pro.stars} Stars**
-• 30 days access
-• All tabs unlocked
-• Unlimited notifications
-• Early access features
-
-━━━━━━━━━━━━━━━━━━━━
-*Secure payment via Telegram*
-━━━━━━━━━━━━━━━━━━━━
-        `, {
-            parse_mode: 'Markdown',
-            reply_markup: {
-                inline_keyboard: [
-                    [Markup.button.url('💳 Pay with Stars', invoice)],
-                    [Markup.button.callback('🔙 Back to Plans', 'back_to_plans')]
-                ]
-            }
-        });
-        
+        ctx.answerCbQuery('💳 Invoice sent! Check the message below.');
     } catch (error) {
-        console.error('Error creating Stars invoice:', error);
+        console.error('Error sending Stars invoice:', error);
         ctx.answerCbQuery('❌ Payment system temporarily unavailable. Please try again later.');
     }
 });
@@ -1102,14 +1067,24 @@ async function handleSuccessfulPayment(ctx) {
         payload: payment.invoice_payload
     });
     
-    // Parse subscription type from payload
-    const payload = payment.invoice_payload;
+    // Parse subscription type from payload (JSON or legacy string)
     let subscriptionType = 'basic';
+    let payloadData = null;
     
-    if (payload.includes('pro_')) {
-        subscriptionType = 'pro';
-    } else if (payload.includes('basic_')) {
-        subscriptionType = 'basic';
+    try {
+        // Try to parse JSON payload
+        payloadData = JSON.parse(payment.invoice_payload);
+        subscriptionType = payloadData.tier || 'basic';
+        console.log('📦 Parsed JSON payload:', payloadData);
+    } catch (e) {
+        // Legacy string payload format
+        const payload = payment.invoice_payload;
+        if (payload.includes('pro_')) {
+            subscriptionType = 'pro';
+        } else if (payload.includes('basic_')) {
+            subscriptionType = 'basic';
+        }
+        console.log('📦 Legacy payload format:', payload);
     }
     
     // Send confirmation message
