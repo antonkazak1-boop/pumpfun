@@ -747,14 +747,12 @@ bot.action(/verify_sol_(.+)/, async (ctx) => {
     ctx.editMessageText(`
 🔍 *Payment Verification*
 
-Please send me your **transaction signature**:
+Please send me your **Solana wallet address** (the one you paid from):
 
-Example: \`2ZE7R...xV3kL\`
-
-You can find it in your wallet app after sending SOL.
+Example: \`7tiRXPM4wwBMRMYzmywRAE6jveS3gDbNyxgRrEoU6RLA\`
 
 ━━━━━━━━━━━━━━━━━━━━
-⏱ Make sure transaction is confirmed (30-60 sec)
+💡 We'll automatically detect your payment via Helius webhook!
 ━━━━━━━━━━━━━━━━━━━━
     `, {
         parse_mode: 'Markdown',
@@ -767,7 +765,7 @@ You can find it in your wallet app after sending SOL.
     
     // Store state
     ctx.session = ctx.session || {};
-    ctx.session.awaitingSignature = tier;
+    ctx.session.awaitingWalletForPayment = tier;
 });
 
 bot.action('back_to_plans', async (ctx) => {
@@ -925,25 +923,29 @@ bot.on('text', async (ctx) => {
         return;
     }
     
-    // Check if waiting for transaction signature
-    if (ctx.session && ctx.session.awaitingSignature) {
-        const tier = ctx.session.awaitingSignature;
-        const signature = message.trim();
+    // Check if waiting for wallet address for payment activation
+    if (ctx.session && ctx.session.awaitingWalletForPayment) {
+        const tier = ctx.session.awaitingWalletForPayment;
+        const walletAddress = message.trim();
         
-        ctx.reply('⏳ Verifying transaction on blockchain...');
+        // Validate wallet address
+        if (walletAddress.length < 32 || walletAddress.length > 44) {
+            ctx.reply('❌ Invalid Solana wallet address. Please send a valid address.');
+            return;
+        }
+        
+        ctx.reply('⏳ Checking for payment...');
         
         try {
-            // Call verification API
-            const response = await fetch(`${process.env.BACKEND_URL || 'https://pump-dex-mini-app.onrender.com'}/api/payment/verify-solana`, {
+            // Call activation API
+            const response = await fetch(`${process.env.BACKEND_URL || 'https://pump-dex-mini-app.onrender.com'}/api/payment/activate-pending`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    signature: signature,
-                    expectedAmount: SUBSCRIPTION_PRICES[tier].sol,
                     userId: userId,
-                    subscriptionType: tier
+                    fromWallet: walletAddress
                 })
             });
             
@@ -951,29 +953,30 @@ bot.on('text', async (ctx) => {
             
             if (data.success) {
                 ctx.replyWithMarkdown(`
-✅ *Payment Verified!*
+✅ *Payment Activated!*
 
-Your ${tier.toUpperCase()} subscription is now active!
+Your *${data.type.toUpperCase()}* subscription is now active!
 
+💰 Payment: ${data.amount} SOL
 🎉 *Welcome to Premium!*
 • Access all tabs
-• ${tier === 'pro' ? 'Unlimited' : '50'} notifications
+• ${data.type === 'pro' ? 'Unlimited' : '50'} notifications
 • Priority support
 • 30 days access
 
-Launch the Mini App to start using:
+Launch the Mini App:
                 `, Markup.inlineKeyboard([
                     [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)]
                 ]));
                 
                 // Clear session
-                delete ctx.session.awaitingSignature;
+                delete ctx.session.awaitingWalletForPayment;
             } else {
-                ctx.reply(`❌ Verification failed: ${data.error}\n\nPlease make sure:\n• Transaction is confirmed (wait 30-60 sec)\n• You sent the correct amount\n• Signature is copied correctly`);
+                ctx.reply(`❌ ${data.error}\n\n💡 Make sure you:\n• Sent SOL to the correct address\n• Wait 1-2 minutes for blockchain confirmation\n• Use the same wallet address you paid from`);
             }
         } catch (error) {
-            console.error('Error verifying payment:', error);
-            ctx.reply('❌ Error verifying payment. Please try again or contact support.');
+            console.error('Error activating payment:', error);
+            ctx.reply('❌ Error checking payment. Please try again in 1 minute or contact support.');
         }
         
         return;
@@ -1309,6 +1312,15 @@ async function startBot(pool = null) {
         if (pool) {
             console.log('📊 Database pool connected to bot');
         }
+        
+        // Set bot commands
+        await bot.telegram.setMyCommands([
+            { command: 'start', description: '🚀 Launch Sol Fun Mini App' },
+            { command: 'subscribe', description: '💎 View subscription plans & pricing' },
+            { command: 'help', description: '❓ Get help and support' },
+            { command: 'about', description: 'ℹ️ About Sol Fun - Smart Money tracker' }
+        ]);
+        console.log('✅ Bot commands set');
         
         // Получаем информацию о боте
         const botInfo = await bot.telegram.getMe();

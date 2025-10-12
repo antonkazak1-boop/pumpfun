@@ -2206,6 +2206,65 @@ app.post('/api/payment/verify-solana', async (req, res) => {
     }
 });
 
+// Activate pending payment by wallet
+app.post('/api/payment/activate-pending', async (req, res) => {
+    try {
+        const { userId, fromWallet } = req.body;
+        
+        if (!userId || !fromWallet) {
+            return res.status(400).json({ success: false, error: 'Missing userId or fromWallet' });
+        }
+        
+        // Find pending payment for this wallet
+        const pendingQuery = await pool.query(`
+            SELECT * FROM pending_payments 
+            WHERE from_wallet = $1 AND status = 'pending'
+            ORDER BY created_at DESC 
+            LIMIT 1
+        `, [fromWallet]);
+        
+        if (pendingQuery.rows.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'No pending payment found for this wallet' 
+            });
+        }
+        
+        const payment = pendingQuery.rows[0];
+        
+        // Create subscription
+        if (subscriptionSystem) {
+            await subscriptionSystem.createSubscription(
+                userId,
+                payment.subscription_type,
+                'solana',
+                payment.tx_signature
+            );
+            
+            // Mark payment as activated
+            await pool.query(`
+                UPDATE pending_payments 
+                SET status = 'activated', 
+                    telegram_user_id = $1, 
+                    activated_at = NOW()
+                WHERE id = $2
+            `, [userId, payment.id]);
+            
+            res.json({ 
+                success: true, 
+                message: `${payment.subscription_type} subscription activated!`,
+                amount: payment.amount_sol,
+                type: payment.subscription_type
+            });
+        } else {
+            res.status(500).json({ success: false, error: 'Subscription system not available' });
+        }
+    } catch (error) {
+        console.error('Activate pending payment error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Check KOLScan balance
 app.get('/api/kolscan/balance/:walletAddress', async (req, res) => {
     try {
