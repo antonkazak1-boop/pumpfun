@@ -860,9 +860,28 @@
             <!-- Smart Money Tab -->
             <div id="smartMoney" class="tab-content">
                 <div class="tab-header">
-                    <h2><i class="fas fa-brain"></i> Smart Money (1 hour)</h2>
-                    <p class="tab-description">Activity of experienced traders</p>
+                    <h2><i class="fas fa-brain"></i> 🧠 Smart Money</h2>
+                    <p class="tab-description">Track top traders by ROI, win rate, and profitability</p>
                 </div>
+                
+                <!-- Smart Money Filters -->
+                <div class="filters-container smart-filters">
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-period="7d">7 Days</button>
+                        <button class="filter-btn" data-period="30d">30 Days</button>
+                        <button class="filter-btn" data-period="90d">90 Days</button>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-sort="volume">Volume ↓</button>
+                        <button class="filter-btn" data-sort="roi">ROI ↓</button>
+                        <button class="filter-btn" data-sort="winrate">Win Rate ↓</button>
+                        <button class="filter-btn" data-sort="pnl">PnL ↓</button>
+                    </div>
+                </div>
+                
+                <div class="token-counter" id="smartMoneyCounter">Showing 0 traders</div>
+                
                 <div id="smartMoneyData" class="data-list">
                     <div class="loading-placeholder">Loading data...</div>
                 </div>

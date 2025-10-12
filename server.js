@@ -1100,12 +1100,24 @@ app.get('/api/traders/list', async (req, res) => {
                        COUNT(DISTINCT token_mint) as unique_tokens,
                        MAX(ts) as last_activity,
                        SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) - 
-                       SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl
+                       SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl,
+                       SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as total_invested,
+                       COUNT(DISTINCT CASE WHEN side = 'SELL' AND sol_received > sol_spent THEN token_mint END) as winning_tokens,
+                       COUNT(DISTINCT CASE WHEN side = 'SELL' THEN token_mint END) as sold_tokens
                 FROM events
                 WHERE ts >= NOW() - INTERVAL '30 days'
                 GROUP BY wallet 
             )
-            SELECT * FROM trader_stats
+            SELECT *,
+                   CASE WHEN total_invested > 0 
+                        THEN (realized_pnl / total_invested * 100) 
+                        ELSE 0 
+                   END as roi_percentage,
+                   CASE WHEN sold_tokens > 0 
+                        THEN (winning_tokens::FLOAT / sold_tokens * 100) 
+                        ELSE 0 
+                   END as win_rate
+            FROM trader_stats
             ORDER BY total_volume DESC 
             LIMIT 200
         `;
@@ -1124,12 +1136,24 @@ app.get('/api/traders/list', async (req, res) => {
                            COUNT(DISTINCT token_mint) as unique_tokens,
                            MAX(ts) as last_activity,
                            SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) - 
-                           SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl
+                           SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl,
+                           SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as total_invested,
+                           COUNT(DISTINCT CASE WHEN side = 'SELL' AND sol_received > sol_spent THEN token_mint END) as winning_tokens,
+                           COUNT(DISTINCT CASE WHEN side = 'SELL' THEN token_mint END) as sold_tokens
                     FROM events 
                     WHERE ts >= NOW() - INTERVAL '90 days'
                     GROUP BY wallet 
                 )
-                SELECT * FROM trader_stats
+                SELECT *,
+                       CASE WHEN total_invested > 0 
+                            THEN (realized_pnl / total_invested * 100) 
+                            ELSE 0 
+                       END as roi_percentage,
+                       CASE WHEN sold_tokens > 0 
+                            THEN (winning_tokens::FLOAT / sold_tokens * 100) 
+                            ELSE 0 
+                       END as win_rate
+                FROM trader_stats
                 ORDER BY total_volume DESC 
                 LIMIT 200
             `;

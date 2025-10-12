@@ -703,6 +703,8 @@ function renderCoBuy(data) {
 // Рендеринг Smart Money данных
 function renderSmartMoney(data) {
     const container = document.getElementById('smartMoneyData');
+    const counter = document.getElementById('smartMoneyCounter');
+    
     if (!container) return;
     
     if (!data || data.length === 0) {
@@ -710,82 +712,112 @@ function renderSmartMoney(data) {
             <div class="empty-state">
                 <i class="fas fa-brain"></i>
                 <h3>No Smart Money Activity</h3>
-                <p>No experienced trader activity detected in the last 24 hours</p>
+                <p>No trader activity detected in the last 30 days</p>
             </div>`;
+        if (counter) counter.textContent = 'Showing 0 traders';
         return;
     }
     
-    container.innerHTML = data.map((item, index) => {
-        const walletUrl = `https://solscan.io/account/${item.wallet}`;
-        const timeAgo = formatTimeAgo(new Date(item.last_activity));
+    // Update counter
+    if (counter) {
+        counter.textContent = `Showing ${data.length} trader${data.length !== 1 ? 's' : ''}`;
+    }
+    
+    container.innerHTML = data.map((trader, index) => {
+        const walletShort = trader.wallet.substring(0, 4) + '...' + trader.wallet.substring(trader.wallet.length - 4);
+        const traderName = trader.wallet_name || `Trader ${walletShort}`;
         
-        // Получаем данные о трейдере
-        const traderName = item.wallet_name || `Trader ${item.wallet.substring(0, 8)}`;
-        const telegramLink = item.wallet_telegram;
-        const twitterLink = item.wallet_twitter;
+        // Calculate metrics
+        const roi = trader.roi_percentage || 0;
+        const winRate = trader.win_rate || 0;
+        const pnl = trader.realized_pnl || 0;
         
-        // Информация о последней сделке
-        const latestToken = item.token_name || 'Unknown Token';
-        const latestSymbol = item.token_symbol || 'Unknown';
-        const latestAmount = item.sol_spent ? formatSOL(item.sol_spent) : 'N/A';
+        // Determine category badge
+        let categoryBadge = '';
+        let categoryClass = '';
+        
+        if (roi > 100 && winRate > 70) {
+            categoryBadge = '🧠 Smart';
+            categoryClass = 'badge-smart';
+        } else if (trader.total_volume > 100) {
+            categoryBadge = '👑 Whale';
+            categoryClass = 'badge-whale';
+        } else if (winRate > 60) {
+            categoryBadge = '🎯 Sniper';
+            categoryClass = 'badge-sniper';
+        } else {
+            categoryBadge = '📊 Active';
+            categoryClass = 'badge-active';
+        }
+        
+        // Determine if trader is profitable
+        const isProfitable = pnl > 0;
+        const pnlClass = isProfitable ? 'positive' : (pnl < 0 ? 'negative' : 'neutral');
+        const roiClass = roi > 0 ? 'positive' : (roi < 0 ? 'negative' : 'neutral');
         
         return `
-            <div class="data-item smart-item">
-                <h3>
-                    <i class="fas fa-brain"></i>
-                    ${index + 1}. ${traderName}
-                    ${telegramLink ? `<a href="${telegramLink}" target="_blank" class="social-link telegram"><i class="fab fa-telegram"></i></a>` : ''}
-                    ${twitterLink ? `<a href="${twitterLink}" target="_blank" class="social-link twitter"><i class="fab fa-twitter"></i></a>` : ''}
-                </h3>
-                <div class="item-stats">
-                    <div class="stat-item">
-                        <div class="stat-label">Wallet</div>
-                        <div class="stat-value">${shortenAddress(item.wallet)}</div>
+            <div class="data-item">
+                <div class="data-header">
+                    <div class="data-title">
+                        <span class="rank-badge">#${index + 1}</span>
+                        <span class="trader-name">${traderName}</span>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Unique Tokens</div>
-                        <div class="stat-value positive">${item.unique_tokens || 0}</div>
+                    <div class="token-badges">
+                        <span class="token-badge ${categoryClass}">${categoryBadge}</span>
+                        ${isProfitable ? '<span class="token-badge badge-hot">🔥 Profit</span>' : ''}
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Total Trades</div>
-                        <div class="stat-value neutral">${item.total_trades || 0}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Total Volume</div>
-                        <div class="stat-value positive">${formatSOL(item.total_volume || 0)}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Avg Buy Size</div>
-                        <div class="stat-value neutral">${formatSOL(item.avg_buy_size || 0)}</div>
                 </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Last Activity</div>
-                        <div class="stat-value">${timeAgo}</div>
+                
+                <div class="token-info-compact">
+                    <div class="info-row">
+                        <span class="info-label">Wallet</span>
+                        <span class="contract-address" onclick="copyToClipboard('${trader.wallet}', this)">${walletShort}</span>
                     </div>
-                    ${item.token_symbol ? `
-                    <div class="stat-item">
-                        <div class="stat-label">Latest Token</div>
-                        <div class="stat-value">${item.token_symbol} - ${latestToken}</div>
+                    <div class="info-row">
+                        <span class="info-label">ROI</span>
+                        <span class="info-value ${roiClass}">${roi > 0 ? '+' : ''}${roi.toFixed(1)}%</span>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Latest Amount</div>
-                        <div class="stat-value positive">${latestAmount}</div>
+                    <div class="info-row">
+                        <span class="info-label">Win Rate</span>
+                        <span class="info-value ${winRate > 50 ? 'positive' : 'neutral'}">${winRate.toFixed(0)}%</span>
                     </div>
-                    ` : ''}
+                    <div class="info-row">
+                        <span class="info-label">PnL</span>
+                        <span class="info-value ${pnlClass}">${pnl > 0 ? '+' : ''}${formatSOL(pnl)}</span>
+                    </div>
+                </div>
+                
+                <div class="token-info-compact">
+                    <div class="info-row">
+                        <span class="info-label">Volume</span>
+                        <span class="info-value">${formatSOL(trader.total_volume || 0)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Trades</span>
+                        <span class="info-value">${trader.total_trades || 0}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Tokens</span>
+                        <span class="info-value">${trader.unique_tokens || 0}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Last Active</span>
+                        <span class="info-value">${formatTimeAgo(new Date(trader.last_activity))}</span>
+                    </div>
                 </div>
                 
                 <div class="item-actions">
-                    <a href="${walletUrl}" target="_blank" class="action-button">
-                        <i class="fas fa-wallet"></i> Wallet
+                    <a href="https://solscan.io/account/${trader.wallet}" target="_blank" class="action-button">
+                        <i class="fas fa-external-link-alt"></i> Solscan
                     </a>
-                    ${item.tx_signature ? `
-                    <a href="https://solscan.io/tx/${item.tx_signature}" target="_blank" class="action-button">
-                        <i class="fas fa-external-link-alt"></i> Last Trade
+                    ${trader.wallet_telegram ? `
+                    <a href="${trader.wallet_telegram}" target="_blank" class="action-button">
+                        <i class="fab fa-telegram"></i> Telegram
                     </a>
                     ` : ''}
-                    ${item.token_mint ? `
-                    <a href="https://pump.fun/coin/${item.token_mint}" target="_blank" class="action-button">
-                        <i class="fas fa-coins"></i> Token
+                    ${trader.wallet_twitter ? `
+                    <a href="${trader.wallet_twitter}" target="_blank" class="action-button">
+                        <i class="fab fa-twitter"></i> Twitter
                     </a>
                     ` : ''}
                 </div>
@@ -1399,6 +1431,22 @@ async function loadTabData(tabName) {
             showLoading();
             showSkeletonLoader(dataContainerId);
             await loadTopGainersData();
+            updateLastUpdateTime();
+        } catch (error) {
+            console.error(`Ошибка загрузки данных для ${tabName}:`, error);
+            renderError(dataContainerId, error);
+        } finally {
+            hideLoading();
+        }
+        return;
+    }
+    
+    // Special handling for Smart Money with filters
+    if (tabName === 'smartMoney') {
+        try {
+            showLoading();
+            showSkeletonLoader(dataContainerId);
+            await loadSmartMoneyData();
             updateLastUpdateTime();
         } catch (error) {
             console.error(`Ошибка загрузки данных для ${tabName}:`, error);
@@ -2626,6 +2674,110 @@ async function loadTopGainersData() {
     } catch (error) {
         console.error('Error loading top gainers:', error);
         renderTopGainers([]);
+    }
+}
+
+// Smart Money Filters
+let smartMoneyFilters = {
+    period: '7d',
+    sort: 'volume',
+    sortDirection: 'desc'
+};
+
+function initSmartMoneyFilters() {
+    const saved = localStorage.getItem('smartMoneyFilters');
+    if (saved) {
+        smartMoneyFilters = JSON.parse(saved);
+    }
+    
+    const filterButtons = document.querySelectorAll('.smart-filters .filter-btn');
+    
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const period = btn.dataset.period;
+            const sort = btn.dataset.sort;
+            
+            if (period) {
+                // Period filter
+                smartMoneyFilters.period = period;
+                
+                // Update UI
+                document.querySelectorAll('.smart-filters [data-period]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            } else if (sort) {
+                // Sort filter - toggle direction
+                if (smartMoneyFilters.sort === sort) {
+                    smartMoneyFilters.sortDirection = smartMoneyFilters.sortDirection === 'desc' ? 'asc' : 'desc';
+                } else {
+                    smartMoneyFilters.sort = sort;
+                    smartMoneyFilters.sortDirection = 'desc';
+                }
+                
+                // Update UI
+                document.querySelectorAll('.smart-filters [data-sort]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update arrow
+                const arrow = smartMoneyFilters.sortDirection === 'desc' ? ' ↓' : ' ↑';
+                btn.textContent = btn.textContent.split(' ')[0] + arrow;
+            }
+            
+            // Save preferences
+            localStorage.setItem('smartMoneyFilters', JSON.stringify(smartMoneyFilters));
+            
+            // Reload data with filters
+            loadSmartMoneyData();
+        });
+        
+        // Restore active state
+        if (btn.dataset.period === smartMoneyFilters.period) {
+            btn.classList.add('active');
+        }
+        if (btn.dataset.sort === smartMoneyFilters.sort) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+async function loadSmartMoneyData() {
+    try {
+        showSkeletonLoader('smartMoneyData');
+        
+        // Fetch data
+        let data = await fetchData('traders/list');
+        
+        // Apply client-side sorting
+        if (smartMoneyFilters.sort) {
+            data = data.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(smartMoneyFilters.sort) {
+                    case 'roi':
+                        aVal = a.roi_percentage || 0;
+                        bVal = b.roi_percentage || 0;
+                        break;
+                    case 'winrate':
+                        aVal = a.win_rate || 0;
+                        bVal = b.win_rate || 0;
+                        break;
+                    case 'pnl':
+                        aVal = a.realized_pnl || 0;
+                        bVal = b.realized_pnl || 0;
+                        break;
+                    case 'volume':
+                    default:
+                        aVal = a.total_volume || 0;
+                        bVal = b.total_volume || 0;
+                }
+                
+                return smartMoneyFilters.sortDirection === 'desc' ? bVal - aVal : aVal - bVal;
+            });
+        }
+        
+        renderSmartMoney(data);
+    } catch (error) {
+        console.error('Error loading smart money:', error);
+        renderSmartMoney([]);
     }
 }
 
@@ -4563,6 +4715,9 @@ function initializeComponents() {
     
     // Initialize top gainers filters
     initTopGainersFilters();
+    
+    // Initialize smart money filters
+    initSmartMoneyFilters();
     
     // Initialize wallet stats
     initWalletStats();
