@@ -128,10 +128,7 @@ function initTelegramWebApp() {
         tg.setBackgroundColor('#0a0a0a');
         console.log('🎨 Theme colors set');
         
-        // Add fullscreen toggle button (if supported)
-        if (tg.requestFullscreen && tg.exitFullscreen) {
-            addFullscreenToggle(tg);
-        }
+        // NO FULLSCREEN TOGGLE BUTTON - stays fullscreen always
         
         // Main button setup (optional)
         tg.MainButton.hide();
@@ -179,25 +176,16 @@ function initTelegramWebApp() {
 
 // Initialize PWA features
 function initializePWA() {
-    // Register Service Worker
+    // DISABLED: Service Worker makes app offline
+    // We want real-time data, not cached
+    console.log('⚠️ Service Worker disabled - using real-time API only');
+    
+    // Unregister existing service worker if any
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', async () => {
-            try {
-                const registration = await navigator.serviceWorker.register('/sw.js');
-                console.log('🔧 Service Worker registered:', registration.scope);
-                
-                // Handle updates
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('🔄 New version available!');
-                            showUpdateNotification();
-                        }
-                    });
-                });
-            } catch (error) {
-                console.error('❌ Service Worker registration failed:', error);
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+                registration.unregister();
+                console.log('🗑️ Service Worker unregistered');
             }
         });
     }

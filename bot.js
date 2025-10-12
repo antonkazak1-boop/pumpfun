@@ -238,8 +238,7 @@ Powered by on-chain data analysis.
     
     ctx.replyWithMarkdown(welcomeMessage, 
         Markup.inlineKeyboard([
-            [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)],
-            [Markup.button.url('📊 View Web Version', MINI_APP_URL)]
+            [Markup.button.webApp('🚀 Launch Mini App', MINI_APP_URL)]
         ])
     );
 });
