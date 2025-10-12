@@ -1026,9 +1026,9 @@ Launch the Mini App to start using:
     
     // Default response
     ctx.replyWithMarkdown(
-        `Привет! Я бот для анализа торговли на Solana.\n\nДля работы используйте Mini App:`,
+        `👋 Hi! I'm Sol Fun - your Smart Money tracker for Solana.\n\n🚀 Open the Mini App to start:`,
         Markup.inlineKeyboard([
-            [Markup.button.webApp('🚀 Открыть Mini App', MINI_APP_URL)]
+            [Markup.button.webApp('🚀 Open Mini App', MINI_APP_URL)]
         ])
     );
 });

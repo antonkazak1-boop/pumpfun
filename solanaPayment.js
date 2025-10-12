@@ -118,21 +118,42 @@ class SolanaPayment {
             console.log('💰 Expected amount:', expectedAmount, 'SOL');
             console.log('🔗 RPC URL:', this.connection.rpcEndpoint);
             
-            // Try to get transaction with maxSupportedTransactionVersion
-            const transaction = await this.connection.getTransaction(signature, {
-                commitment: 'confirmed',
-                maxSupportedTransactionVersion: 0
-            });
+            // Try multiple RPC endpoints for reliability
+            let transaction = null;
+            const rpcEndpoints = [
+                this.connection.rpcEndpoint, // Primary
+                'https://api.mainnet-beta.solana.com', // Public fallback
+                'https://solana-api.projectserum.com' // Serum fallback
+            ];
+            
+            for (const rpc of rpcEndpoints) {
+                try {
+                    console.log(`Trying RPC: ${rpc}`);
+                    const conn = new Connection(rpc, { commitment: 'confirmed' });
+                    transaction = await conn.getTransaction(signature, {
+                        commitment: 'confirmed',
+                        maxSupportedTransactionVersion: 0
+                    });
+                    
+                    if (transaction) {
+                        console.log(`✅ Transaction found on: ${rpc}`);
+                        break;
+                    }
+                } catch (rpcError) {
+                    console.log(`❌ RPC ${rpc} failed:`, rpcError.message);
+                    continue;
+                }
+            }
 
             if (!transaction) {
-                console.log('❌ Transaction not found on chain');
+                console.log('❌ Transaction not found on any RPC');
                 return {
                     success: false,
-                    error: 'Transaction not found. Please wait 30 seconds and try again, or check if you are on the correct network (mainnet).'
+                    error: 'Transaction not found on Solana. Please wait 30-60 seconds for confirmation and try again.'
                 };
             }
             
-            console.log('✅ Transaction found:', transaction.slot);
+            console.log('✅ Transaction found at slot:', transaction.slot);
 
             // Check if transaction was successful
             if (transaction.meta.err) {
