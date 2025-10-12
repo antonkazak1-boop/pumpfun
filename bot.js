@@ -62,7 +62,7 @@ async function showBasicPayment(ctx, userName) {
     try {
         // Create invoice for Telegram Stars
         const invoice = await bot.telegram.createInvoiceLink({
-            title: 'Pump Dex Basic Subscription',
+            title: 'Sol Fun Basic Subscription',
             description: 'Basic subscription - 30 days access to all tabs',
             payload: `basic_${userId}`,
             provider_token: '', // Empty for Stars
@@ -110,7 +110,7 @@ async function showProPayment(ctx, userName) {
     try {
         // Create invoice for Telegram Stars
         const invoice = await bot.telegram.createInvoiceLink({
-            title: 'Pump Dex Pro Subscription',
+            title: 'Sol Fun Pro Subscription',
             description: 'Pro subscription - 30 days access with unlimited notifications',
             payload: `pro_${userId}`,
             provider_token: '', // Empty for Stars
@@ -172,7 +172,7 @@ bot.start((ctx) => {
     }
     
     const welcomeMessage = `
-🚀 *Welcome to Pump Dex Bot!*
+🚀 *Welcome to Sol Fun Bot!*
 
 Hey ${userName}! Ready to track smart money on Solana?
 
@@ -247,13 +247,13 @@ Powered by on-chain data analysis.
 // Обработчик команды /about
 bot.command('about', (ctx) => {
     const aboutMessage = `
-📖 *About Pump Dex Bot*
+📖 *About Sol Fun Bot*
 
 ╔═══════════════════════╗
 ║  💡 *Our Mission*        ║
 ╚═══════════════════════╝
 
-We believe that everyone should have access to the same trading insights as professional traders. That's why we built Pump Dex Bot - to democratize smart money tracking on Solana.
+We believe that everyone should have access to the same trading insights as professional traders. That's why we built Sol Fun Bot - to democratize smart money tracking on Solana.
 
 ╔═══════════════════════╗
 ║  🔍 *What We Track*      ║
@@ -299,14 +299,14 @@ Questions? Contact @your_support_bot
 // Обработчик команды /help
 bot.help((ctx) => {
     const helpMessage = `
-📖 *Pump Dex Bot - Help*
+📖 *Sol Fun Bot - Help*
 
 ╔═══════════════════════╗
 ║  🤖 *Bot Commands*       ║
 ╚═══════════════════════╝
 
 /start - Launch the bot and access Mini App
-/about - Learn about Pump Dex Bot
+/about - Learn about Sol Fun Bot
 /subscribe - View subscription plans and pricing
 /help - Show this help message
 
@@ -352,7 +352,7 @@ Need support? Contact @your_support_bot
 // Обработчик команды /subscribe
 bot.command('subscribe', (ctx) => {
     const subscriptionMessage = `
-💎 *Pump Dex Premium Subscription*
+💎 *Sol Fun Premium Subscription*
 
 ╔═══════════════════════╗
 ║  💰 *Choose Your Plan*  ║
@@ -521,7 +521,7 @@ bot.action('pay_stars_basic', async (ctx) => {
     try {
         // Create invoice for Telegram Stars
         const invoice = await bot.telegram.createInvoiceLink({
-            title: 'Pump Dex Basic Subscription',
+            title: 'Sol Fun Basic Subscription',
             description: 'Basic subscription - 30 days access to all tabs',
             payload: `basic_${userId}`,
             provider_token: '', // Empty for Stars
@@ -567,7 +567,7 @@ bot.action('pay_stars_pro', async (ctx) => {
     try {
         // Create invoice for Telegram Stars
         const invoice = await bot.telegram.createInvoiceLink({
-            title: 'Pump Dex Pro Subscription',
+            title: 'Sol Fun Pro Subscription',
             description: 'Pro subscription - 30 days access with unlimited notifications',
             payload: `pro_${userId}`,
             provider_token: '', // Empty for Stars
@@ -776,7 +776,7 @@ bot.action('back_to_plans', async (ctx) => {
     
     // Show subscription plans again
     const subscriptionMessage = `
-💎 *Pump Dex Premium Subscription*
+💎 *Sol Fun Premium Subscription*
 
 ╔═══════════════════════╗
 ║  💰 *Choose Your Plan*  ║
@@ -882,7 +882,7 @@ bot.command('status', async (ctx) => {
 // Обработчик команды /about
 bot.command('about', (ctx) => {
     const aboutMessage = `
-ℹ️ *О Pump Dex Bot*
+ℹ️ *О Sol Fun Bot*
 
 *Версия:* 1.0.0
 *Тип:* Telegram Mini App
@@ -1041,10 +1041,10 @@ bot.on('inline_query', (ctx) => {
         {
             type: 'article',
             id: '1',
-            title: '🚀 Pump Dex Bot Mini App',
+            title: '🚀 Sol Fun Bot Mini App',
             description: 'Анализ торговли токенами на Solana',
             input_message_content: {
-                message_text: `🤖 *Pump Dex Bot*\n\nАнализ торговли токенами на Solana в режиме реального времени!\n\n🔥 Cluster Buy | 🐋 Whale Moves | 📈 Volume Surge`,
+                message_text: `🤖 *Sol Fun Bot*\n\nАнализ торговли токенами на Solana в режиме реального времени!\n\n🔥 Cluster Buy | 🐋 Whale Moves | 📈 Volume Surge`,
                 parse_mode: 'Markdown'
             },
             reply_markup: {
@@ -1301,7 +1301,7 @@ let globalPool = null;
 // Запуск бота
 async function startBot(pool = null) {
     try {
-        console.log('🤖 Запуск Pump Dex Bot...');
+        console.log('🤖 Запуск Sol Fun Bot...');
         console.log(`🔗 Mini App URL: ${MINI_APP_URL}`);
         
         // Store pool globally for use in payment handlers
@@ -1318,7 +1318,7 @@ async function startBot(pool = null) {
         // Запускаем бота
         await bot.launch();
         
-        console.log('✅ Pump Dex Bot успешно запущен!');
+        console.log('✅ Sol Fun Bot успешно запущен!');
         console.log('📱 Пользователи могут использовать команду /start для доступа к Mini App');
         
     } catch (error) {

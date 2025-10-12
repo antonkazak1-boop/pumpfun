@@ -1,4 +1,4 @@
-// Solana Payment Integration for Pump Dex Mini App
+// Solana Payment Integration for Sol Fun
 const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = require('@solana/web3.js');
 const axios = require('axios');
 
@@ -145,22 +145,32 @@ class SolanaPayment {
                         const data = instruction.data;
                         
                         // Check if it's a transfer (instruction type 2)
-                        if (data && data.length > 0 && data[0] === 2) {
+                        if (data && data.length >= 12 && data[0] === 2) {
                             // Get accounts involved in transfer
                             const fromIndex = instruction.accounts[0];
                             const toIndex = instruction.accounts[1];
+                            
+                            if (fromIndex === undefined || toIndex === undefined) continue;
+                            
                             const fromAddress = accountKeys[fromIndex];
                             const toAddress = accountKeys[toIndex];
                             
+                            if (!fromAddress || !toAddress) continue;
+                            
                             // Check if transfer is to our merchant wallet
-                            if (toAddress && toAddress.equals(merchantWallet)) {
-                                // Extract amount (8 bytes after instruction type)
-                                const amountBuffer = data.slice(4, 12);
-                                const lamports = Number(amountBuffer.readBigUInt64LE());
-                                actualAmount = lamports / LAMPORTS_PER_SOL;
-                                actualFromWallet = fromAddress.toBase58();
-                                paymentFound = true;
-                                break;
+                            if (toAddress.equals(merchantWallet)) {
+                                // Extract amount (8 bytes after instruction type, starting at byte 4)
+                                try {
+                                    const amountBuffer = Buffer.from(data.slice(4, 12));
+                                    const lamports = amountBuffer.readBigUInt64LE(0);
+                                    actualAmount = Number(lamports) / LAMPORTS_PER_SOL;
+                                    actualFromWallet = fromAddress.toBase58();
+                                    paymentFound = true;
+                                    break;
+                                } catch (bufferError) {
+                                    console.log('Error reading amount from buffer:', bufferError.message);
+                                    continue;
+                                }
                             }
                         }
                     }
@@ -265,7 +275,7 @@ class SolanaPayment {
     }
 
     // Create payment URL for Solana Pay
-    async createSolanaPayUrl(amount, subscriptionType, label = 'Pump Dex Subscription') {
+    async createSolanaPayUrl(amount, subscriptionType, label = 'Sol Fun Subscription') {
         try {
             const recipient = this.MERCHANT_WALLET;
             const reference = this.generateReference(subscriptionType);
@@ -275,7 +285,7 @@ class SolanaPayment {
             url.searchParams.set('amount', amount.toString());
             url.searchParams.set('reference', reference);
             url.searchParams.set('label', label);
-            url.searchParams.set('message', `Pump Dex ${subscriptionType} subscription`);
+            url.searchParams.set('message', `Sol Fun ${subscriptionType} subscription`);
 
             return {
                 success: true,
