@@ -1095,11 +1095,15 @@ app.get('/api/traders/list', async (req, res) => {
         const query = `
             WITH trader_stats AS (
                 SELECT wallet,
-                       COUNT(*) as total_trades, 
+                       COUNT(*) as total_trades,
+                       COUNT(CASE WHEN side = 'BUY' THEN 1 END) as buy_count,
+                       COUNT(CASE WHEN side = 'SELL' THEN 1 END) as sell_count,
                        COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) + 
                        COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) as total_volume,
                        COUNT(DISTINCT token_mint) as unique_tokens,
                        MAX(ts) as last_activity,
+                       AVG(CASE WHEN side = 'BUY' THEN sol_spent END) as avg_buy_size,
+                       MAX(CASE WHEN side = 'BUY' THEN sol_spent END) as max_buy_size,
                        COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) - 
                        COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as realized_pnl,
                        COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as total_invested,
@@ -1152,11 +1156,15 @@ app.get('/api/traders/list', async (req, res) => {
             const fallbackQuery = `
                 WITH trader_stats AS (
                     SELECT wallet, 
-                           COUNT(*) as total_trades, 
+                           COUNT(*) as total_trades,
+                           COUNT(CASE WHEN side = 'BUY' THEN 1 END) as buy_count,
+                           COUNT(CASE WHEN side = 'SELL' THEN 1 END) as sell_count,
                            COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) + 
                            COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) as total_volume,
                            COUNT(DISTINCT token_mint) as unique_tokens,
                            MAX(ts) as last_activity,
+                           AVG(CASE WHEN side = 'BUY' THEN sol_spent END) as avg_buy_size,
+                           MAX(CASE WHEN side = 'BUY' THEN sol_spent END) as max_buy_size,
                            COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) - 
                            COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as realized_pnl,
                            COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as total_invested,

@@ -731,20 +731,25 @@ function renderSmartMoney(data) {
         const roi = trader.roi_percentage || 0;
         const winRate = trader.win_rate || 0;
         const pnl = trader.realized_pnl || 0;
+        const sellCount = trader.sell_count || 0;
+        const hasRealizedPnL = sellCount > 0;
         
         // Determine category badge
         let categoryBadge = '';
         let categoryClass = '';
         
-        if (roi > 100 && winRate > 70) {
+        if (hasRealizedPnL && roi > 100 && winRate > 70) {
             categoryBadge = '🧠 Smart';
             categoryClass = 'badge-smart';
         } else if (trader.total_volume > 100) {
             categoryBadge = '👑 Whale';
             categoryClass = 'badge-whale';
-        } else if (winRate > 60) {
+        } else if (hasRealizedPnL && winRate > 60) {
             categoryBadge = '🎯 Sniper';
             categoryClass = 'badge-sniper';
+        } else if (!hasRealizedPnL) {
+            categoryBadge = '💎 Holder';
+            categoryClass = 'badge-holder';
         } else {
             categoryBadge = '📊 Active';
             categoryClass = 'badge-active';
@@ -774,16 +779,16 @@ function renderSmartMoney(data) {
                         <span class="contract-address" onclick="copyToClipboard('${trader.wallet}', this)">${walletShort}</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">ROI</span>
-                        <span class="info-value ${roiClass}">${roi > 0 ? '+' : ''}${roi.toFixed(1)}%</span>
+                        <span class="info-label">Buys</span>
+                        <span class="info-value positive">${trader.buy_count || trader.total_trades || 0}</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Win Rate</span>
-                        <span class="info-value ${winRate > 50 ? 'positive' : 'neutral'}">${winRate.toFixed(0)}%</span>
+                        <span class="info-label">Sells</span>
+                        <span class="info-value ${sellCount > 0 ? 'neutral' : 'muted'}">${sellCount}</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">PnL</span>
-                        <span class="info-value ${pnlClass}">${pnl > 0 ? '+' : ''}${formatSOL(pnl)}</span>
+                        <span class="info-label">Avg Buy</span>
+                        <span class="info-value">${formatSOL(trader.avg_buy_size || 0)}</span>
                     </div>
                 </div>
                 
