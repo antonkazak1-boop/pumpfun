@@ -4,6 +4,60 @@
 
 ---
 
+## [1.4.2] - 2025-10-12 (Full-Screen Mode & Cache Control)
+
+### 📱 Telegram Full-Screen Mode
+#### Added
+- ✅ **Native Fullscreen**: `tg.requestFullscreen()` для immersive experience
+- ✅ **Auto-expand**: Приложение автоматически открывается в fullscreen
+- ✅ **Theme Colors**: `setHeaderColor()` и `setBackgroundColor()` для native integration
+- ✅ **Back Button Handler**: Закрытие модалок через Telegram Back button
+- ✅ **Closing Confirmation**: `enableClosingConfirmation()` предотвращает случайное закрытие
+
+#### Removed
+- ✅ **Fullscreen Toggle Button**: Убрана кнопка выхода из fullscreen
+- ✅ **View Web Version**: Удалена из бота (дубликат)
+
+#### Mobile Improvements
+- ✅ **Safe Area Insets**: Header опущен на `44px + safe-area-inset-top`
+- ✅ **Content Padding**: Контент опущен на `80px` для удобного доступа
+- ✅ **iPhone Notch Support**: Учитывает notch через `env(safe-area-inset-top)`
+
+### 🔄 Version Control & Cache Management
+#### Added
+- ✅ **APP_VERSION**: `1.4.2` для tracking версий
+- ✅ **Auto Cache Clear**: При смене версии автоматически удаляет Service Worker и caches
+- ✅ **Cache-Control Headers**: `no-cache, no-store, must-revalidate` в HTML
+- ✅ **Query String Versioning**: `script.js?v=1.4.2` для принудительного обновления
+
+#### Removed
+- ✅ **Service Worker**: Полностью удален `sw.js` (делал приложение офлайн)
+- ✅ **PWA Manifest**: Отключен в HTML (оставлен для будущего использования)
+- ✅ **All Caches**: Автоматическое удаление при обновлении
+
+#### Technical Details
+```javascript
+// Auto-cleanup on version change
+const lastVersion = localStorage.getItem('app_version');
+if (lastVersion !== APP_VERSION) {
+  // Unregister Service Workers
+  // Delete all caches
+  // Update version
+}
+```
+
+### 🏠 PWA Features (Hybrid Approach)
+#### Added
+- ✅ **manifest.json**: PWA конфигурация для Safari/Chrome
+- ✅ **Apple Meta Tags**: Support для iOS home screen shortcuts
+- ✅ **App Icons**: SVG icon для будущих PWA функций
+- ✅ **Shortcuts**: Quick access к Fresh Tokens, Smart Money, Market
+
+#### Note
+PWA функционал **disabled** для Telegram (используем native shortcuts), но **enabled** для браузерной версии через Safari/Chrome.
+
+---
+
 ## [1.4.1] - 2025-10-12 (Telegram Invoice Modal)
 
 ### 💎 Telegram Invoice Modal
