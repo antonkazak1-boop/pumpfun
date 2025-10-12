@@ -99,6 +99,10 @@ function initTelegramWebApp() {
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         
+        console.log('📱 Telegram Web App detected');
+        console.log('Platform:', tg.platform);
+        console.log('User:', tg.initDataUnsafe?.user);
+        
         // Theme setup
         if (tg.themeParams) {
             document.body.classList.add('telegram-theme');
@@ -107,6 +111,16 @@ function initTelegramWebApp() {
         // Ready and expand to full screen
         tg.ready();
         tg.expand();
+        console.log('📱 Full-screen mode enabled');
+        
+        // Enable closing confirmation
+        tg.enableClosingConfirmation();
+        console.log('⚠️ Closing confirmation enabled');
+        
+        // Set theme colors for better integration
+        tg.setHeaderColor('#1a1a1a');
+        tg.setBackgroundColor('#0a0a0a');
+        console.log('🎨 Theme colors set');
         
         // Main button setup (optional)
         tg.MainButton.hide();
@@ -114,9 +128,27 @@ function initTelegramWebApp() {
         // Back button setup (optional)
         tg.BackButton.hide();
         
-        console.log('Telegram Web App initialized');
-        console.log('User ID:', tg.initDataUnsafe?.user?.id);
-        console.log('Theme params:', tg.themeParams);
+        // Handle back button
+        tg.onEvent('backButtonClicked', () => {
+            console.log('⬅️ Back button clicked');
+            // Close modals or navigate back
+            const modals = document.querySelectorAll('.modal.show');
+            if (modals.length > 0) {
+                const lastModal = modals[modals.length - 1];
+                lastModal.classList.remove('show');
+            }
+        });
+        
+        // Handle main button click
+        tg.onEvent('mainButtonClicked', () => {
+            console.log('🔘 Main button clicked');
+            // Handle main button action
+        });
+        
+        console.log('✅ Telegram Web App features initialized');
+        
+        // Initialize PWA features
+        initializePWA();
         
         // Set current user ID for subscription system
         const user = tg.initDataUnsafe?.user;
@@ -132,6 +164,111 @@ function initTelegramWebApp() {
     }
     console.log('Telegram Web App not available (development outside Telegram)');
     return null;
+}
+
+// Initialize PWA features
+function initializePWA() {
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', async () => {
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                console.log('🔧 Service Worker registered:', registration.scope);
+                
+                // Handle updates
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('🔄 New version available!');
+                            showUpdateNotification();
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('❌ Service Worker registration failed:', error);
+            }
+        });
+    }
+    
+    // Handle PWA install prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('📱 PWA install prompt available');
+        e.preventDefault();
+        deferredPrompt = e;
+        showInstallPrompt();
+    });
+    
+    // Handle PWA installed
+    window.addEventListener('appinstalled', () => {
+        console.log('✅ PWA installed successfully');
+        hideInstallPrompt();
+    });
+    
+    // Check if app is running as PWA
+    if (window.matchMedia('(display-mode: standalone)').matches || 
+        window.navigator.standalone === true) {
+        console.log('🏠 Running as PWA');
+        document.body.classList.add('pwa-mode');
+    }
+}
+
+// Show PWA install prompt
+function showInstallPrompt() {
+    // Create install button
+    const installButton = document.createElement('button');
+    installButton.id = 'pwa-install-btn';
+    installButton.innerHTML = `
+        <i class="fas fa-download"></i>
+        <span>Install App</span>
+    `;
+    installButton.className = 'pwa-install-button';
+    
+    // Add to header
+    const header = document.querySelector('.app-header');
+    if (header) {
+        header.appendChild(installButton);
+        
+        // Handle click
+        installButton.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('📱 Install prompt outcome:', outcome);
+                deferredPrompt = null;
+                hideInstallPrompt();
+            }
+        });
+    }
+}
+
+// Hide PWA install prompt
+function hideInstallPrompt() {
+    const installButton = document.getElementById('pwa-install-btn');
+    if (installButton) {
+        installButton.remove();
+    }
+}
+
+// Show update notification
+function showUpdateNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'update-notification';
+    notification.innerHTML = `
+        <div class="update-content">
+            <i class="fas fa-sync-alt"></i>
+            <span>New version available!</span>
+            <button onclick="window.location.reload()">Update</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 10000);
 }
 
 // HTTP requests with timeout
