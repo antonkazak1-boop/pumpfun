@@ -1,6 +1,63 @@
-# 📝 Changelog - Pump Dex Mini App
+# 📝 Changelog - Sol Fun Mini App
 
 > **Для AI/Cursor**: История всех изменений проекта в хронологическом порядке. Используй для понимания эволюции проекта.
+
+---
+
+## [1.4.0] - 2025-10-12 (Payment Intent System & Security)
+
+### 🔒 Secure Solana Payment System
+#### Added
+- ✅ **Payment Intent**: Создание intent ПЕРЕД оплатой (привязка user_id)
+- ✅ **Auto-Activation**: Webhook автоматически активирует подписку при payment match
+- ✅ **Intent Matching**: Поиск payment intent по amount + merchant wallet + optional from_wallet
+- ✅ **Fallback**: Если intent не найден → сохраняет в `pending_payments` для ручной активации
+- ✅ **API Endpoints**:
+  - `POST /api/payment/create-intent` - создать payment intent
+  - `GET /api/payment/check-intent/:intentId` - проверить статус оплаты
+  - `POST /webhook/payments` - Helius webhook для auto-detection
+
+#### Security Improvements
+- ✅ **User Binding**: Payment intent содержит `telegram_user_id` → невозможно подменить
+- ✅ **Expiration**: Intent истекает через 30 минут
+- ✅ **Amount Verification**: Проверка точной суммы (0.01 или 0.02 SOL)
+- ✅ **Wallet Validation**: Optional проверка from_wallet для KOLScan discount
+
+#### Bot Flow Updated
+```
+Old: User pays → скидывает wallet → API ищет pending payment
+❌ Problem: Можно украсть чужой payment из blockchain explorer
+
+New: User → создается intent с user_id → платит → webhook автоматом активирует
+✅ Secure: Payment привязан к user_id заранее
+```
+
+#### Technical Details
+```sql
+CREATE TABLE payment_intents (
+  intent_id VARCHAR(100) UNIQUE,
+  telegram_user_id BIGINT NOT NULL,
+  subscription_type VARCHAR(20),
+  expected_amount_sol DECIMAL(20, 8),
+  from_wallet VARCHAR(44),
+  status VARCHAR(20), -- 'pending', 'paid', 'expired'
+  expires_at TIMESTAMP
+);
+```
+
+### 🤖 Telegram Bot Improvements
+#### Changed
+- ✅ **setMyCommands**: Bot commands теперь видны в UI Telegram
+- ✅ **New Payment Flow**: "Check Payment Status" вместо "Enter wallet"
+- ✅ **Auto-Detection Message**: "We'll auto-detect your payment!"
+- ✅ **Polling Button**: "🔄 Check Again" для повторной проверки
+
+### 🎨 Rebranding: Pump Dex → Sol Fun
+#### Changed
+- ✅ **Global Rename**: Все упоминания "Pump Dex" → "Sol Fun"
+- ✅ **Bot Messages**: Обновлены все сообщения в боте
+- ✅ **Solana Pay Labels**: `label=Sol+Fun+Subscription`
+- ✅ **Comments**: Обновлены комментарии в коде
 
 ---
 
