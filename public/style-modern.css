@@ -5933,35 +5933,9 @@ body.menu-open {
 
 /* ===== PWA STYLES ===== */
 
-/* Fullscreen Toggle Button */
+/* Fullscreen Toggle Button - HIDDEN */
 .fullscreen-toggle {
-    position: absolute;
-    top: 50%;
-    right: 80px;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 1000;
-}
-
-.fullscreen-toggle:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: #10b981;
-    transform: translateY(-50%) scale(1.1);
-}
-
-.fullscreen-toggle i {
-    font-size: 16px;
+    display: none !important;
 }
 
 /* PWA Install Button */
@@ -6002,6 +5976,22 @@ body.menu-open {
 
 .pwa-mode .container {
     padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Fix for Telegram Fullscreen on Mobile - move content down */
+.app-header {
+    margin-top: env(safe-area-inset-top, 0);
+}
+
+/* Mobile adjustments for fullscreen */
+@media (max-width: 768px) {
+    .app-header {
+        margin-top: max(env(safe-area-inset-top, 0px), 44px);
+    }
+    
+    .container {
+        padding-top: 80px; /* header height + safe area */
+    }
 }
 
 /* Update Notification */
