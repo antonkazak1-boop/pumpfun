@@ -1096,17 +1096,20 @@ app.get('/api/traders/list', async (req, res) => {
             WITH trader_stats AS (
                 SELECT wallet,
                        COUNT(*) as total_trades, 
-                       SUM(sol_spent) as total_volume,
+                       COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) + 
+                       COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) as total_volume,
                        COUNT(DISTINCT token_mint) as unique_tokens,
                        MAX(ts) as last_activity,
-                       SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) - 
-                       SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl,
-                       SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as total_invested,
+                       COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) - 
+                       COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as realized_pnl,
+                       COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as total_invested,
                        COUNT(DISTINCT CASE WHEN side = 'SELL' AND sol_received > sol_spent THEN token_mint END) as winning_tokens,
                        COUNT(DISTINCT CASE WHEN side = 'SELL' THEN token_mint END) as sold_tokens
                 FROM events
                 WHERE ts >= NOW() - INTERVAL '30 days'
+                  AND wallet IS NOT NULL
                 GROUP BY wallet 
+                HAVING COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) > 0
             )
             SELECT *,
                    CASE WHEN total_invested > 0 
@@ -1118,6 +1121,7 @@ app.get('/api/traders/list', async (req, res) => {
                         ELSE 0 
                    END as win_rate
             FROM trader_stats
+            WHERE total_volume > 0
             ORDER BY total_volume DESC 
             LIMIT 200
         `;
@@ -1149,17 +1153,20 @@ app.get('/api/traders/list', async (req, res) => {
                 WITH trader_stats AS (
                     SELECT wallet, 
                            COUNT(*) as total_trades, 
-                           SUM(sol_spent) as total_volume,
+                           COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) + 
+                           COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) as total_volume,
                            COUNT(DISTINCT token_mint) as unique_tokens,
                            MAX(ts) as last_activity,
-                           SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END) - 
-                           SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as realized_pnl,
-                           SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END) as total_invested,
+                           COALESCE(SUM(CASE WHEN side = 'SELL' THEN sol_received ELSE 0 END), 0) - 
+                           COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as realized_pnl,
+                           COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as total_invested,
                            COUNT(DISTINCT CASE WHEN side = 'SELL' AND sol_received > sol_spent THEN token_mint END) as winning_tokens,
                            COUNT(DISTINCT CASE WHEN side = 'SELL' THEN token_mint END) as sold_tokens
                     FROM events 
                     WHERE ts >= NOW() - INTERVAL '90 days'
+                      AND wallet IS NOT NULL
                     GROUP BY wallet 
+                    HAVING COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) > 0
                 )
                 SELECT *,
                        CASE WHEN total_invested > 0 
@@ -1171,6 +1178,7 @@ app.get('/api/traders/list', async (req, res) => {
                             ELSE 0 
                        END as win_rate
                 FROM trader_stats
+                WHERE total_volume > 0
                 ORDER BY total_volume DESC 
                 LIMIT 200
             `;
