@@ -4,9 +4,20 @@ const axios = require('axios');
 
 class SolanaPayment {
     constructor() {
-        this.connection = new Connection(process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com');
+        // Use better RPC endpoints (Helius recommended, fallback to public)
+        const rpcUrl = process.env.SOLANA_RPC_URL || 
+                       process.env.HELIUS_RPC_URL ||
+                       'https://mainnet.helius-rpc.com/?api-key=demo'; // Helius public
+        
+        this.connection = new Connection(rpcUrl, {
+            commitment: 'confirmed',
+            confirmTransactionInitialTimeout: 60000 // 60 seconds timeout
+        });
+        
         this.MERCHANT_WALLET = process.env.MERCHANT_WALLET || 'G1baEgxW9rFLbPr8M6SmAxEbpeLw5Z5j4xyYwt8emTha';
         this.KOLSCAN_TOKEN_ADDRESS = process.env.KOLSCAN_TOKEN_ADDRESS || 'Db8vz7nh1jbjxVBatBRgQWafqB5iDaW7A1VNh6DmraxP';
+        
+        console.log('🔗 Solana RPC:', rpcUrl);
     }
 
     // Check SOL balance of a wallet
@@ -103,16 +114,25 @@ class SolanaPayment {
     // Verify transaction
     async verifyTransaction(signature, expectedAmount, expectedFromWallet = null) {
         try {
+            console.log('🔍 Verifying transaction:', signature);
+            console.log('💰 Expected amount:', expectedAmount, 'SOL');
+            console.log('🔗 RPC URL:', this.connection.rpcEndpoint);
+            
+            // Try to get transaction with maxSupportedTransactionVersion
             const transaction = await this.connection.getTransaction(signature, {
-                commitment: 'confirmed'
+                commitment: 'confirmed',
+                maxSupportedTransactionVersion: 0
             });
 
             if (!transaction) {
+                console.log('❌ Transaction not found on chain');
                 return {
                     success: false,
-                    error: 'Transaction not found'
+                    error: 'Transaction not found. Please wait 30 seconds and try again, or check if you are on the correct network (mainnet).'
                 };
             }
+            
+            console.log('✅ Transaction found:', transaction.slot);
 
             // Check if transaction was successful
             if (transaction.meta.err) {
