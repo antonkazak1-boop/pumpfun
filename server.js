@@ -2117,6 +2117,58 @@ app.post('/api/payment/solana', async (req, res) => {
     }
 });
 
+// Payment webhook handler for merchant wallet
+app.post('/webhook/payments', async (req, res) => {
+    try {
+        console.log('💰 Payment webhook received:', JSON.stringify(req.body, null, 2));
+        
+        // Parse Helius webhook for merchant wallet
+        const events = Array.isArray(req.body) ? req.body : [req.body];
+        
+        for (const event of events) {
+            // Check if it's a native SOL transfer
+            const nativeTransfers = event.nativeTransfers || [];
+            
+            for (const transfer of nativeTransfers) {
+                const merchantWallet = process.env.MERCHANT_WALLET || 'G1baEgxW9rFLbPr8M6SmAxEbpeLw5Z5j4xyYwt8emTha';
+                
+                // Check if transfer is TO our merchant wallet
+                if (transfer.toUserAccount === merchantWallet) {
+                    const amountSOL = transfer.amount / 1000000000; // lamports to SOL
+                    const fromWallet = transfer.fromUserAccount;
+                    const signature = event.signature;
+                    
+                    console.log(`✅ Payment received: ${amountSOL} SOL from ${fromWallet}`);
+                    console.log(`📝 TX: ${signature}`);
+                    
+                    // Determine subscription type based on amount
+                    let subscriptionType = null;
+                    if (Math.abs(amountSOL - 0.01) < 0.001) subscriptionType = 'basic';
+                    else if (Math.abs(amountSOL - 0.02) < 0.001) subscriptionType = 'pro';
+                    
+                    if (subscriptionType) {
+                        console.log(`🎯 Auto-activating ${subscriptionType} subscription`);
+                        
+                        // Save to pending_payments table for manual activation
+                        await pool.query(`
+                            INSERT INTO pending_payments (from_wallet, amount_sol, tx_signature, subscription_type, status)
+                            VALUES ($1, $2, $3, $4, 'pending')
+                            ON CONFLICT (tx_signature) DO NOTHING
+                        `, [fromWallet, amountSOL, signature, subscriptionType]);
+                        
+                        console.log(`💾 Payment saved for manual activation`);
+                    }
+                }
+            }
+        }
+        
+        res.json({ success: true, message: 'Webhook processed' });
+    } catch (error) {
+        console.error('Payment webhook error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Verify Solana transaction
 app.post('/api/payment/verify-solana', async (req, res) => {
     try {

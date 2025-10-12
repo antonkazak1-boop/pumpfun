@@ -128,6 +128,24 @@ CREATE INDEX IF NOT EXISTS idx_payments_telegram_id ON payments(telegram_user_id
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at);
 
+-- 7.5 PENDING_PAYMENTS TABLE - платежи для ручной активации (через webhook)
+CREATE TABLE IF NOT EXISTS pending_payments (
+    id SERIAL PRIMARY KEY,
+    from_wallet VARCHAR(44) NOT NULL,
+    amount_sol DECIMAL(20, 8) NOT NULL,
+    tx_signature VARCHAR(255) UNIQUE NOT NULL,
+    subscription_type VARCHAR(20) NOT NULL, -- 'basic', 'pro'
+    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'activated', 'expired'
+    telegram_user_id BIGINT, -- filled when user claims payment
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    activated_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Индексы для pending_payments
+CREATE INDEX IF NOT EXISTS idx_pending_payments_wallet ON pending_payments(from_wallet);
+CREATE INDEX IF NOT EXISTS idx_pending_payments_status ON pending_payments(status);
+CREATE INDEX IF NOT EXISTS idx_pending_payments_tx ON pending_payments(tx_signature);
+
 -- 8. USER_ALERTS TABLE - пользовательские алерты
 CREATE TABLE IF NOT EXISTS user_alerts (
     id SERIAL PRIMARY KEY,
