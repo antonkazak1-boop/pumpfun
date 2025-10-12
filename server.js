@@ -1125,6 +1125,23 @@ app.get('/api/traders/list', async (req, res) => {
         const result = await pool.query(query);
         console.log(`📊 Found ${result.rows.length} traders in database`);
         
+        // Debug: show sample data
+        if (result.rows.length > 0) {
+            console.log('📊 Sample trader:', {
+                wallet: result.rows[0].wallet?.substring(0, 8),
+                roi: result.rows[0].roi_percentage,
+                winRate: result.rows[0].win_rate,
+                pnl: result.rows[0].realized_pnl,
+                volume: result.rows[0].total_volume
+            });
+        } else {
+            console.log('⚠️ No traders found - checking events table...');
+            
+            // Check if events table has data
+            const eventCheck = await pool.query('SELECT COUNT(*) as count FROM events WHERE ts >= NOW() - INTERVAL \'30 days\'');
+            console.log(`📊 Events in last 30 days: ${eventCheck.rows[0].count}`);
+        }
+        
         // Если нет данных, попробуем получить данные за больший период
         if (result.rows.length === 0) {
             console.log(`📊 No traders found for 30 days, trying 90 days...`);
@@ -1501,13 +1518,13 @@ app.get('/api/freshtokens', async (req, res) => {
             )
             SELECT 
                 e.token_mint, 
-                COUNT(DISTINCT e.wallet) AS early_buyers, 
-                SUM(e.sol_spent) AS total_volume, 
+                   COUNT(DISTINCT e.wallet) AS early_buyers,
+                   SUM(e.sol_spent) AS total_volume,
                 fa.first_seen,
                 COUNT(*) AS tx_count
             FROM events e
             JOIN first_appearance fa ON e.token_mint = fa.token_mint
-            WHERE e.side = 'BUY' 
+            WHERE e.side = 'BUY'
             AND fa.first_seen > now() - interval '24 hours' 
             AND e.ts > now() - interval '24 hours'
             AND e.token_mint != 'So11111111111111111111111111111111111111112'
@@ -2364,7 +2381,7 @@ app.post('/api/payment/activate-pending', async (req, res) => {
         
         if (pendingQuery.rows.length === 0) {
             return res.status(404).json({ 
-                success: false, 
+            success: false,
                 error: 'No pending payment found for this wallet' 
             });
         }

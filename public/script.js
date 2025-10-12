@@ -725,7 +725,7 @@ function renderSmartMoney(data) {
     
     container.innerHTML = data.map((trader, index) => {
         const walletShort = trader.wallet.substring(0, 4) + '...' + trader.wallet.substring(trader.wallet.length - 4);
-        const traderName = trader.wallet_name || `Trader ${walletShort}`;
+        const traderName = trader.name || trader.wallet_name || `Trader ${walletShort}`;
         
         // Calculate metrics
         const roi = trader.roi_percentage || 0;
@@ -810,13 +810,13 @@ function renderSmartMoney(data) {
                     <a href="https://solscan.io/account/${trader.wallet}" target="_blank" class="action-button">
                         <i class="fas fa-external-link-alt"></i> Solscan
                     </a>
-                    ${trader.wallet_telegram ? `
-                    <a href="${trader.wallet_telegram}" target="_blank" class="action-button">
+                    ${trader.telegram || trader.wallet_telegram ? `
+                    <a href="${trader.telegram || trader.wallet_telegram}" target="_blank" class="action-button">
                         <i class="fab fa-telegram"></i> Telegram
                     </a>
                     ` : ''}
-                    ${trader.wallet_twitter ? `
-                    <a href="${trader.wallet_twitter}" target="_blank" class="action-button">
+                    ${trader.twitter || trader.wallet_twitter ? `
+                    <a href="${trader.twitter || trader.wallet_twitter}" target="_blank" class="action-button">
                         <i class="fab fa-twitter"></i> Twitter
                     </a>
                     ` : ''}
