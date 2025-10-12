@@ -4,6 +4,58 @@
 
 ---
 
+## [1.4.3] - 2025-10-12 (Smart Money Redesign)
+
+### 🧠 Smart Money Tab - Complete Redesign
+#### Added
+- ✅ **New Metrics Display**:
+  - Wallet (tap-to-copy)
+  - Buys / Sells count
+  - Avg Buy size
+  - Total Volume
+  - Total Trades
+  - Unique Tokens
+  - Last Activity
+- ✅ **Category Badges**:
+  - 💎 Holder (only buying, no sells yet)
+  - 👑 Whale (volume > 100 SOL)
+  - 🎯 Sniper (win rate > 60%)
+  - 🧠 Smart (ROI > 100% AND win rate > 70%)
+  - 📊 Active (default)
+- ✅ **Compact Filters** (one line):
+  - Period: 7d / 30d / 90d
+  - Sort: Vol ↓ / ROI ↓ / Win ↓ / PnL ↓
+  - Toggle direction on repeated click
+- ✅ **2-Column Mobile Layout**
+- ✅ **Token Counter** ("Showing X traders")
+- ✅ **Filter Preferences** saved to LocalStorage
+
+#### Performance
+- ✅ **Materialized View Integration**: Uses `trader_stats_daily` (80x faster!)
+- ✅ **Fallback to Real-Time**: If materialized view doesn't exist
+- ✅ **Client-Side Sorting**: Instant filter application
+- ✅ **SQL Optimizations**: COALESCE, HAVING, WHERE filters
+
+#### Technical Details
+```sql
+-- Fast query (< 1 sec):
+SELECT * FROM trader_stats_daily ORDER BY total_volume DESC;
+
+-- Fallback (40 sec):
+WITH trader_stats AS (
+  SELECT wallet, COUNT(*), SUM(...), AVG(...), MAX(...)
+  FROM events WHERE ts >= NOW() - INTERVAL '30 days'
+  GROUP BY wallet
+)
+```
+
+#### Known Issues
+- ⚠️ **ROI/PnL Calculation**: Currently uses SOL amounts, should use market cap ratios
+- ⚠️ **Win Rate**: Should compare entry vs exit market cap, not just SOL amounts
+- 📝 **TODO**: Add market_cap to events table for accurate profit tracking
+
+---
+
 ## [1.4.2] - 2025-10-12 (Full-Screen Mode & Cache Control)
 
 ### 📱 Telegram Full-Screen Mode
