@@ -96,6 +96,7 @@ const TAB_API_MAP = {
     'dashboard': null, // Dashboard tab without API
     'analytics': null, // Analytics tab without API
     'portfolio': 'traders/list', // Portfolio tab API endpoint  
+    'liveSignals': null, // Live Signals - merged tab (special handling)
     'clusterBuy': 'clusterbuy',
     'whaleMoves': 'whalemoves', 
     'volumeSurge': 'volumesurge',
@@ -115,6 +116,7 @@ const TAB_RENDER_MAP = {
     'dashboard': null, // Dashboard tab without rendering
     'analytics': null, // Analytics tab without rendering
     'portfolio': renderPortfolio, // Portfolio tab rendering function
+    'liveSignals': renderLiveSignals, // NEW: Live Signals merged tab
     'clusterBuy': renderClusterBuy,
     'whaleMoves': renderWhaleMoves,
     'volumeSurge': renderVolumeSurge,
@@ -1411,6 +1413,12 @@ async function loadTabData(tabName) {
     // Special handling for non-API tabs
     if (tabName === 'about' || tabName === 'dashboard' || tabName === 'analytics') {
         hideLoading();
+        return;
+    }
+    
+    // Special handling for Live Signals (merged tab)
+    if (tabName === 'liveSignals') {
+        await loadLiveSignalsData();
         return;
     }
     
@@ -4707,6 +4715,188 @@ function animateAboutNumbers() {
     });
 }
 
+// ========== LIVE SIGNALS (MERGED TAB) ==========
+
+let liveSignalsData = {
+    cluster: [],
+    volume: [],
+    whale: [],
+    cobuy: []
+};
+let currentSignalFilter = 'all';
+
+// Initialize signal tabs
+function initLiveSignalsTabs() {
+    const signalTabs = document.querySelectorAll('.signal-tab');
+    signalTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Update active state
+            signalTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Update filter and render
+            currentSignalFilter = tab.dataset.signal;
+            renderLiveSignals();
+        });
+    });
+}
+
+// Load all signals data
+async function loadLiveSignalsData() {
+    try {
+        showLoading();
+        
+        // Fetch all signal types in parallel
+        const [clusterData, volumeData, whaleData, cobuyData] = await Promise.all([
+            fetch(`${API_URL}/clusterbuy`).then(r => r.json()),
+            fetch(`${API_URL}/volumesurge`).then(r => r.json()),
+            fetch(`${API_URL}/whalemoves`).then(r => r.json()),
+            fetch(`${API_URL}/cobuy`).then(r => r.json())
+        ]);
+        
+        liveSignalsData = {
+            cluster: clusterData || [],
+            volume: volumeData || [],
+            whale: whaleData || [],
+            cobuy: cobuyData || []
+        };
+        
+        renderLiveSignals();
+        updateLastUpdateTime();
+    } catch (error) {
+        console.error('Error loading live signals:', error);
+        renderError('liveSignalsData', error);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Render live signals based on current filter
+function renderLiveSignals() {
+    const container = document.getElementById('liveSignalsData');
+    if (!container) return;
+    
+    // Combine and filter signals
+    let signals = [];
+    
+    if (currentSignalFilter === 'all' || currentSignalFilter === 'cluster') {
+        signals = signals.concat(liveSignalsData.cluster.map(s => ({ ...s, type: 'cluster' })));
+    }
+    if (currentSignalFilter === 'all' || currentSignalFilter === 'volume') {
+        signals = signals.concat(liveSignalsData.volume.map(s => ({ ...s, type: 'volume' })));
+    }
+    if (currentSignalFilter === 'all' || currentSignalFilter === 'whale') {
+        signals = signals.concat(liveSignalsData.whale.map(s => ({ ...s, type: 'whale' })));
+    }
+    if (currentSignalFilter === 'all' || currentSignalFilter === 'cobuy') {
+        signals = signals.concat(liveSignalsData.cobuy.map(s => ({ ...s, type: 'cobuy' })));
+    }
+    
+    if (signals.length === 0) {
+        container.innerHTML = '<div class="no-data"><i class="fas fa-inbox"></i><p>No signals detected</p></div>';
+        return;
+    }
+    
+    // Sort by time (most recent first)
+    signals.sort((a, b) => new Date(b.latest_purchase || b.ts) - new Date(a.latest_purchase || a.ts));
+    
+    // Render signals
+    container.innerHTML = signals.map(signal => {
+        const signalStrength = getSignalStrength(signal);
+        const signalIcon = getSignalIcon(signal.type);
+        const signalColor = getSignalColor(signal.type);
+        
+        return `
+            <div class="data-item" onclick="showTokenDetails('${signal.token_mint}', '${signal.symbol || 'N/A'}', '${signal.name || 'Unknown'}')">
+                <div class="item-header">
+                    <div class="token-info">
+                        <h3>${signal.symbol || 'N/A'}</h3>
+                        <p>${signal.name || 'Unknown Token'}</p>
+                    </div>
+                    <div class="item-badges">
+                        <span class="badge ${signalColor}">
+                            <i class="${signalIcon}"></i> ${signal.type.toUpperCase()}
+                        </span>
+                        ${signalStrength}
+                    </div>
+                </div>
+                <div class="item-stats">
+                    ${getSignalStats(signal)}
+                </div>
+                <div class="item-actions">
+                    <a href="https://pump.fun/${signal.token_mint}" target="_blank" rel="noopener noreferrer" class="action-btn">
+                        <i class="fas fa-rocket"></i> Pump.fun
+                    </a>
+                    <a href="https://dexscreener.com/solana/${signal.token_mint}" target="_blank" rel="noopener noreferrer" class="action-btn">
+                        <i class="fas fa-chart-line"></i> Chart
+                    </a>
+                    <a href="https://solscan.io/token/${signal.token_mint}" target="_blank" rel="noopener noreferrer" class="action-btn">
+                        <i class="fas fa-search"></i> Solscan
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Get signal strength badge
+function getSignalStrength(signal) {
+    let count = 0;
+    if (signal.purchase_count >= 10) count++;
+    if (signal.total_volume >= 10) count++;
+    if (signal.unique_buyers >= 5) count++;
+    if (signal.max_buy >= 10) count++;
+    
+    if (count >= 3) return '<span class="signal-strength signal-hot"><i class="fas fa-fire"></i> HOT</span>';
+    if (count >= 2) return '<span class="signal-strength signal-strong"><i class="fas fa-bolt"></i> STRONG</span>';
+    return '<span class="signal-strength signal-medium"><i class="fas fa-circle"></i> MEDIUM</span>';
+}
+
+// Get signal icon
+function getSignalIcon(type) {
+    const icons = {
+        cluster: 'fas fa-fire',
+        volume: 'fas fa-chart-line',
+        whale: 'fas fa-fish',
+        cobuy: 'fas fa-users'
+    };
+    return icons[type] || 'fas fa-bolt';
+}
+
+// Get signal color
+function getSignalColor(type) {
+    const colors = {
+        cluster: 'badge-hot',
+        volume: 'badge-trending',
+        whale: 'badge-whale',
+        cobuy: 'badge-smart'
+    };
+    return colors[type] || 'badge';
+}
+
+// Get signal stats
+function getSignalStats(signal) {
+    const stats = [];
+    
+    if (signal.purchase_count) {
+        stats.push(`<div class="stat"><span class="stat-label">Buys</span><span class="stat-value">${signal.purchase_count}</span></div>`);
+    }
+    if (signal.unique_buyers) {
+        stats.push(`<div class="stat"><span class="stat-label">Buyers</span><span class="stat-value">${signal.unique_buyers}</span></div>`);
+    }
+    if (signal.total_volume) {
+        stats.push(`<div class="stat"><span class="stat-label">Volume</span><span class="stat-value">${parseFloat(signal.total_volume).toFixed(2)} SOL</span></div>`);
+    }
+    if (signal.max_buy) {
+        stats.push(`<div class="stat"><span class="stat-label">Max Buy</span><span class="stat-value">${parseFloat(signal.max_buy).toFixed(2)} SOL</span></div>`);
+    }
+    if (signal.latest_purchase) {
+        stats.push(`<div class="stat"><span class="stat-label">Last Buy</span><span class="stat-value">${formatTimeAgo(signal.latest_purchase)}</span></div>`);
+    }
+    
+    return stats.join('');
+}
+
 // Initialize components
 function initializeComponents() {
     // Initialize traders scroll
@@ -4723,6 +4913,9 @@ function initializeComponents() {
     
     // Initialize smart money filters
     initSmartMoneyFilters();
+    
+    // Initialize live signals tabs
+    initLiveSignalsTabs();
     
     // Initialize wallet stats
     initWalletStats();

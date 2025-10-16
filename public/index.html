@@ -157,41 +157,26 @@
                             <span>Coins Market</span>
                             <small>market</small>
                         </button>
-                        <button class="tab-button" data-tab="volumeSurge">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Volume Surge</span>
-                            <small>2h</small>
-                        </button>
-                        <button class="tab-button" data-tab="whaleMoves">
-                            <i class="fas fa-fish"></i>
-                            <span>Whale Moves</span>
-                            <small>2h</small>
-                        </button>
                     </div>
                 </div>
 
-                <!-- Signals Group -->
+                <!-- Live Signals Group (MERGED: Cluster/Volume/Whale/Co-Buy) -->
                 <div class="nav-group">
                     <div class="group-header">
-                        <i class="fas fa-bell"></i>
-                        <span>Signals</span>
+                        <i class="fas fa-bolt"></i>
+                        <span>Live Signals</span>
                     </div>
                     <div class="group-tabs">
-                        <button class="tab-button" data-tab="clusterBuy">
-                            <i class="fas fa-fire"></i>
-                            <span>Cluster Buy</span>
-                            <small>10m</small>
-                </button>
-                <button class="tab-button" data-tab="coBuy">
-                    <i class="fas fa-users"></i>
-                    <span>Co-buy</span>
-                            <small>20m</small>
-                </button>
+                        <button class="tab-button" data-tab="liveSignals">
+                            <i class="fas fa-bolt"></i>
+                            <span>Live Signals</span>
+                            <small>real-time</small>
+                        </button>
                         <button class="tab-button" data-tab="recentActivity">
                             <i class="fas fa-history"></i>
                             <span>Recent Activity</span>
                             <small>live</small>
-                </button>
+                        </button>
                     </div>
                 </div>
 
@@ -797,8 +782,39 @@
                 </div>
             </div>
 
-            <!-- Cluster Buy Tab -->
-            <div id="clusterBuy" class="tab-content">
+            <!-- 🔥 NEW: Live Signals Tab (MERGED) -->
+            <div id="liveSignals" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-bolt"></i> Live Signals</h2>
+                    <p class="tab-description">Real-time market signals - Cluster Buy, Volume Surge, Whale Moves, Co-Buy</p>
+                </div>
+                
+                <!-- Signal Filter Tabs -->
+                <div class="signal-tabs">
+                    <button class="signal-tab active" data-signal="all">
+                        <i class="fas fa-th"></i> All Signals
+                    </button>
+                    <button class="signal-tab" data-signal="cluster">
+                        <i class="fas fa-fire"></i> Cluster
+                    </button>
+                    <button class="signal-tab" data-signal="volume">
+                        <i class="fas fa-chart-line"></i> Volume
+                    </button>
+                    <button class="signal-tab" data-signal="whale">
+                        <i class="fas fa-fish"></i> Whale
+                    </button>
+                    <button class="signal-tab" data-signal="cobuy">
+                        <i class="fas fa-users"></i> Co-Buy
+                    </button>
+                </div>
+                
+                <div id="liveSignalsData" class="data-list">
+                    <div class="loading-placeholder">Loading signals...</div>
+                </div>
+            </div>
+
+            <!-- Cluster Buy Tab (DEPRECATED - kept for compatibility) -->
+            <div id="clusterBuy" class="tab-content" style="display: none;">
                 <div class="tab-header">
                 <h2><i class="fas fa-fire"></i> Cluster Buy (10 minutes)</h2>
                 <p class="tab-description">Tokens with 3+ unique buyers</p>
