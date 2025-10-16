@@ -3757,6 +3757,21 @@ function hasAccessToTab(tabName) {
 }
 
 // Show upgrade prompt when user tries to access locked content
+// Open subscription directly in bot
+function openSubscribeInBot() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        // Running in Telegram - send /subscribe command to bot
+        window.Telegram.WebApp.sendData(JSON.stringify({ command: 'subscribe' }));
+        window.Telegram.WebApp.close();
+        
+        // Alternative: Open bot chat
+        window.Telegram.WebApp.openTelegramLink('https://t.me/solfun_bot?start=subscribe');
+    } else {
+        // Running in web browser - open bot
+        window.open('https://t.me/solfun_bot?start=subscribe', '_blank');
+    }
+}
+
 function showUpgradePrompt(feature = 'this feature') {
     // Check if running in Telegram WebApp
     if (window.Telegram && window.Telegram.WebApp) {
