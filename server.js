@@ -506,6 +506,34 @@ app.post('/webhook/helius', async (req, res) => {
         const TRACKED = new Set(); // optional: fill if needed
         const rows = [];
 
+        // 📊 STEP 1: Collect all unique token mints first
+        const tokenMints = new Set();
+        for (const ev of body) {
+            if (!ev || typeof ev !== 'object') continue;
+            const wallet = pickWallet(ev, TRACKED);
+            const leg = extractTokenLeg(ev, wallet);
+            if (leg.token_mint) tokenMints.add(leg.token_mint);
+        }
+
+        // 📊 STEP 2: Batch fetch market cap for ALL tokens in parallel
+        const marketCapCache = new Map();
+        if (tokenMints.size > 0) {
+            console.log(`📊 Fetching market cap for ${tokenMints.size} tokens...`);
+            await Promise.all(
+                Array.from(tokenMints).map(async (mint) => {
+                    try {
+                        const mcData = await getTokenMarketCap(mint);
+                        marketCapCache.set(mint, mcData);
+                    } catch (error) {
+                        console.error(`❌ Failed to get MC for ${mint}:`, error.message);
+                        marketCapCache.set(mint, { marketCap: 0, price: 0 });
+                    }
+                })
+            );
+            console.log(`✅ Market cap fetched for ${marketCapCache.size} tokens`);
+        }
+
+        // 📊 STEP 3: Parse events and assign market cap from cache
         for (const ev of body) {
             if (!ev || typeof ev !== 'object') continue;
             
@@ -522,14 +550,14 @@ app.post('/webhook/helius', async (req, res) => {
             // получаем метаданные wallet из нашего модуля
             const { wallet_name, wallet_telegram, wallet_twitter } = resolveWalletMeta(wallet);
 
-            // 📊 GET MARKET CAP для правильного ROI/PnL
+            // 📊 GET MARKET CAP из cache (быстро!)
             let entry_market_cap = null;
             let exit_market_cap = null;
             let entry_price = null;
             let exit_price = null;
             
-            if (leg.token_mint) {
-                const mcData = await getTokenMarketCap(leg.token_mint);
+            if (leg.token_mint && marketCapCache.has(leg.token_mint)) {
+                const mcData = marketCapCache.get(leg.token_mint);
                 if (leg.side === 'BUY') {
                     entry_market_cap = mcData.marketCap || null;
                     entry_price = mcData.price || null;
