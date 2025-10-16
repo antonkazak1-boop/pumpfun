@@ -356,10 +356,24 @@ async function createEventsTable() {
                 tx_signature text,
                 usd_value numeric,
                 usd_estimate numeric,
+                entry_market_cap numeric,
+                exit_market_cap numeric,
+                entry_price numeric,
+                exit_price numeric,
                 created_at timestamptz default now()
             );
         `);
         console.log('✅ Table events created successfully');
+        
+        // Add columns to existing table if they don't exist
+        await pool.query(`
+            ALTER TABLE events 
+            ADD COLUMN IF NOT EXISTS entry_market_cap NUMERIC,
+            ADD COLUMN IF NOT EXISTS exit_market_cap NUMERIC,
+            ADD COLUMN IF NOT EXISTS entry_price NUMERIC,
+            ADD COLUMN IF NOT EXISTS exit_price NUMERIC;
+        `);
+        console.log('✅ Market cap columns added/verified');
     } catch (error) {
         console.error('❌ Failed to create table events:', error.message);
     }
@@ -433,6 +447,42 @@ function extractTokenLeg(ev, wallet) {
     return out;
 }
 
+// --- Helper function для получения market cap ---
+async function getTokenMarketCap(tokenMint) {
+    try {
+        // Try DexScreener first (most reliable for market cap)
+        const dexUrl = `https://api.dexscreener.com/latest/dex/tokens/${tokenMint}`;
+        const dexResponse = await axios.get(dexUrl, { timeout: 3000 });
+        
+        if (dexResponse.data?.pairs && dexResponse.data.pairs.length > 0) {
+            const pair = dexResponse.data.pairs[0];
+            if (pair.fdv || pair.marketCap) {
+                return {
+                    marketCap: parseFloat(pair.fdv || pair.marketCap || 0),
+                    price: parseFloat(pair.priceUsd || 0)
+                };
+            }
+        }
+        
+        // Fallback: Try Jupiter
+        const jupUrl = `https://price.jup.ag/v4/price?ids=${tokenMint}`;
+        const jupResponse = await axios.get(jupUrl, { timeout: 3000 });
+        
+        if (jupResponse.data?.data?.[tokenMint]) {
+            const price = parseFloat(jupResponse.data.data[tokenMint].price || 0);
+            return {
+                marketCap: 0, // Jupiter doesn't provide MC directly
+                price: price
+            };
+        }
+        
+        return { marketCap: 0, price: 0 };
+    } catch (error) {
+        console.error(`❌ Error getting market cap for ${tokenMint}:`, error.message);
+        return { marketCap: 0, price: 0 };
+    }
+}
+
 // --- Webhook endpoint из n8n ---
 
 app.post('/webhook/helius', async (req, res) => {
@@ -472,6 +522,23 @@ app.post('/webhook/helius', async (req, res) => {
             // получаем метаданные wallet из нашего модуля
             const { wallet_name, wallet_telegram, wallet_twitter } = resolveWalletMeta(wallet);
 
+            // 📊 GET MARKET CAP для правильного ROI/PnL
+            let entry_market_cap = null;
+            let exit_market_cap = null;
+            let entry_price = null;
+            let exit_price = null;
+            
+            if (leg.token_mint) {
+                const mcData = await getTokenMarketCap(leg.token_mint);
+                if (leg.side === 'BUY') {
+                    entry_market_cap = mcData.marketCap || null;
+                    entry_price = mcData.price || null;
+                } else if (leg.side === 'SELL') {
+                    exit_market_cap = mcData.marketCap || null;
+                    exit_price = mcData.price || null;
+                }
+            }
+
             rows.push({
                 tx_signature: ev.signature || null,
                 ts: ev.timestamp ? new Date(ev.timestamp * 1000).toISOString() : new Date().toISOString(),
@@ -486,9 +553,13 @@ app.post('/webhook/helius', async (req, res) => {
                 wallet_name,
                 wallet_telegram,
                 wallet_twitter,
+                entry_market_cap,
+                exit_market_cap,
+                entry_price,
+                exit_price,
             });
 
-            console.log(`✅ Parsed event: ${ev.source} ${leg.side} ${leg.token_mint} - wallet: ${wallet || 'unknown'}`);
+            console.log(`✅ Parsed event: ${ev.source} ${leg.side} ${leg.token_mint} - MC: ${entry_market_cap || exit_market_cap || 'N/A'} - wallet: ${wallet || 'unknown'}`);
         }
 
         if (rows.length === 0) {
@@ -497,7 +568,7 @@ app.post('/webhook/helius', async (req, res) => {
 
         // Bulk insert с базовой дедупликацией по tx_signature + token_mint + side
                 const columns = [
-                    'tx_signature','ts','dex','wallet','side','token_mint','token_amount','sol_spent','sol_received','usd_value','wallet_name','wallet_telegram','wallet_twitter'
+                    'tx_signature','ts','dex','wallet','side','token_mint','token_amount','sol_spent','sol_received','usd_value','wallet_name','wallet_telegram','wallet_twitter','entry_market_cap','exit_market_cap','entry_price','exit_price'
                 ];
         
         const values = [];
@@ -520,6 +591,10 @@ app.post('/webhook/helius', async (req, res) => {
                 r.wallet_name,
                 r.wallet_telegram,
                 r.wallet_twitter,
+                r.entry_market_cap,
+                r.exit_market_cap,
+                r.entry_price,
+                r.exit_price,
             );
         }
 
