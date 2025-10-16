@@ -651,7 +651,11 @@ app.post('/webhook/helius', async (req, res) => {
                 const insertSql = `
                     INSERT INTO events (${columns.join(',')})
                     VALUES ${values.join(',')}
-                    ON CONFLICT (id) DO NOTHING;
+                    ON CONFLICT (tx_signature) DO UPDATE SET
+                        entry_market_cap = EXCLUDED.entry_market_cap,
+                        exit_market_cap = EXCLUDED.exit_market_cap,
+                        entry_price = EXCLUDED.entry_price,
+                        exit_price = EXCLUDED.exit_price;
                 `;
 
         const insertResult = await pool.query(insertSql, params);
