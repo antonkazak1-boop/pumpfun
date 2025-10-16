@@ -584,6 +584,9 @@ app.post('/webhook/helius', async (req, res) => {
                     exit_market_cap = mcData.marketCap || null;
                     exit_price = mcData.price || null;
                 }
+                console.log(`📊 MC assigned for ${leg.side}: ${entry_market_cap || exit_market_cap}`);
+            } else if (leg.token_mint) {
+                console.log(`⚠️ Market cap NOT in cache for token: ${leg.token_mint}`);
             }
 
             rows.push({

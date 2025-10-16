@@ -7,7 +7,7 @@ class SolanaPayment {
         // Use better RPC endpoints (Helius recommended, fallback to public)
         const rpcUrl = process.env.SOLANA_RPC_URL || 
                        process.env.HELIUS_RPC_URL ||
-                       'https://mainnet.helius-rpc.com/?api-key=demo'; // Helius public
+                       'https://api.mainnet-beta.solana.com'; // FREE public RPC (no auth required)
         
         this.connection = new Connection(rpcUrl, {
             commitment: 'confirmed',
@@ -17,7 +17,7 @@ class SolanaPayment {
         this.MERCHANT_WALLET = process.env.MERCHANT_WALLET || 'G1baEgxW9rFLbPr8M6SmAxEbpeLw5Z5j4xyYwt8emTha';
         this.KOLSCAN_TOKEN_ADDRESS = process.env.KOLSCAN_TOKEN_ADDRESS || 'Db8vz7nh1jbjxVBatBRgQWafqB5iDaW7A1VNh6DmraxP';
         
-        console.log('🔗 Solana RPC:', rpcUrl);
+        console.log('🔗 Solana RPC:', rpcUrl.includes('api-key') ? rpcUrl.split('?')[0] + '?api-key=***' : rpcUrl);
     }
 
     // Check SOL balance of a wallet
