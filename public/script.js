@@ -773,7 +773,7 @@ function renderSmartMoney(data) {
                         <span class="token-badge ${categoryClass}">${categoryBadge}</span>
                         ${isProfitable ? '<span class="token-badge badge-hot">🔥 Profit</span>' : ''}
                     </div>
-                </div>
+                    </div>
                 
                 <div class="token-info-compact">
                     <div class="info-row">
@@ -783,7 +783,7 @@ function renderSmartMoney(data) {
                     <div class="info-row">
                         <span class="info-label">Buys</span>
                         <span class="info-value positive">${trader.buy_count || trader.total_trades || 0}</span>
-                    </div>
+                </div>
                     <div class="info-row">
                         <span class="info-label">Sells</span>
                         <span class="info-value ${sellCount > 0 ? 'neutral' : 'muted'}">${sellCount}</span>
@@ -895,10 +895,10 @@ function renderFreshTokens(data) {
         return `
             <div class="data-item fresh-item">
                 <div class="data-header">
-                    <h3>
+                <h3>
                         <img src="${item.image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
                         ${index + 1}. ${tokenSymbol} - ${tokenName}
-                    </h3>
+                </h3>
                     <div class="token-badges">${badges}</div>
                 </div>
                 <div class="item-stats">
@@ -982,10 +982,10 @@ function renderTopGainers(data) {
         return `
             <div class="data-item">
                 <div class="data-header">
-                    <h3>
+                <h3>
                         <img src="${item.image || '/img/token-placeholder.png'}" alt="${tokenSymbol}" class="token-avatar" onerror="this.src='/img/token-placeholder.png'">
                         ${index + 1}. ${tokenSymbol} - ${tokenName}
-                    </h3>
+                </h3>
                     <div class="token-badges">${badges}</div>
                 </div>
                 <div class="item-stats">
@@ -1162,7 +1162,7 @@ function closeTokenModal() {
         
         // Удаляем modal после анимации
         setTimeout(() => {
-            modal.classList.remove('active');
+        modal.classList.remove('active');
             modal.classList.remove('closing');
         }, 300);
     }
@@ -1529,7 +1529,7 @@ function switchTab(tabName) {
     if (activeTabContent) {
         // Добавляем небольшую задержку для плавного перехода
         setTimeout(() => {
-            activeTabContent.classList.add('active');
+        activeTabContent.classList.add('active');
         }, 50);
     }
     
@@ -4674,7 +4674,7 @@ function copyToClipboard(text, element) {
         element.innerHTML = '<i class="fas fa-check" style="color: var(--success);"></i> Copied!';
         element.style.color = 'var(--success)';
         
-        setTimeout(() => {
+    setTimeout(() => {
             element.innerHTML = originalText;
             element.style.color = '';
         }, 2000);

@@ -648,20 +648,13 @@ bot.action('sol_pro_no_discount', async (ctx) => {
 });
 
 // Function to show Solana payment instructions
-async function showSolanaPaymentInstructions(ctx, tier, walletAddress) {
+async function showSolanaPaymentInstructions(ctx, tier, walletAddress, discountedPrice = null) {
     const userId = ctx.from.id;
     const price = SUBSCRIPTION_PRICES[tier].sol;
     
-    // Check for discount if wallet provided
-    let finalPrice = price;
-    let hasDiscount = false;
-    
-    if (walletAddress) {
-        // In real scenario, check KOLScan balance via API
-        // For now, assume no discount unless verified
-        hasDiscount = false;
-        finalPrice = price;
-    }
+    // Use discounted price if provided, otherwise full price
+    const finalPrice = discountedPrice || price;
+    const hasDiscount = discountedPrice !== null && discountedPrice < price;
     
     const merchantWallet = 'G1baEgxW9rFLbPr8M6SmAxEbpeLw5Z5j4xyYwt8emTha';
     
@@ -674,6 +667,7 @@ async function showSolanaPaymentInstructions(ctx, tier, walletAddress) {
             body: JSON.stringify({
                 userId: userId,
                 subscriptionType: tier,
+                expectedAmount: finalPrice, // ✅ ПРАВИЛЬНАЯ ЦЕНА С УЧЁТОМ СКИДКИ!
                 fromWallet: walletAddress
             })
         });
@@ -681,7 +675,7 @@ async function showSolanaPaymentInstructions(ctx, tier, walletAddress) {
         const data = await response.json();
         if (data.success) {
             intentId = data.intentId;
-            console.log(`✅ Payment intent created: ${intentId}`);
+            console.log(`✅ Payment intent created: ${intentId} for ${finalPrice} SOL`);
         }
     } catch (error) {
         console.error('Error creating payment intent:', error);
@@ -978,15 +972,15 @@ bot.on('text', async (ctx) => {
             if (data.success && data.hasMinimumHold) {
                 // Has discount!
                 const price = SUBSCRIPTION_PRICES[tier].sol;
-                const discountedPrice = (price * 0.75).toFixed(4);
+                const discountedPrice = parseFloat((price * 0.75).toFixed(4));
                 
                 ctx.reply(`🎉 Discount applied! You hold ${data.balance} $KOLScan tokens.\n\nYour price: ${discountedPrice} SOL (25% off!)`);
                 
-                await showSolanaPaymentInstructions(ctx, tier, walletAddress);
+                await showSolanaPaymentInstructions(ctx, tier, walletAddress, discountedPrice);
             } else {
                 ctx.reply(`ℹ️ No discount available. You need at least 1000 $KOLScan tokens.\n\nContinuing with regular price...`);
                 
-                await showSolanaPaymentInstructions(ctx, tier, null);
+                await showSolanaPaymentInstructions(ctx, tier, null, null);
             }
             
             // Clear session

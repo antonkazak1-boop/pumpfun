@@ -1229,7 +1229,7 @@ app.get('/api/traders/list', async (req, res) => {
             
             query = `
                 WITH trader_stats AS (
-                    SELECT wallet,
+                SELECT wallet,
                            COUNT(*) as total_trades,
                            COUNT(CASE WHEN side = 'BUY' THEN 1 END) as buy_count,
                            COUNT(CASE WHEN side = 'SELL' THEN 1 END) as sell_count,
@@ -1244,7 +1244,7 @@ app.get('/api/traders/list', async (req, res) => {
                            COALESCE(SUM(CASE WHEN side = 'BUY' THEN sol_spent ELSE 0 END), 0) as total_invested,
                            COUNT(DISTINCT CASE WHEN side = 'SELL' AND sol_received > sol_spent THEN token_mint END) as winning_tokens,
                            COUNT(DISTINCT CASE WHEN side = 'SELL' THEN token_mint END) as sold_tokens
-                    FROM events
+                FROM events
                     WHERE ts >= NOW() - INTERVAL '30 days'
                       AND wallet IS NOT NULL
                     GROUP BY wallet 
@@ -2312,17 +2312,19 @@ app.post('/api/payment/solana', async (req, res) => {
 // Create payment intent (BEFORE user pays)
 app.post('/api/payment/create-intent', async (req, res) => {
     try {
-        const { userId, subscriptionType, fromWallet } = req.body;
+        const { userId, subscriptionType, fromWallet, expectedAmount } = req.body;
         
-        console.log(`📝 Creating payment intent:`, { userId, subscriptionType, fromWallet });
+        console.log(`📝 Creating payment intent:`, { userId, subscriptionType, fromWallet, expectedAmount });
         
         if (!userId || !subscriptionType) {
             return res.status(400).json({ success: false, error: 'Missing userId or subscriptionType' });
         }
         
         const merchantWallet = process.env.MERCHANT_WALLET || 'G1baEgxW9rFLbPr8M6SmAxEbpeLw5Z5j4xyYwt8emTha';
-        const prices = { basic: 0.01, pro: 0.02 };
-        const expectedAmount = prices[subscriptionType];
+        
+        // Use provided expectedAmount (with discount), or fallback to default prices
+        const defaultPrices = { basic: 0.01, pro: 0.02 };
+        const finalAmount = expectedAmount || defaultPrices[subscriptionType];
         
         // Generate unique intent ID
         const intentId = `intent_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -2335,9 +2337,9 @@ app.post('/api/payment/create-intent', async (req, res) => {
                 INSERT INTO payment_intents 
                 (intent_id, telegram_user_id, subscription_type, expected_amount_sol, from_wallet, merchant_wallet, expires_at)
                 VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '30 minutes')
-            `, [intentId, userId, subscriptionType, expectedAmount, fromWallet, merchantWallet]);
+            `, [intentId, userId, subscriptionType, finalAmount, fromWallet, merchantWallet]);
             
-            console.log(`✅ Payment intent created: ${intentId} for user ${userId}`);
+            console.log(`✅ Payment intent created: ${intentId} for user ${userId} - ${finalAmount} SOL`);
         } catch (dbError) {
             console.error('❌ Database error:', dbError);
             console.error('❌ Error details:', {
@@ -2354,7 +2356,7 @@ app.post('/api/payment/create-intent', async (req, res) => {
             success: true,
             intentId,
             merchantWallet,
-            expectedAmount,
+            expectedAmount: finalAmount,
             subscriptionType
         });
     } catch (error) {
