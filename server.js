@@ -450,7 +450,26 @@ function extractTokenLeg(ev, wallet) {
 // --- Helper function для получения market cap ---
 async function getTokenMarketCap(tokenMint) {
     try {
-        // Try DexScreener first (most reliable for market cap)
+        // 1️⃣ Try Pump.fun API first (best for new tokens!)
+        try {
+            const pumpUrl = `https://frontend-api.pump.fun/coins/${tokenMint}`;
+            const pumpResponse = await axios.get(pumpUrl, { timeout: 2000 });
+            
+            if (pumpResponse.data) {
+                const data = pumpResponse.data;
+                // Pump.fun provides market_cap directly
+                if (data.usd_market_cap || data.market_cap) {
+                    return {
+                        marketCap: parseFloat(data.usd_market_cap || data.market_cap || 0),
+                        price: parseFloat(data.price || 0)
+                    };
+                }
+            }
+        } catch (pumpError) {
+            // Silent fail, continue to DexScreener
+        }
+        
+        // 2️⃣ Try DexScreener (most reliable for established tokens)
         const dexUrl = `https://api.dexscreener.com/latest/dex/tokens/${tokenMint}`;
         const dexResponse = await axios.get(dexUrl, { timeout: 3000 });
         
@@ -464,7 +483,7 @@ async function getTokenMarketCap(tokenMint) {
             }
         }
         
-        // Fallback: Try Jupiter
+        // 3️⃣ Fallback: Try Jupiter
         const jupUrl = `https://price.jup.ag/v4/price?ids=${tokenMint}`;
         const jupResponse = await axios.get(jupUrl, { timeout: 3000 });
         
