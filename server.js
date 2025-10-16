@@ -654,9 +654,19 @@ app.post('/webhook/helius', async (req, res) => {
                     ON CONFLICT (id) DO NOTHING;
                 `;
 
-        await pool.query(insertSql, params);
+        const insertResult = await pool.query(insertSql, params);
 
-        console.log(`Inserted ${rows.length} events`);
+        console.log(`✅ Inserted ${rows.length} events - DB result:`, insertResult.rowCount);
+        
+        // Verify insertion by reading back
+        if (rows.length > 0) {
+            const verifyResult = await pool.query(`
+                SELECT COUNT(*) as count FROM events 
+                WHERE tx_signature = $1
+            `, [rows[0].tx_signature]);
+            console.log(`🔍 Verification: Found ${verifyResult.rows[0].count} events with signature ${rows[0].tx_signature}`);
+        }
+        
         return res.status(200).json({ success: true, inserted: rows.length });
         
     } catch (error) {

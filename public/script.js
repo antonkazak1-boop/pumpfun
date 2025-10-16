@@ -4746,20 +4746,66 @@ async function loadLiveSignalsData() {
     try {
         showLoading();
         
-        // Fetch all signal types in parallel
-        const [clusterData, volumeData, whaleData, cobuyData] = await Promise.all([
-            fetch(`${API_URL}/clusterbuy`).then(r => r.json()),
-            fetch(`${API_URL}/volumesurge`).then(r => r.json()),
-            fetch(`${API_URL}/whalemoves`).then(r => r.json()),
-            fetch(`${API_URL}/cobuy`).then(r => r.json())
-        ]);
+        // Check subscription level
+        const userTier = await getUserSubscriptionTier();
+        
+        // Define available signals based on tier
+        let availableSignals = [];
+        
+        if (userTier === 'trial' || userTier === 'free') {
+            // Trial: NO access to Live Signals
+            document.getElementById('liveSignalsData').innerHTML = `
+                <div class="upgrade-prompt">
+                    <i class="fas fa-lock" style="font-size: 48px; color: var(--primary); margin-bottom: 16px;"></i>
+                    <h3>Live Signals - Premium Feature</h3>
+                    <p>Upgrade to <strong>Basic</strong> or <strong>Pro</strong> to access real-time market signals!</p>
+                    <button onclick="window.location.href='#subscribe'" class="upgrade-button">
+                        <i class="fas fa-rocket"></i> Upgrade Now
+                    </button>
+                </div>
+            `;
+            hideLoading();
+            return;
+        } else if (userTier === 'basic') {
+            // Basic: Cluster + Volume only
+            availableSignals = ['cluster', 'volume'];
+        } else if (userTier === 'pro') {
+            // Pro: ALL signals
+            availableSignals = ['cluster', 'volume', 'whale', 'cobuy'];
+        }
+        
+        // Fetch only available signals
+        const fetchPromises = [];
+        const signalMap = {
+            cluster: `${API_URL}/clusterbuy`,
+            volume: `${API_URL}/volumesurge`,
+            whale: `${API_URL}/whalemoves`,
+            cobuy: `${API_URL}/cobuy`
+        };
+        
+        availableSignals.forEach(signal => {
+            fetchPromises.push(
+                fetch(signalMap[signal]).then(r => r.json()).catch(() => [])
+            );
+        });
+        
+        const results = await Promise.all(fetchPromises);
         
         liveSignalsData = {
-            cluster: clusterData || [],
-            volume: volumeData || [],
-            whale: whaleData || [],
-            cobuy: cobuyData || []
+            cluster: availableSignals.includes('cluster') ? results[availableSignals.indexOf('cluster')] : [],
+            volume: availableSignals.includes('volume') ? results[availableSignals.indexOf('volume')] : [],
+            whale: availableSignals.includes('whale') ? results[availableSignals.indexOf('whale')] : [],
+            cobuy: availableSignals.includes('cobuy') ? results[availableSignals.indexOf('cobuy')] : []
         };
+        
+        // Hide unavailable signal tabs
+        const signalTabs = document.querySelectorAll('.signal-tab');
+        signalTabs.forEach(tab => {
+            const signal = tab.dataset.signal;
+            if (signal !== 'all' && !availableSignals.includes(signal)) {
+                tab.style.display = 'none';
+            }
+        });
         
         renderLiveSignals();
         updateLastUpdateTime();

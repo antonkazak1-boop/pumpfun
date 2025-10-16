@@ -24,19 +24,43 @@ const bot = new Telegraf(BOT_TOKEN);
 // Enable session support
 bot.use(session());
 
-// Subscription pricing constants (TESTING PRICES)
-const SUBSCRIPTION_PRICES = {
+// Subscription pricing - loaded from database (subscription_tiers table)
+let SUBSCRIPTION_PRICES = {
     basic: {
-        sol: 0.01,         // 0.01 SOL for testing (normally 0.1 SOL)
-        stars: 1,          // Stars amount (what user sees and API gets) - TESTING
-        stars_cents: 1     // Same as stars for Telegram API - TESTING
+        sol: 0.01,         // Fallback price
+        stars: 1,
+        stars_cents: 1
     },
     pro: {
-        sol: 0.02,         // 0.02 SOL for testing (normally 0.25 SOL)
-        stars: 2,          // Stars amount (what user sees and API gets) - TESTING
-        stars_cents: 2     // Same as stars for Telegram API - TESTING
+        sol: 0.02,         // Fallback price
+        stars: 2,
+        stars_cents: 2
     }
 };
+
+// Load prices from API on startup
+async function loadSubscriptionPrices() {
+    try {
+        const response = await fetch(`${process.env.BACKEND_URL || 'https://pumpfun-u7av.onrender.com'}/api/subscription/tiers`);
+        const data = await response.json();
+        
+        if (data.success && data.tiers) {
+            data.tiers.forEach(tier => {
+                if (SUBSCRIPTION_PRICES[tier.tier_name]) {
+                    SUBSCRIPTION_PRICES[tier.tier_name].sol = parseFloat(tier.price_sol);
+                    SUBSCRIPTION_PRICES[tier.tier_name].stars = tier.price_stars;
+                    SUBSCRIPTION_PRICES[tier.tier_name].stars_cents = tier.price_stars;
+                }
+            });
+            console.log('✅ Subscription prices loaded from database:', SUBSCRIPTION_PRICES);
+        }
+    } catch (error) {
+        console.error('❌ Failed to load subscription prices, using fallback:', error);
+    }
+}
+
+// Load prices on bot startup
+loadSubscriptionPrices();
 
 // Handle payment commands from Mini App
 async function handlePaymentCommand(ctx, tierName) {
